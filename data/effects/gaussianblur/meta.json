@@ -1,0 +1,24 @@
+{
+  "label": "Gaussian Blur",
+  "steps": 3,
+  "parameters": [
+    {
+      "name": "breaking_point",
+      "label": "Breaking point",
+      "type": "double",
+      "slider": true,
+      "min": 0,
+      "max": 100,
+      "default": 50
+    },
+    {
+      "name": "max_blur_level",
+      "label": "Blur level",
+      "type": "double",
+      "slider": true,
+      "min": 0.1,
+      "max": 10,
+      "default": 5
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "label": "TEMPLATE",
+  "parameters": [
+    {
+      "name": "random_amount",
+      "label": "Randomization amount",
+      "type": "double",
+      "slider": true,
+      "min": 0,
+      "max": 100,
+      "default": 10
+    }
+  ]
+}

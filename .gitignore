@@ -1,0 +1,16 @@
+# Jetbrains files
+.idea/
+*.iml
+
+# Built files
+build/
+build-prod/
+/src/version.h
+
+# Development files
+*.mp4
+*.webm
+*.mov
+build.sh
+build_dev.sh
+test.sh
