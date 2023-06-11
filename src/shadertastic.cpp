@@ -65,7 +65,7 @@ transition_effect_t load_effect(std::string effect_name, transition_effect_t *pr
 
         effect.main_shader.load(shader_path);
         if (effect.main_shader.effect == NULL) {
-            char *fallback_shader_path = obs_module_file("effects/transition_fallback.hlsl");
+            char *fallback_shader_path = obs_module_file("effects/fallback_effect.hlsl");
             debug("FALLBACK %s", fallback_shader_path);
             effect.main_shader.load(fallback_shader_path);
             bfree(fallback_shader_path);
