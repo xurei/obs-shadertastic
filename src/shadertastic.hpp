@@ -1,4 +1,4 @@
-typedef std::map<std::string, transition_effect_t> transition_effects_map_t;
+typedef std::map<std::string, shadertastic_effect_t> shadertastic_effects_map_t;
 
 struct shadertastic_transition {
     obs_source_t *source;
@@ -24,8 +24,8 @@ struct shadertastic_transition {
     float transition_a_mul;
     float transition_b_mul;
 
-    transition_effects_map_t *effects;
-    transition_effect_t *selected_effect;
+    shadertastic_effects_map_t *effects;
+    shadertastic_effect_t *selected_effect;
 
     void release() {
         for (auto& [key, effect] : *this->effects) {
@@ -50,8 +50,8 @@ struct shadertastic_filter {
     double speed = 1.0;
     uint64_t start_time = 0;
 
-    transition_effects_map_t *effects;
-    transition_effect_t *selected_effect;
+    shadertastic_effects_map_t *effects;
+    shadertastic_effect_t *selected_effect;
 
     void release() {
         for (auto& [key, effect] : *this->effects) {

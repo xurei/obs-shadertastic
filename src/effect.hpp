@@ -1,4 +1,4 @@
-struct transition_effect_t {
+struct shadertastic_effect_t {
     std::string name;
     std::string label;
     int nb_steps;

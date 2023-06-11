@@ -1,7 +1,7 @@
 static void *shadertastic_transition_create(obs_data_t *settings, obs_source_t *source) {
     struct shadertastic_transition *s = static_cast<shadertastic_transition*>(bzalloc(sizeof(struct shadertastic_transition)));
     s->source = source;
-    s->effects = new transition_effects_map_t();
+    s->effects = new shadertastic_effects_map_t();
     s->rand_seed = (float)rand() / RAND_MAX;
 
     debug("MODULE PATH : %s", obs_module_file(""));
@@ -17,11 +17,11 @@ static void *shadertastic_transition_create(obs_data_t *settings, obs_source_t *
     s->transition_texrender[1] = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
 
     for (const auto &dir : dirs) {
-        transition_effect_t effect;
+        shadertastic_effect_t effect;
         load_effect(effect, dir);
         if (effect.main_shader.effect != NULL) {
             const char *effect_label = effect.label.c_str();
-            s->effects->insert(transition_effects_map_t::value_type(dir, effect));
+            s->effects->insert(shadertastic_effects_map_t::value_type(dir, effect));
 
             // Defaults must be set here and not in the transition_defaults() function.
             // as the effects are not loaded yet in transition_defaults()
@@ -176,7 +176,7 @@ void shadertastic_transition_shader_render(void *data, gs_texture_t *a, gs_textu
     const bool previous = gs_framebuffer_srgb_enabled();
     gs_enable_framebuffer_srgb(true);
 
-    transition_effect_t *effect = s->selected_effect;
+    shadertastic_effect_t *effect = s->selected_effect;
 
     if (effect != NULL) {
         gs_texture_t *interm_texture = s->transparent_texture;
@@ -265,7 +265,7 @@ void shadertastic_transition_filter_video_render(void *data, gs_effect_t *effect
     uint32_t cy = obs_source_get_height(s->source);
     //if (gs_texrender_begin_with_color_space(s->filter_source_a_texrender, cx, cy, source_space))
 
-    transition_effect_t *effect = s->selected_effect;
+    shadertastic_effect_t *effect = s->selected_effect;
     if (effect != NULL) {
         gs_texrender_reset(s->filter_source_a_texrender);
         gs_texrender_reset(s->filter_source_b_texrender);

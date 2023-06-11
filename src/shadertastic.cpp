@@ -39,11 +39,11 @@
 #include "parameters/parameter_list_int.hpp"
 #include "parameters/parameter_unknown.hpp"
 #include "parameters/parameter_factory.hpp"
-#include "transition_effect.hpp"
+#include "effect.hpp"
 #include "shadertastic.hpp"
 //----------------------------------------------------------------------------------------------------------------------
 
-void load_effect(transition_effect_t &effect, std::string effect_name) {
+void load_effect(shadertastic_effect_t &effect, std::string effect_name) {
     debug(">>>>>>>>>>>>>>> load_effect %s", effect_name.c_str());
     char *metadata_path = obs_module_file((std::string("effects/") + effect_name + "/meta.json").c_str());
     char *shader_path = obs_module_file((std::string("effects/") + effect_name + "/main.hlsl").c_str());
@@ -67,7 +67,7 @@ void load_effect(transition_effect_t &effect, std::string effect_name) {
 }
 //----------------------------------------------------------------------------------------------------------------------
 
-void reload_effect(transition_effect_t *selected_effect) {
+void reload_effect(shadertastic_effect_t *selected_effect) {
     if (selected_effect != NULL) {
         std::string effect_name = selected_effect->name;
         load_effect(*selected_effect, effect_name);

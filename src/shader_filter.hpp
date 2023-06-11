@@ -1,7 +1,7 @@
 static void *shadertastic_filter_create(obs_data_t *settings, obs_source_t *source) {
     struct shadertastic_filter *s = static_cast<shadertastic_filter*>(bzalloc(sizeof(struct shadertastic_filter)));
     s->source = source;
-    s->effects = new transition_effects_map_t();
+    s->effects = new shadertastic_effects_map_t();
     s->rand_seed = (float)rand() / RAND_MAX;
     s->start_time = obs_get_video_frame_time();
 
@@ -19,10 +19,10 @@ static void *shadertastic_filter_create(obs_data_t *settings, obs_source_t *sour
     s->filter_source_texrender = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
 
     for (const auto &dir : dirs) {
-        transition_effect_t effect;
+        shadertastic_effect_t effect;
         load_effect(effect, dir);
         if (effect.main_shader.effect != NULL) {
-            s->effects->insert(transition_effects_map_t::value_type(dir, effect));
+            s->effects->insert(shadertastic_effects_map_t::value_type(dir, effect));
 
             // Defaults must be set here and not in the transition_defaults() function.
             // as the effects are not loaded yet in transition_defaults()
@@ -149,7 +149,7 @@ void shadertastic_filter_shader_render(void *data, gs_texture_t *a, gs_texture_t
     const bool previous = gs_framebuffer_srgb_enabled();
     gs_enable_framebuffer_srgb(true);
 
-    transition_effect_t *effect = s->selected_effect;
+    shadertastic_effect_t *effect = s->selected_effect;
 
     if (effect != NULL) {
         gs_texture_t *interm_texture = s->transparent_texture;
@@ -192,7 +192,7 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
     const enum gs_color_space source_space = obs_source_get_color_space(target_source, OBS_COUNTOF(preferred_spaces), preferred_spaces);
     const enum gs_color_format format = gs_get_format_from_space(source_space);
 
-    transition_effect_t *selected_effect = s->selected_effect;
+    shadertastic_effect_t *selected_effect = s->selected_effect;
     if (selected_effect != NULL) {
         if (obs_source_process_filter_begin_with_color_space(s->source, format, source_space, OBS_ALLOW_DIRECT_RENDERING)) {
             uint64_t frame_time = obs_get_video_frame_time();
