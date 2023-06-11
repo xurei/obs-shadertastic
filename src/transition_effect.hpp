@@ -22,7 +22,7 @@ struct transition_effect_t {
         }
         //debug("input textures set");
 
-        try_gs_effect_set_float(main_shader.param_transition_time, t);
+        try_gs_effect_set_float(main_shader.param_time, t);
         try_gs_effect_set_float(main_shader.param_upixel, (float)(1.0/cx));
         try_gs_effect_set_float(main_shader.param_vpixel, (float)(1.0/cy));
         try_gs_effect_set_float(main_shader.param_rand_seed, rand_seed);

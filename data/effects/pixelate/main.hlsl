@@ -48,14 +48,13 @@ float3 srgb_nonlinear_to_linear(float3 v)
 	return float3(srgb_nonlinear_to_linear_channel(v.r), srgb_nonlinear_to_linear_channel(v.g), srgb_nonlinear_to_linear_channel(v.b));
 }
 
-float4 EffectLinear(FragData f_in)
+float4 EffectLinear(float2 uv)
 {
-	float t = transition_time;
-    float u = f_in.uv[0];
-    float v = f_in.uv[1];
+    float u = uv[0];
+    float v = uv[1];
     float break_point = breaking_point / 100.0;
 
-    float size_ratio = (t < break_point) ? t / break_point : (1.0-t) / (1.0-break_point);
+    float size_ratio = (time < break_point) ? time / break_point : (1.0-time) / (1.0-break_point);
 
     float min_squares = 100.0 / max_pixelation_level;
 
@@ -69,7 +68,7 @@ float4 EffectLinear(FragData f_in)
     float4 px_a = tex_a.Sample(textureSampler, float2(u,v));
     float4 px_b = tex_b.Sample(textureSampler, float2(u,v));
 
-    float lerp_t = sigmoid(30, (t+0.5-break_point));
+    float lerp_t = sigmoid(30, (time+0.5-break_point));
 
     px_a.r = lerp(px_a.r, 1.0, 0.1*lerp_t);
     px_a.g = lerp(px_a.g, 1.0, 0.1*lerp_t);
@@ -87,14 +86,14 @@ float4 EffectLinear(FragData f_in)
 
 float4 PSEffect(FragData f_in) : TARGET
 {
-    float4 rgba = EffectLinear(f_in);
+    float4 rgba = EffectLinear(f_in.uv);
 	rgba.rgb = srgb_nonlinear_to_linear(rgba.rgb);
 	return rgba;
 }
 
 float4 PSEffectLinear(FragData f_in) : TARGET
 {
-	float4 rgba = EffectLinear(f_in);
+	float4 rgba = EffectLinear(f_in.uv);
 	return rgba;
 }
 
