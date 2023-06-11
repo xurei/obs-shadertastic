@@ -59,7 +59,7 @@ transition_effect_t load_effect(std::string effect_name, transition_effect_t *pr
         effect.parameters = effect_parameters;
 
         obs_data_set_default_int(effect_metadata, "steps", 1);
-        effect.nb_steps = obs_data_get_int(effect_metadata, "steps");
+        effect.nb_steps = (int)obs_data_get_int(effect_metadata, "steps");
 
         bool is_fallback = false;
 

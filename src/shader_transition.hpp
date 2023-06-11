@@ -40,6 +40,7 @@ static void *shadertastic_transition_create(obs_data_t *settings, obs_source_t *
     obs_source_update(source, settings);
     return s;
 }
+#ifdef DEV_MODE
 static void *shadertastic_transition_filter_create(obs_data_t *settings, obs_source_t *source) {
     struct shadertastic_transition *s = static_cast<shadertastic_transition*>(shadertastic_transition_create(settings, source));
     s->is_filter = true;
@@ -47,6 +48,7 @@ static void *shadertastic_transition_filter_create(obs_data_t *settings, obs_sou
     s->filter_source_b_texrender = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
     return s;
 }
+#endif
 //----------------------------------------------------------------------------------------------------------------------
 
 void shadertastic_transition_destroy(void *data) {
@@ -64,6 +66,7 @@ void shadertastic_transition_destroy(void *data) {
     bfree(data);
     debug("Destroyed");
 }
+#ifdef DEV_MODE
 void shadertastic_transition_filter_destroy(void *data) {
     shadertastic_transition_destroy(data);
     struct shadertastic_transition *s = static_cast<shadertastic_transition*>(data);
@@ -72,6 +75,7 @@ void shadertastic_transition_filter_destroy(void *data) {
     gs_texrender_destroy(s->filter_source_b_texrender);
     obs_leave_graphics();
 }
+#endif
 //----------------------------------------------------------------------------------------------------------------------
 
 static inline float calc_fade(float t, float mul) {
@@ -239,6 +243,7 @@ void shadertastic_transition_video_render(void *data, gs_effect_t *effect) {
 }
 //----------------------------------------------------------------------------------------------------------------------
 
+#ifdef DEV_MODE
 void shadertastic_transition_filter_video_render(void *data, gs_effect_t *effect_unused) {
     UNUSED_PARAMETER(effect_unused);
     struct shadertastic_transition *s = static_cast<shadertastic_transition*>(data);
@@ -281,6 +286,7 @@ void shadertastic_transition_filter_video_render(void *data, gs_effect_t *effect
         }
     }
 }
+#endif
 //----------------------------------------------------------------------------------------------------------------------
 
 static bool shadertastic_transition_audio_render(void *data, uint64_t *ts_out, struct obs_source_audio_mix *audio, uint32_t mixers, size_t channels, size_t sample_rate) {

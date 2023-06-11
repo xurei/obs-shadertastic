@@ -217,10 +217,10 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
         if (obs_source_process_filter_begin_with_color_space(s->source, format, source_space, OBS_ALLOW_DIRECT_RENDERING)) {
             uint64_t frame_time = obs_get_video_frame_time();
             uint64_t frame_time2 = frame_time - s->start_time;
-            double filter_time = s->speed < 0.001 ? 0.0 : (double)(frame_time - s->start_time) / (1000000000.0) * s->speed;
+            float filter_time = (float)(s->speed < 0.001 ? 0.0 : (float)((frame_time - s->start_time) / (1000000000.0) * s->speed));
             //filter_time = filter_time - floor(filter_time);
             //debug("frame_time: %lu -> %lu -> %f", frame_time, frame_time2, filter_time);
-            filter_time = 0.3;
+            //filter_time = 0.3f;
 
             selected_effect->set_params(NULL, NULL, filter_time, cx, cy, s->rand_seed);
             selected_effect->set_step_params(selected_effect->nb_steps - 1, NULL);
