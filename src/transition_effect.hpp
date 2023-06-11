@@ -128,13 +128,13 @@ struct transition_effect_t {
     }
 
     void render_shader(uint32_t cx, uint32_t cy) {
-        const char *tech_name = "Effect";
+        const char *tech_name = "Draw";
         if (gs_get_color_space() == GS_CS_SRGB) {
             /* users want nonlinear fade */
         }
         else {
             /* nonlinear fade is too wrong, so use linear fade */
-            tech_name = "EffectLinear";
+            tech_name = "DrawLinear";
         }
 
         while (gs_effect_loop(main_shader.effect, tech_name)) {

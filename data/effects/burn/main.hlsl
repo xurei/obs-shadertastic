@@ -78,7 +78,7 @@ float4 PSEffectLinear(FragData f_in) : TARGET
     return rgba;
 }
 
-technique Effect
+technique Draw
 {
     pass
     {
@@ -87,7 +87,7 @@ technique Effect
     }
 }
 
-technique EffectLinear
+technique DrawLinear
 {
     pass
     {
