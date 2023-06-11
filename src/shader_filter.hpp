@@ -266,9 +266,7 @@ obs_properties_t *shadertastic_filter_properties(void *data) {
 
     // Filter settings
     obs_properties_add_float_slider(props, "speed", "Speed", 0.0, 300.0, 1.0);
-    #ifdef DEV_MODE
     obs_properties_add_button(props, "reload_btn", "Reload", shadertastic_filter_reload_button_click);
-    #endif
 
     // Shader mode
     p = obs_properties_add_list(props, "effect", "Effect", OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
