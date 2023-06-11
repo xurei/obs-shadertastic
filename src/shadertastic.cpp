@@ -1,6 +1,7 @@
 #define do_log(level, format, ...) \
     blog(level, "[shadertastic] " format, ##__VA_ARGS__)
 #define info(format, ...) do_log(LOG_INFO, format, ##__VA_ARGS__)
+#define warn(format, ...) do_log(LOG_WARNING, format, ##__VA_ARGS__)
 
 #ifdef DEV_MODE
     #define debug(format, ...) info(format, ##__VA_ARGS__)
@@ -42,108 +43,35 @@
 #include "shadertastic.hpp"
 //----------------------------------------------------------------------------------------------------------------------
 
-transition_effect_t load_effect(std::string effect_name, transition_effect_t *previous_loaded_effect) {
+void load_effect(transition_effect_t &effect, std::string effect_name) {
+    debug(">>>>>>>>>>>>>>> load_effect %s", effect_name.c_str());
     char *metadata_path = obs_module_file((std::string("effects/") + effect_name + "/meta.json").c_str());
     char *shader_path = obs_module_file((std::string("effects/") + effect_name + "/main.hlsl").c_str());
-    obs_data_t *effect_metadata = obs_data_create_from_json_file(metadata_path);
-    debug(">>>>>>>>>>>>>>> load_effect %s", effect_name.c_str());
 
-    if (effect_metadata != NULL) {
-        const char *effect_label = obs_data_get_string(effect_metadata, "label");
+    effect.name = effect_name;
 
-        obs_data_array_t *effect_parameters = obs_data_get_array(effect_metadata, "parameters");
-
-        transition_effect_t effect;
-        effect.name = effect_name;
-        effect.metadata = effect_metadata;
-        effect.parameters = effect_parameters;
-
-        obs_data_set_default_int(effect_metadata, "steps", 1);
-        effect.nb_steps = (int)obs_data_get_int(effect_metadata, "steps");
-
-        bool is_fallback = false;
-
+    if (shader_path != NULL) {
         effect.main_shader.load(shader_path);
+        bfree(shader_path);
         if (effect.main_shader.effect == NULL) {
             char *fallback_shader_path = obs_module_file("effects/fallback_effect.hlsl");
             debug("FALLBACK %s", fallback_shader_path);
             effect.main_shader.load(fallback_shader_path);
             bfree(fallback_shader_path);
-            is_fallback = true;
+            effect.is_fallback = true;
         }
 
-        {
-            obs_data_array_t *parameters = obs_data_get_array(effect_metadata, "parameters");
-            //debug(">>>>>>>>1");
-
-            if (parameters == NULL) {
-                info("No parameter specified for effect %s", effect_name.c_str());
-            }
-            else if (!is_fallback) {
-                //debug(">>>>>>>>2");
-                for (size_t i=0; i < obs_data_array_count(parameters); i++) {
-                    //debug(">>>>>>>>3");
-                    obs_data_t *param_metadata = obs_data_array_item(parameters, i);
-                    const char *param_name = obs_data_get_string(param_metadata, "name");
-                    const char *data_type = obs_data_get_string(param_metadata, "type");
-                    //debug(">>>>>>>>4 %s", param_name);
-                    gs_eparam_t *shader_param = gs_effect_get_param_by_name(effect.main_shader.effect, param_name);
-                    //debug(">>>>>>>>5");
-                    effect_parameter *effect_param = parameter_factory.create(effect_name, shader_param, param_metadata);
-                    //debug(">>>>>>>>6");
-
-                    if (effect_param != NULL) {
-                        std::string param_name_str = std::string(param_name);
-                        if (previous_loaded_effect != NULL &&
-                            previous_loaded_effect->effect_params.find(param_name_str) != previous_loaded_effect->effect_params.end() &&
-                            previous_loaded_effect->effect_params[param_name_str]->get_data_size() == effect_param->get_data_size()
-                           ) {
-                            debug("Recycling data for %s", param_name_str.c_str());
-                            effect_param->data = previous_loaded_effect->effect_params[param_name_str]->data;
-                        }
-                        else {
-                            effect_param->data = malloc(effect_param->get_data_size());
-                        }
-
-                        effect_param->set_defaults();
-                        effect.effect_params.insert(std::pair<std::string, effect_parameter *>(param_name_str, effect_param));
-                    }
-                }
-            }
-        }
-
-        info("Loaded effect %s from %s", effect_name.c_str(), metadata_path);
-        bfree(shader_path);
+        effect.load_metadata(metadata_path);
         bfree(metadata_path);
-
-        return effect;
     }
-
-    // Something went wrong -> return the empty transition, should not be added in the list
-    debug("Missing metadata in %s", effect_name.c_str());
-    bfree(shader_path);
-    bfree(metadata_path);
-    struct transition_effect_t effect;
-    effect.name = effect_name;
-    effect.metadata = NULL;
-    effect.parameters = NULL;
-    return effect;
 }
 //----------------------------------------------------------------------------------------------------------------------
 
 #ifdef DEV_MODE
-void reload_shader(shadertastic_transition *s) {
-    if (s->selected_effect != NULL) {
-        debug("DEV_RELOAD %p", s->selected_effect);
-        std::string effect_name = s->selected_effect->name;
-        debug("DEV_RELOAD2");
-        transition_effect_t effect = load_effect(effect_name, s->selected_effect);
-        debug("DEV_RELOAD3");
-        s->selected_effect->release();
-        debug("DEV_RELOAD4");
-        if (effect.metadata != NULL && effect.parameters != NULL && effect.main_shader.effect != NULL) {
-            (*s->effects)[effect.name] = effect;
-        }
+void reload_effect(transition_effect_t *selected_effect) {
+    if (selected_effect != NULL) {
+        std::string effect_name = selected_effect->name;
+        load_effect(*selected_effect, effect_name);
     }
 }
 #endif

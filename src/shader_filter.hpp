@@ -19,9 +19,9 @@ static void *shadertastic_filter_create(obs_data_t *settings, obs_source_t *sour
     s->filter_source_texrender = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
 
     for (const auto &dir : dirs) {
-        transition_effect_t effect = load_effect(dir, NULL);
-        if (effect.metadata != NULL && effect.parameters != NULL && effect.main_shader.effect != NULL) {
-            const char *effect_label = obs_data_get_string(effect.metadata, "label");
+        transition_effect_t effect;
+        load_effect(effect, dir);
+        if (effect.main_shader.effect != NULL) {
             s->effects->insert(transition_effects_map_t::value_type(dir, effect));
 
             // Defaults must be set here and not in the transition_defaults() function.
@@ -33,8 +33,6 @@ static void *shadertastic_filter_create(obs_data_t *settings, obs_source_t *sour
         }
         else {
             debug ("NOT LOADING %s", dir.c_str());
-            debug ("NOT LOADING meta %p", effect.metadata);
-            debug ("NOT LOADING params %p", effect.parameters);
             debug ("NOT LOADING main_shader %p", effect.main_shader.effect);
         }
     }
@@ -97,24 +95,6 @@ void shadertastic_filter_update(void *data, obs_data_t *settings) {
     s->speed = obs_data_get_double(settings, "speed");
     //debug("SELECTED SCENE: %s %p", obs_data_get_string(settings, "scene_b"), s->filter_scene_b);
 }
-//----------------------------------------------------------------------------------------------------------------------
-
-#ifdef DEV_MODE
-void reload_shader(shadertastic_filter *s) {
-    if (s->selected_effect != NULL) {
-        debug("DEV_RELOAD %p", s->selected_effect);
-        std::string effect_name = s->selected_effect->name;
-        debug("DEV_RELOAD2");
-        transition_effect_t effect = load_effect(effect_name, s->selected_effect);
-        debug("DEV_RELOAD3");
-        s->selected_effect->release();
-        debug("DEV_RELOAD4");
-        if (effect.metadata != NULL && effect.parameters != NULL && effect.main_shader.effect != NULL) {
-            (*s->effects)[effect.name] = effect;
-        }
-    }
-}
-#endif
 //----------------------------------------------------------------------------------------------------------------------
 
 static void shadertastic_filter_tick(void *data, float seconds) {
@@ -271,7 +251,7 @@ bool shadertastic_filter_reload_button_click(obs_properties_t *props, obs_proper
     struct shadertastic_filter *s = static_cast<shadertastic_filter*>(data);
 
     #ifdef DEV_MODE
-        reload_shader(s);
+        reload_effect(s->selected_effect);
     #endif
     return true;
 }
@@ -293,7 +273,7 @@ obs_properties_t *shadertastic_filter_properties(void *data) {
     // Shader mode
     p = obs_properties_add_list(props, "effect", "Effect", OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
     for (auto& [effect_name, effect] : *(s->effects)) {
-        const char *effect_label = obs_data_get_string(effect.metadata, "label");
+        const char *effect_label = effect.label.c_str();
         obs_property_list_add_string(p, effect_label, effect_name.c_str());
     }
     obs_property_set_modified_callback2(p, shadertastic_filter_properties_change_effect_callback, data);
@@ -301,7 +281,7 @@ obs_properties_t *shadertastic_filter_properties(void *data) {
     obs_property_t *bla = obs_properties_get(props, "effect");
 
     for (auto& [effect_name, effect] : *(s->effects)) {
-        const char *effect_label = obs_data_get_string(effect.metadata, "label");
+        const char *effect_label = effect.label.c_str();
         obs_properties_t *effect_group = obs_properties_create();
         //obs_properties_add_text(effect_group, "", effect_name, OBS_TEXT_INFO);
         for (auto &[_, param] : effect.effect_params) {

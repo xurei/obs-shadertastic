@@ -1,12 +1,10 @@
 class effect_parameter {
     public:
-        void *data;
-
         effect_parameter(size_t data_size, gs_eparam_t *shader_param, obs_data_t *metadata) {
             this->data_size = data_size;
             this->shader_param = shader_param;
             this->metadata = metadata;
-            this->data = NULL;
+            this->data = bmalloc(data_size);
         }
 
         virtual ~effect_parameter() {
@@ -14,6 +12,7 @@ class effect_parameter {
                 obs_data_release(metadata);
                 metadata = NULL;
             }
+            bfree(this->data);
             #ifndef DEV_MODE
                 // FIXME This seems to make the windows version crash. Needs to be inspected
                 //if (data != NULL) {
@@ -30,6 +29,8 @@ class effect_parameter {
         virtual void render_property_ui(const char *effect_name, obs_properties_t *props) = 0;
 
         virtual void set_data_from_settings(obs_data_t *settings, const char *full_param_name) = 0;
+
+        virtual void set_data_from_default(obs_data_t *metadata) = 0;
 
         std::string get_full_param_name(const char *effect_name) {
             std::string effect_name_str = std::string(effect_name);
@@ -49,8 +50,12 @@ class effect_parameter {
         size_t get_data_size() {
             return data_size;
         }
+        inline void * get_data() {
+            return data;
+        }
 
     protected:
+        void *data;
         gs_eparam_t *shader_param;
         obs_data_t *metadata;
         size_t data_size;

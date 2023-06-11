@@ -4,7 +4,7 @@ class effect_parameter_double : public effect_parameter {
     public:
         effect_parameter_double(gs_eparam_t *shader_param, obs_data_t *metadata)
         :effect_parameter(sizeof(float), shader_param, metadata) {
-
+            this->set_defaults();
         }
         virtual ~effect_parameter_double() {
 
@@ -15,6 +15,7 @@ class effect_parameter_double : public effect_parameter {
             obs_data_set_default_double(metadata, "min", 0.0);
             obs_data_set_default_double(metadata, "max", 100.0);
             obs_data_set_default_double(metadata, "step", 0.1);
+            obs_data_set_default_double(metadata, "default", 50.0);
         }
 
         virtual void set_default(obs_data_t *settings, const char *full_param_name) {
@@ -38,5 +39,9 @@ class effect_parameter_double : public effect_parameter {
         virtual void set_data_from_settings(obs_data_t *settings, const char *full_param_name) {
             *((float*)this->data) = (float)obs_data_get_double(settings, full_param_name);
             //debug("%s = %f", full_param_name, *((float*)this->data));
+        }
+
+        virtual void set_data_from_default(obs_data_t *metadata) {
+            *((float*)this->data) = (float)obs_data_get_double(metadata, "default");
         }
 };

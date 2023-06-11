@@ -17,9 +17,10 @@ static void *shadertastic_transition_create(obs_data_t *settings, obs_source_t *
     s->transition_texrender[1] = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
 
     for (const auto &dir : dirs) {
-        transition_effect_t effect = load_effect(dir, NULL);
-        if (effect.metadata != NULL && effect.parameters != NULL && effect.main_shader.effect != NULL) {
-            const char *effect_label = obs_data_get_string(effect.metadata, "label");
+        transition_effect_t effect;
+        load_effect(effect, dir);
+        if (effect.main_shader.effect != NULL) {
+            const char *effect_label = effect.label.c_str();
             s->effects->insert(transition_effects_map_t::value_type(dir, effect));
 
             // Defaults must be set here and not in the transition_defaults() function.
@@ -31,8 +32,6 @@ static void *shadertastic_transition_create(obs_data_t *settings, obs_source_t *
         }
         else {
             debug ("NOT LOADING %s", dir.c_str());
-            debug ("NOT LOADING meta %p", effect.metadata);
-            debug ("NOT LOADING params %p", effect.parameters);
             debug ("NOT LOADING main_shader %p", effect.main_shader.effect);
         }
     }
@@ -212,7 +211,7 @@ void shadertastic_transition_video_render(void *data, gs_effect_t *effect) {
         obs_source_t *scene_b = obs_transition_get_source(s->source, OBS_TRANSITION_SOURCE_B);
 
         #ifdef DEV_MODE
-            reload_shader(s);
+            reload_effect(s->selected_effect);
         #endif
 
         obs_transition_video_render(s->source, shadertastic_transition_render_init);
@@ -352,7 +351,7 @@ bool shadertastic_transition_reload_button_click(obs_properties_t *props, obs_pr
     struct shadertastic_transition *s = static_cast<shadertastic_transition*>(data);
 
     #ifdef DEV_MODE
-        reload_shader(s);
+        reload_effect(s->selected_effect);
     #endif
     return true;
 }
@@ -387,7 +386,7 @@ obs_properties_t *shadertastic_transition_properties(void *data) {
     // Shader mode
     p = obs_properties_add_list(props, "effect", "Effect", OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
     for (auto& [effect_name, effect] : *(s->effects)) {
-        const char *effect_label = obs_data_get_string(effect.metadata, "label");
+        const char *effect_label = effect.label.c_str();
         obs_property_list_add_string(p, effect_label, effect_name.c_str());
     }
     obs_property_set_modified_callback2(p, shadertastic_transition_properties_change_effect_callback, data);
@@ -395,7 +394,7 @@ obs_properties_t *shadertastic_transition_properties(void *data) {
     obs_property_t *bla = obs_properties_get(props, "effect");
 
     for (auto& [effect_name, effect] : *(s->effects)) {
-        const char *effect_label = obs_data_get_string(effect.metadata, "label");
+        const char *effect_label = effect.label.c_str();
         obs_properties_t *effect_group = obs_properties_create();
         //obs_properties_add_text(effect_group, "", effect_name, OBS_TEXT_INFO);
         for (auto &[_, param] : effect.effect_params) {

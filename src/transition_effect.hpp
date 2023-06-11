@@ -1,10 +1,90 @@
 struct transition_effect_t {
     std::string name;
-    obs_data_t *metadata;
+    std::string label;
     int nb_steps;
-    obs_data_array_t *parameters;
-    transition_shader main_shader;
+    bool is_fallback = false;
+
     std::map<std::string, effect_parameter *> effect_params;
+
+    transition_shader main_shader;
+
+    void load_metadata(const char *metadata_path) {
+        if (metadata_path == NULL) {
+            // Something went wrong -> set default configuration
+            warn("Missing metadata file for effect %s", name.c_str());
+            label = name;
+            nb_steps = 1;
+        }
+        else {
+            obs_data_t *metadata = obs_data_create_from_json_file(metadata_path);
+            if (metadata == NULL) {
+                // Something went wrong -> set default configuration
+                warn("Unable to open metadata file for effect %s. Check the JSON syntax", name.c_str());
+                label = name;
+                nb_steps = 1;
+            }
+            else {
+                const char *effect_label = obs_data_get_string(metadata, "label");
+                if (effect_label == NULL) {
+                    label = name;
+                }
+                else {
+                    label = std::string(effect_label);
+                }
+                obs_data_set_default_int(metadata, "steps", 1);
+                nb_steps = (int)obs_data_get_int(metadata, "steps");
+
+                obs_data_array_t *parameters = obs_data_get_array(metadata, "parameters");
+                if (parameters == NULL) {
+                    warn("No parameters specified for effect %s", name.c_str());
+                    parameters = obs_data_array_create();
+                }
+
+                // Copy the effect params map to allow recycling
+                std::map<std::string, effect_parameter *> previous_effect_params(effect_params);
+                effect_params.clear();
+
+                for (size_t i=0; i < obs_data_array_count(parameters); i++) {
+                    obs_data_t *param_metadata = obs_data_array_item(parameters, i);
+                    const char *param_name = obs_data_get_string(param_metadata, "name");
+                    const char *data_type = obs_data_get_string(param_metadata, "type");
+                    gs_eparam_t *shader_param = gs_effect_get_param_by_name(main_shader.effect, param_name);
+                    effect_parameter *effect_param = parameter_factory.create(name, shader_param, param_metadata);
+
+                    if (effect_param != NULL) {
+                        std::string param_name_str = std::string(param_name);
+                        auto previous_param = previous_effect_params.find(param_name_str);
+                        if (previous_param != previous_effect_params.end()) {
+                            if (previous_param->second->get_data_size() == effect_param->get_data_size()) {
+                                debug("Recycling data for %s (size: %i)", param_name_str.c_str(), (int)effect_param->get_data_size());
+                                memcpy(effect_param->get_data(), previous_param->second->get_data(), effect_param->get_data_size());
+                            }
+                            else {
+                                effect_param->set_data_from_default(param_metadata);
+                            }
+
+                            previous_effect_params.erase(previous_param);
+                        }
+                        else {
+                            effect_param->set_data_from_default(param_metadata);
+                        }
+
+                        effect_params[param_name_str] = effect_param;
+                    }
+                }
+
+                // Clear memory of removed params
+                for (auto &[param_name, param] : previous_effect_params) {
+                    debug ("Free removed param %s", param_name.c_str());
+                    delete param;
+                }
+
+                obs_data_array_release(parameters);
+                obs_data_release(metadata);
+                debug("Loaded effect %s from %s", name.c_str(), metadata_path);
+            }
+        }
+    }
 
     void set_params(gs_texture_t *a, gs_texture_t *b, float t, uint32_t cx, uint32_t cy, float rand_seed) {
         //debug("--------------------");
@@ -29,8 +109,8 @@ struct transition_effect_t {
         try_gs_effect_set_int(main_shader.param_nb_steps, nb_steps);
         //debug("common params set");
 
-        for (auto &[_, param] : effect_params) {
-            gs_effect_set_val(param->get_shader_param(), param->data, param->get_data_size());
+        for (auto &[param_name, param] : effect_params) {
+            gs_effect_set_val(param->get_shader_param(), param->get_data(), param->get_data_size());
         }
         //debug("all params set");
     }
@@ -69,14 +149,6 @@ struct transition_effect_t {
             gs_effect_destroy(main_shader.effect);
             obs_leave_graphics();
             main_shader.effect = NULL;
-        }
-        if (parameters != NULL) {
-            obs_data_array_release(parameters);
-            parameters = NULL;
-        }
-        if (metadata != NULL) {
-            obs_data_release(metadata);
-            metadata = NULL;
         }
         for (auto& [_, effect_param] : effect_params) {
             delete effect_param;
