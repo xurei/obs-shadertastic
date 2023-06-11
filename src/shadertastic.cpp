@@ -43,18 +43,17 @@
 #include "shadertastic.hpp"
 //----------------------------------------------------------------------------------------------------------------------
 
-void load_effect(shadertastic_effect_t &effect, std::string effect_name) {
+void load_effect(shadertastic_effect_t &effect, std::string parent_dir, std::string effect_name) {
     debug(">>>>>>>>>>>>>>> load_effect %s", effect_name.c_str());
-    char *metadata_path = obs_module_file((std::string("effects/") + effect_name + "/meta.json").c_str());
-    char *shader_path = obs_module_file((std::string("effects/") + effect_name + "/main.hlsl").c_str());
+    char *metadata_path = obs_module_file((std::string("effects/") + parent_dir + "/" + effect_name + "/meta.json").c_str());
+    char *shader_path = obs_module_file((std::string("effects/") + parent_dir + "/" +effect_name + "/main.hlsl").c_str());
 
     effect.name = effect_name;
 
     if (shader_path != NULL) {
         effect.main_shader.load(shader_path);
-        bfree(shader_path);
         if (effect.main_shader.effect == NULL) {
-            char *fallback_shader_path = obs_module_file("effects/fallback_effect.hlsl");
+            char *fallback_shader_path = obs_module_file((std::string("effects/") + parent_dir + "/fallback_effect.hlsl").c_str());
             debug("FALLBACK %s", fallback_shader_path);
             effect.main_shader.load(fallback_shader_path);
             bfree(fallback_shader_path);
@@ -62,15 +61,20 @@ void load_effect(shadertastic_effect_t &effect, std::string effect_name) {
         }
 
         effect.load_metadata(metadata_path);
+    }
+    if (shader_path != NULL) {
+        bfree(shader_path);
+    }
+    if (metadata_path != NULL) {
         bfree(metadata_path);
     }
 }
 //----------------------------------------------------------------------------------------------------------------------
 
-void reload_effect(shadertastic_effect_t *selected_effect) {
+void reload_effect(std::string parent_dir, shadertastic_effect_t *selected_effect) {
     if (selected_effect != NULL) {
         std::string effect_name = selected_effect->name;
-        load_effect(*selected_effect, effect_name);
+        load_effect(*selected_effect, parent_dir, effect_name);
     }
 }
 //----------------------------------------------------------------------------------------------------------------------

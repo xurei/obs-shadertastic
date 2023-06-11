@@ -10,7 +10,7 @@ static void *shadertastic_filter_create(obs_data_t *settings, obs_source_t *sour
 
     debug("%s", obs_data_get_json(settings));
 
-    std::vector<std::string> dirs = list_directories(obs_module_file("effects"));
+    std::vector<std::string> dirs = list_directories(obs_module_file("effects/filters"));
     uint8_t transparent_tex_data[2 * 2 * 4] = {0};
     const uint8_t *transparent_tex = transparent_tex_data;
     s->transparent_texture = gs_texture_create(2, 2, GS_RGBA, 1, &transparent_tex, 0);
@@ -20,7 +20,7 @@ static void *shadertastic_filter_create(obs_data_t *settings, obs_source_t *sour
 
     for (const auto &dir : dirs) {
         shadertastic_effect_t effect;
-        load_effect(effect, dir);
+        load_effect(effect, "filters", dir);
         if (effect.main_shader.effect != NULL) {
             s->effects->insert(shadertastic_effects_map_t::value_type(dir, effect));
 
@@ -250,9 +250,7 @@ bool shadertastic_filter_reload_button_click(obs_properties_t *props, obs_proper
     UNUSED_PARAMETER(property);
     struct shadertastic_filter *s = static_cast<shadertastic_filter*>(data);
 
-    #ifdef DEV_MODE
-        reload_effect(s->selected_effect);
-    #endif
+    reload_effect("filters", s->selected_effect);
     return true;
 }
 

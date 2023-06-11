@@ -9,7 +9,7 @@ static void *shadertastic_transition_create(obs_data_t *settings, obs_source_t *
 
     debug("%s", obs_data_get_json(settings));
 
-    std::vector<std::string> dirs = list_directories(obs_module_file("effects"));
+    std::vector<std::string> dirs = list_directories(obs_module_file("effects/transitions"));
     uint8_t transparent_tex_data[2 * 2 * 4] = {0};
     const uint8_t *transparent_tex = transparent_tex_data;
     s->transparent_texture = gs_texture_create(2, 2, GS_RGBA, 1, &transparent_tex, 0);
@@ -18,7 +18,7 @@ static void *shadertastic_transition_create(obs_data_t *settings, obs_source_t *
 
     for (const auto &dir : dirs) {
         shadertastic_effect_t effect;
-        load_effect(effect, dir);
+        load_effect(effect, "transitions", dir);
         if (effect.main_shader.effect != NULL) {
             const char *effect_label = effect.label.c_str();
             s->effects->insert(shadertastic_effects_map_t::value_type(dir, effect));
@@ -213,7 +213,7 @@ void shadertastic_transition_video_render(void *data, gs_effect_t *effect) {
         obs_source_t *scene_b = obs_transition_get_source(s->source, OBS_TRANSITION_SOURCE_B);
 
         if (s->auto_reload) {
-            reload_effect(s->selected_effect);
+            reload_effect("transitions", s->selected_effect);
         }
 
         obs_transition_video_render(s->source, shadertastic_transition_render_init);
@@ -353,7 +353,7 @@ bool shadertastic_transition_reload_button_click(obs_properties_t *props, obs_pr
     struct shadertastic_transition *s = static_cast<shadertastic_transition*>(data);
 
     if (s->auto_reload) {
-        reload_effect(s->selected_effect);
+        reload_effect("transitions", s->selected_effect);
     }
     return true;
 }
