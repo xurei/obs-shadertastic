@@ -11,6 +11,8 @@ struct shadertastic_transition {
     gs_texture_t *transparent_texture;
     float rand_seed;
 
+    bool auto_reload = false;
+
     bool is_filter = false;
     gs_texrender_t *filter_source_a_texrender;
     gs_texrender_t *filter_source_b_texrender;

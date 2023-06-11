@@ -111,6 +111,8 @@ void shadertastic_transition_update(void *data, obs_data_t *settings) {
     struct shadertastic_transition *s = static_cast<shadertastic_transition*>(data);
     //debug("Update : %s", obs_data_get_json(settings));
 
+    s->auto_reload = obs_data_get_bool(settings, "auto_reload");
+
     s->transition_point = (float)obs_data_get_double(settings, "transition_point") / 100.0f;
     s->transition_a_mul = (1.0f / s->transition_point);
     s->transition_b_mul = (1.0f / (1.0f - s->transition_point));
@@ -210,9 +212,9 @@ void shadertastic_transition_video_render(void *data, gs_effect_t *effect) {
         obs_source_t *scene_a = obs_transition_get_source(s->source, OBS_TRANSITION_SOURCE_A);
         obs_source_t *scene_b = obs_transition_get_source(s->source, OBS_TRANSITION_SOURCE_B);
 
-        #ifdef DEV_MODE
+        if (s->auto_reload) {
             reload_effect(s->selected_effect);
-        #endif
+        }
 
         obs_transition_video_render(s->source, shadertastic_transition_render_init);
 
@@ -350,9 +352,9 @@ bool shadertastic_transition_reload_button_click(obs_properties_t *props, obs_pr
     UNUSED_PARAMETER(property);
     struct shadertastic_transition *s = static_cast<shadertastic_transition*>(data);
 
-    #ifdef DEV_MODE
+    if (s->auto_reload) {
         reload_effect(s->selected_effect);
-    #endif
+    }
     return true;
 }
 
@@ -363,6 +365,9 @@ obs_properties_t *shadertastic_transition_properties(void *data) {
     //obs_properties_set_flags(props, OBS_PROPERTIES_DEFER_UPDATE);
 
     obs_property_t *p;
+
+    // auto reload settings (for development)
+    obs_property_t *auto_reload = obs_properties_add_bool(props, "auto_reload", obs_module_text("AutoReload"));
 
     // audio fade settings
     if (!s->is_filter) {
@@ -416,6 +421,7 @@ obs_properties_t *shadertastic_transition_properties(void *data) {
 void shadertastic_transition_defaults(void *data, obs_data_t *settings) {
     struct shadertastic_transition *s = static_cast<shadertastic_transition*>(data);
     obs_data_set_default_double(settings, "transition_point", 50.0);
+    obs_data_set_default_bool(settings, "auto_reload", false);
 }
 //----------------------------------------------------------------------------------------------------------------------
 

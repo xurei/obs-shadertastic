@@ -67,14 +67,12 @@ void load_effect(transition_effect_t &effect, std::string effect_name) {
 }
 //----------------------------------------------------------------------------------------------------------------------
 
-#ifdef DEV_MODE
 void reload_effect(transition_effect_t *selected_effect) {
     if (selected_effect != NULL) {
         std::string effect_name = selected_effect->name;
         load_effect(*selected_effect, effect_name);
     }
 }
-#endif
 //----------------------------------------------------------------------------------------------------------------------
 
 #include "shader_filter.hpp"
