@@ -1,22 +1,22 @@
-// Common configuration for all shaders. You can remove this comment safely
+// Common parameters for all shaders, as reference. Do not uncomment this (but you can remove it safely).
 /*
-uniform float4x4 ViewProj;
-uniform texture2d image;
-uniform texture2d tex_a;
-uniform texture2d tex_b;
-uniform texture2d tex_interm;
-uniform float transition_time;
-uniform float upixel;
-uniform float vpixel;
-uniform float rand_seed;
-uniform int current_step;
+uniform float time;            // Time since the shader is running. Goes from 0 to 1 for transition effects; goes from 0 to infinity for filter effects
+uniform texture2d image;       // Texture of the source (filters only)
+uniform texture2d tex_a;       // Texture of the previous frame (transitions only)
+uniform texture2d tex_b;       // Texture of the next frame (transitions only)
+uniform texture2d tex_interm;  // Intermediate texture where the previous step will be rendered (for multistep effects)
+uniform float upixel;          // Width of a pixel in the UV space
+uniform float vpixel;          // Height of a pixel in the UV space
+uniform float rand_seed;       // Seed for random functions
+uniform int current_step;      // index of current step (for multistep effects)
 */
 
-// Custom arguments, referenced in the meta.json file of the effect
+// Specific parameters of the shader. They must be defined in the meta.json file next to this one.
 uniform float random_amount;
+//----------------------------------------------------------------------------------------------------------------------
 
-#define sampleTex(is_a, uv) ((is_a) ? tex_a.Sample(textureSampler, uv) : tex_b.Sample(textureSampler, uv))
-
+// These are required objects for the shader to work.
+// You don't need to change anything here, unless you know what you are doing
 sampler_state textureSampler {
 	Filter    = Linear;
 	AddressU  = Clamp;
@@ -39,46 +39,36 @@ VertData VSDefault(VertData v_in)
 	vert_out.pos = mul(float4(v_in.pos.xyz, 1.0), ViewProj);
 	return vert_out;
 }
+//----------------------------------------------------------------------------------------------------------------------
 
-float fract(float v) {
-	return v - floor(v);
-}
+//Here goes your implementation !
 
-float rand2(float2 co){
-	float v = sin(dot(co, float2(12.9898, 78.233))) * 43758.5453;
-	return fract(v);
-}
-float rand(float a, float b) {
-	return rand2(float2(a, b));
-}
-
-float srgb_nonlinear_to_linear_channel(float u)
-{
-	return (u <= 0.04045) ? (u / 12.92) : pow((u + 0.055) / 1.055, 2.4);
-}
-
-float3 srgb_nonlinear_to_linear(float3 v)
-{
-	return float3(srgb_nonlinear_to_linear_channel(v.r), srgb_nonlinear_to_linear_channel(v.g), srgb_nonlinear_to_linear_channel(v.b));
-}
-
-float4 EffectLinear(FragData f_in)
+float4 EffectLinear(float2 uv)
 {
 	// -----> YOUR CODE GOES HERE <-----
 
-	return tex_b.Sample(textureSampler, f_in.uv);
+    // Here is an basic example that will progressively show the next scene from right to left :
+    if (uv[0] < 1-time) {
+	    return tex_a.Sample(textureSampler, uv);
+    }
+    else {
+        return tex_b.Sample(textureSampler, uv);
+    }
 }
+//----------------------------------------------------------------------------------------------------------------------
+
+// You probably don't want to change anything from this point.
 
 float4 PSEffect(FragData f_in) : TARGET
 {
-    float4 rgba = EffectLinear(f_in);
+    float4 rgba = EffectLinear(f_in.uv);
 	rgba.rgb = srgb_nonlinear_to_linear(rgba.rgb);
 	return rgba;
 }
 
 float4 PSEffectLinear(FragData f_in) : TARGET
 {
-	float4 rgba = EffectLinear(f_in);
+	float4 rgba = EffectLinear(f_in.uv);
 	return rgba;
 }
 
