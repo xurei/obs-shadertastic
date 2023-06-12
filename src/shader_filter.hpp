@@ -16,7 +16,6 @@ static void *shadertastic_filter_create(obs_data_t *settings, obs_source_t *sour
     s->transparent_texture = gs_texture_create(2, 2, GS_RGBA, 1, &transparent_tex, 0);
     s->interm_texrender[0] = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
     s->interm_texrender[1] = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
-    s->filter_source_texrender = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
 
     for (const auto &dir : dirs) {
         shadertastic_effect_t effect;
@@ -49,7 +48,6 @@ void shadertastic_filter_destroy(void *data) {
     obs_enter_graphics();
     gs_texrender_destroy(s->interm_texrender[0]);
     gs_texrender_destroy(s->interm_texrender[1]);
-    gs_texrender_destroy(s->filter_source_texrender);
     obs_leave_graphics();
     debug("Destroy2");
 
@@ -104,42 +102,6 @@ static void shadertastic_filter_tick(void *data, float seconds) {
 
     s->width = obs_source_get_base_width(target);
     s->height = obs_source_get_base_height(target);
-
-    //debug("tick %f %dx%d", seconds, s->width, s->height);
-
-//	obs_source_t *target = obs_filter_get_target(s->source);
-//
-//	// Determine offsets from expansion values.
-//	int base_width = obs_source_get_base_width(target);
-//	int base_height = obs_source_get_base_height(target);
-//
-//	s->uv_size.x = (float)base_width;
-//	s->uv_size.y = (float)base_height;
-//
-//	s->uv_scale.x = (float)s->total_width / base_width;
-//	s->uv_scale.y = (float)s->total_height / base_height;
-//
-//	s->uv_offset.x = (float)(-s->expand_left) / base_width;
-//	s->uv_offset.y = (float)(-s->expand_top) / base_height;
-//
-//	if (s->shader_start_time == 0) {
-//		s->shader_start_time = s->elapsed_time + seconds;
-//	}
-//	s->elapsed_time += seconds;
-//	s->elapsed_time_loop += seconds;
-//	if (s->elapsed_time_loop > 1.) {
-//		s->elapsed_time_loop -= 1.;
-//
-//		// Loops
-//		s->loops += 1;
-//		if (s->loops >= 4194304)
-//			s->loops = -s->loops;
-//	}
-//	s->local_time = (float)(os_gettime_ns() / 1000000000.0);
-//
-//
-//	// undecided between this and "rand_float(1);"
-//	s->rand_f = (float)((double)rand_interval(0, 10000) / (double)10000);
 }
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -186,32 +148,45 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
     };
     obs_source_t *target_source = obs_filter_get_target(s->source);
 
-    uint32_t cx = obs_source_get_base_width(s->source);
-    uint32_t cy = obs_source_get_base_height(s->source);
+    uint32_t cx = obs_source_get_base_width(target_source);
+    uint32_t cy = obs_source_get_base_height(target_source);
 
     const enum gs_color_space source_space = obs_source_get_color_space(target_source, OBS_COUNTOF(preferred_spaces), preferred_spaces);
     const enum gs_color_format format = gs_get_format_from_space(source_space);
 
     shadertastic_effect_t *selected_effect = s->selected_effect;
     if (selected_effect != NULL) {
-        if (obs_source_process_filter_begin_with_color_space(s->source, format, source_space, OBS_ALLOW_DIRECT_RENDERING)) {
-            uint64_t frame_time = obs_get_video_frame_time();
-            uint64_t frame_time2 = frame_time - s->start_time;
-            float filter_time = (float)(s->speed < 0.001 ? 0.0 : (float)((frame_time - s->start_time) / (1000000000.0) * s->speed));
-            //filter_time = filter_time - floor(filter_time);
-            //debug("frame_time: %lu -> %lu -> %f", frame_time, frame_time2, filter_time);
-            //filter_time = 0.3f;
+        gs_texture_t *interm_texture = s->transparent_texture;
+        for (int current_step=0; current_step < selected_effect->nb_steps; ++current_step) {
+            if (obs_source_process_filter_begin_with_color_space(s->source, format, source_space, OBS_NO_DIRECT_RENDERING)) {
+                uint64_t frame_time = obs_get_video_frame_time();
+                uint64_t frame_time2 = frame_time - s->start_time;
+                float filter_time = (float)(s->speed < 0.001 ? 0.0 : (float)((frame_time - s->start_time) / (1000000000.0) * s->speed));
+                //filter_time = filter_time - floor(filter_time);
+                //debug("frame_time: %lu -> %lu -> %f", frame_time, frame_time2, filter_time);
+                //filter_time = 0.3f;
 
-            selected_effect->set_params(NULL, NULL, filter_time, cx, cy, s->rand_seed);
-            selected_effect->set_step_params(selected_effect->nb_steps - 1, NULL);
-            //selected_effect->render_shader(cx, cy);
+                selected_effect->set_params(NULL, NULL, filter_time, cx, cy, s->rand_seed);
+                selected_effect->set_step_params(current_step, interm_texture);
+                //selected_effect->render_shader(cx, cy);
 
-            //shadertastic_filter_shader_render(s, source_tex, s->transparent_texture, filter_time, cx, cy);
+                //shadertastic_filter_shader_render(s, source_tex, s->transparent_texture, filter_time, cx, cy);
 
-			gs_blend_state_push();
-			gs_blend_function(GS_BLEND_ONE, GS_BLEND_INVSRCALPHA);
-            obs_source_process_filter_end(s->source, selected_effect->main_shader.effect, 0, 0);
-			gs_blend_state_pop();
+                if (current_step < selected_effect->nb_steps - 1) {
+                    s->interm_texrender_buffer = (s->interm_texrender_buffer+1) & 1;
+                    gs_texrender_reset(s->interm_texrender[s->interm_texrender_buffer]);
+                    gs_texrender_begin_with_color_space(s->interm_texrender[s->interm_texrender_buffer], cx*3, cy*3, source_space);
+                }
+                gs_blend_state_push();
+                gs_blend_function(GS_BLEND_ONE, GS_BLEND_INVSRCALPHA);
+                obs_source_process_filter_end(s->source, selected_effect->main_shader.effect, 0, 0);
+                if (current_step < selected_effect->nb_steps - 1) {
+                    gs_texrender_end(s->interm_texrender[s->interm_texrender_buffer]);
+                    s->interm_texture = gs_texrender_get_texture(s->interm_texrender[s->interm_texrender_buffer]);
+                    interm_texture = s->interm_texture;
+                }
+                gs_blend_state_pop();
+            }
         }
     }
     else {

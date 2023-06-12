@@ -185,13 +185,14 @@ void shadertastic_transition_shader_render(void *data, gs_texture_t *a, gs_textu
             //debug("%d", current_step);
             s->transition_texrender_buffer = (s->transition_texrender_buffer+1) & 1;
             gs_texrender_reset(s->transition_texrender[s->transition_texrender_buffer]);
-            gs_texrender_begin(s->transition_texrender[s->transition_texrender_buffer], cx*3, cy*3);
-            effect->set_params(a, b, t, cx, cy, s->rand_seed);
-            effect->set_step_params(current_step, interm_texture);
-            effect->render_shader(cx, cy);
-            gs_texrender_end(s->transition_texrender[s->transition_texrender_buffer]);
-            s->transition_texture = gs_texrender_get_texture(s->transition_texrender[s->transition_texrender_buffer]);
-            interm_texture = s->transition_texture;
+            if (gs_texrender_begin(s->transition_texrender[s->transition_texrender_buffer], cx*3, cy*3)) {
+                effect->set_params(a, b, t, cx, cy, s->rand_seed);
+                effect->set_step_params(current_step, interm_texture);
+                effect->render_shader(cx, cy);
+                gs_texrender_end(s->transition_texrender[s->transition_texrender_buffer]);
+                s->transition_texture = gs_texrender_get_texture(s->transition_texrender[s->transition_texrender_buffer]);
+                interm_texture = s->transition_texture;
+            }
         }
         effect->set_params(a, b, t, cx, cy, s->rand_seed);
         effect->set_step_params(effect->nb_steps - 1, interm_texture);

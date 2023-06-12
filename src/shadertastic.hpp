@@ -46,7 +46,6 @@ struct shadertastic_filter {
 
     int width, height;
 
-    gs_texrender_t *filter_source_texrender;
     double speed = 1.0;
     uint64_t start_time = 0;
 
