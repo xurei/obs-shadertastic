@@ -64,7 +64,6 @@ struct shadertastic_effect_t {
                 for (size_t i=0; i < obs_data_array_count(parameters); i++) {
                     obs_data_t *param_metadata = obs_data_array_item(parameters, i);
                     const char *param_name = obs_data_get_string(param_metadata, "name");
-                    const char *data_type = obs_data_get_string(param_metadata, "type");
                     gs_eparam_t *shader_param = gs_effect_get_param_by_name(main_shader.effect, param_name);
                     effect_parameter *effect_param = parameter_factory.create(name, shader_param, param_metadata);
 
@@ -127,7 +126,7 @@ struct shadertastic_effect_t {
         //debug("common params set");
 
         for (auto &[param_name, param] : effect_params) {
-            gs_effect_set_val(param->get_shader_param(), param->get_data(), param->get_data_size());
+            try_gs_effect_set_val(param->get_shader_param(), param->get_data(), param->get_data_size());
         }
         //debug("all params set");
     }

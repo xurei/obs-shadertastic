@@ -47,7 +47,9 @@ struct shadertastic_transition {
         for (auto& [key, effect] : *this->effects) {
             effect.release();
         }
-        delete this->effects;
+        if (this->effects != NULL) {
+            delete this->effects;
+        }
     }
 };
 //----------------------------------------------------------------------------------------------------------------------

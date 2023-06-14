@@ -31,7 +31,9 @@ class transition_shader {
     void load(const char *shader_path) {
         debug("SHADER PATH: %s", shader_path);
         char *error_string = NULL;
-        std::string shader_source = std::string(os_quick_read_utf8_file(shader_path));
+        char *shader_source_ = os_quick_read_utf8_file(shader_path);
+        std::string shader_source = std::string(shader_source_);
+        bfree(shader_source_);
 
         // Global common arguments, must be in all the effects for this plugin
         shader_source = (std::string("") +

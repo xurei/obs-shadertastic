@@ -46,6 +46,7 @@
 #define LOG_OFFSET_DB 6.0f
 #define LOG_RANGE_DB 96.0f
 
+#define try_gs_effect_set_val(param, data, data_size) if (param) { gs_effect_set_val(param, data, data_size); }
 #define try_gs_effect_set_texture(param, val) if (param) { gs_effect_set_texture(param, val); }
 #define try_gs_effect_set_texture_srgb(param, val) if (param) { gs_effect_set_texture_srgb(param, val); }
 

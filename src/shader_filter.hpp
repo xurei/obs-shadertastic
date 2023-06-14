@@ -22,12 +22,14 @@ static void *shadertastic_filter_create(obs_data_t *settings, obs_source_t *sour
     s->rand_seed = (float)rand() / RAND_MAX;
     s->start_time = obs_get_video_frame_time();
 
-    debug("MODULE PATH : %s", obs_module_file(""));
     debug("Settings : %s", obs_data_get_json(settings));
 
     debug("%s", obs_data_get_json(settings));
 
-    std::vector<std::string> dirs = list_directories(obs_module_file("effects/filters"));
+    char *filters_dir = obs_module_file("effects/filters");
+    std::vector<std::string> dirs = list_directories(filters_dir);
+    bfree(filters_dir);
+
     uint8_t transparent_tex_data[2 * 2 * 4] = {0};
     const uint8_t *transparent_tex = transparent_tex_data;
     s->transparent_texture = gs_texture_create(2, 2, GS_RGBA, 1, &transparent_tex, 0);

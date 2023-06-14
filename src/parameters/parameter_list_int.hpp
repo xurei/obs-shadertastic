@@ -24,13 +24,18 @@ class effect_parameter_list_int : public effect_parameter {
     private:
         int default_value;
         std::vector<effect_parameter_list_int_value> values;
+        obs_data_array *default_array;
 
     public:
         effect_parameter_list_int(gs_eparam_t *shader_param) : effect_parameter(sizeof(int), shader_param) {
         }
+        virtual ~effect_parameter_list_int() {
+            obs_data_array_release(default_array);
+        }
 
         virtual void set_defaults(obs_data_t *metadata) {
-            obs_data_set_default_array(metadata, "values", obs_data_array_create());
+            default_array = obs_data_array_create();
+            obs_data_set_default_array(metadata, "values", default_array);
             obs_data_set_default_array(metadata, "default", 0);
 
             default_value = (int)obs_data_get_int(metadata, "default");
