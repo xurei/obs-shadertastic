@@ -7,8 +7,6 @@ static void *shadertastic_transition_create(obs_data_t *settings, obs_source_t *
     debug("MODULE PATH : %s", obs_module_file(""));
     debug("Settings : %s", obs_data_get_json(settings));
 
-    debug("%s", obs_data_get_json(settings));
-
     std::vector<std::string> dirs = list_directories(obs_module_file("effects/transitions"));
     uint8_t transparent_tex_data[2 * 2 * 4] = {0};
     const uint8_t *transparent_tex = transparent_tex_data;

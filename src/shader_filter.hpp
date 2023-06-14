@@ -83,7 +83,6 @@ void shadertastic_filter_update(void *data, obs_data_t *settings) {
         //debug("Selected Effect: %s", selected_effect_name);
         for (auto &[_, param] : s->selected_effect->effect_params) {
             std::string full_param_name = param->get_full_param_name(selected_effect_name);
-
             param->set_data_from_settings(settings, full_param_name.c_str());
             //info("Assigned value:  %s %lu", full_param_name, param.data_size);
         }
@@ -116,8 +115,8 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
     };
     obs_source_t *target_source = obs_filter_get_target(s->source);
 
-    uint32_t cx = obs_source_get_base_width(target_source);
-    uint32_t cy = obs_source_get_base_height(target_source);
+    uint32_t cx = s->width;
+    uint32_t cy = s->height;
 
     const enum gs_color_space source_space = obs_source_get_color_space(target_source, OBS_COUNTOF(preferred_spaces), preferred_spaces);
     const enum gs_color_format format = gs_get_format_from_space(source_space);
@@ -125,36 +124,44 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
     shadertastic_effect_t *selected_effect = s->selected_effect;
     if (selected_effect != NULL) {
         gs_texture_t *interm_texture = s->transparent_texture;
+        gs_blend_state_push();
+        gs_blend_function(GS_BLEND_ONE, GS_BLEND_INVSRCALPHA);
         for (int current_step=0; current_step < selected_effect->nb_steps; ++current_step) {
-            if (obs_source_process_filter_begin_with_color_space(s->source, format, source_space, OBS_NO_DIRECT_RENDERING)) {
-                uint64_t frame_time = obs_get_video_frame_time();
-                uint64_t frame_time2 = frame_time - s->start_time;
-                float filter_time = (float)(s->speed < 0.001 ? 0.0 : (float)((frame_time - s->start_time) / (1000000000.0) * s->speed));
-                //filter_time = filter_time - floor(filter_time);
-                //debug("frame_time: %lu -> %lu -> %f", frame_time, frame_time2, filter_time);
-                //filter_time = 0.3f;
+            bool texrender_ok = true;
 
-                selected_effect->set_params(NULL, NULL, filter_time, cx, cy, s->rand_seed);
-                selected_effect->set_step_params(current_step, interm_texture);
-                //selected_effect->render_shader(cx, cy);
+            if (current_step < selected_effect->nb_steps - 1) {
+                s->interm_texrender_buffer = (s->interm_texrender_buffer+1) & 1;
+                gs_texrender_reset(s->interm_texrender[s->interm_texrender_buffer]);
+                texrender_ok = gs_texrender_begin(s->interm_texrender[s->interm_texrender_buffer], cx*3, cy*3);
+            }
 
-                //shadertastic_filter_shader_render(s, source_tex, s->transparent_texture, filter_time, cx, cy);
+            if (texrender_ok) {
+                if (obs_source_process_filter_begin_with_color_space(s->source, format, source_space, OBS_NO_DIRECT_RENDERING)) {
+                    uint64_t frame_time = obs_get_video_frame_time();
+                    uint64_t frame_time2 = frame_time - s->start_time;
+                    float filter_time = (float)(s->speed < 0.001 ? 0.0 : (float)((frame_time - s->start_time) / (1000000000.0) * s->speed));
+                    //filter_time = filter_time - floor(filter_time);
+                    //debug("frame_time: %lu -> %lu -> %f", frame_time, frame_time2, filter_time);
+                    //filter_time = 0.3f;
 
-                if (current_step < selected_effect->nb_steps - 1) {
-                    s->interm_texrender_buffer = (s->interm_texrender_buffer+1) & 1;
-                    gs_texrender_reset(s->interm_texrender[s->interm_texrender_buffer]);
-                    gs_texrender_begin_with_color_space(s->interm_texrender[s->interm_texrender_buffer], cx*3, cy*3, source_space);
+                    selected_effect->set_params(NULL, NULL, filter_time, cx, cy, s->rand_seed);
+                    selected_effect->set_step_params(current_step, interm_texture);
+                    //selected_effect->render_shader(cx, cy);
+
+                    //shadertastic_filter_shader_render(s, source_tex, s->transparent_texture, filter_time, cx, cy);
+
+                    obs_source_process_filter_end(s->source, selected_effect->main_shader.effect, 0, 0);
+                    if (current_step < selected_effect->nb_steps - 1) {
+                        gs_texrender_end(s->interm_texrender[s->interm_texrender_buffer]);
+                        interm_texture = gs_texrender_get_texture(s->interm_texrender[s->interm_texrender_buffer]);
+                    }
                 }
-                gs_blend_state_push();
-                gs_blend_function(GS_BLEND_ONE, GS_BLEND_INVSRCALPHA);
-                obs_source_process_filter_end(s->source, selected_effect->main_shader.effect, 0, 0);
-                if (current_step < selected_effect->nb_steps - 1) {
-                    gs_texrender_end(s->interm_texrender[s->interm_texrender_buffer]);
-                    interm_texture = gs_texrender_get_texture(s->interm_texrender[s->interm_texrender_buffer]);
-                }
-                gs_blend_state_pop();
+            }
+            else {
+                break;
             }
         }
+        gs_blend_state_pop();
     }
     else {
         info("No effect selected");

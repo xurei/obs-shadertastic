@@ -140,7 +140,7 @@ bool obs_module_load(void) {
     struct obs_source_info shadertastic_filter_info = {};
     shadertastic_filter_info.id = "shadertastic_filter";
     shadertastic_filter_info.type = OBS_SOURCE_TYPE_FILTER;
-    shadertastic_filter_info.output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_SRGB;
+    shadertastic_filter_info.output_flags = OBS_SOURCE_VIDEO;
     shadertastic_filter_info.get_name = shadertastic_filter_get_name;
     shadertastic_filter_info.create = shadertastic_filter_create;
     shadertastic_filter_info.destroy = shadertastic_filter_destroy;
