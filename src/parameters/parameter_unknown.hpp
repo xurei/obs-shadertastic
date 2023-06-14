@@ -1,14 +1,13 @@
 class effect_parameter_unknown : public effect_parameter {
     public:
-        effect_parameter_unknown(gs_eparam_t *shader_param, obs_data_t *metadata)
-        :effect_parameter(sizeof(int), shader_param, metadata) {
-            this->set_defaults();
+        effect_parameter_unknown(gs_eparam_t *shader_param) : effect_parameter(sizeof(int), shader_param) {
         }
         virtual ~effect_parameter_unknown() {
 
         }
 
-        virtual void set_defaults() {
+        virtual void set_defaults(obs_data_t *metadata) {
+            UNUSED_PARAMETER(metadata);
         }
 
         virtual void set_default(obs_data_t *settings, const char *full_param_name) {
@@ -28,8 +27,7 @@ class effect_parameter_unknown : public effect_parameter {
             *((int*)this->data) = 0;
         }
 
-        virtual void set_data_from_default(obs_data_t *metadata) {
-            UNUSED_PARAMETER(metadata);
+        virtual void set_data_from_default() {
             *((int*)this->data) = 0;
         }
 };

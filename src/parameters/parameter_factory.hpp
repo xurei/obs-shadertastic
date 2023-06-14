@@ -20,21 +20,28 @@ class effect_parameter_factory {
             }
             else {
                 effect_param_datatype datatype = effect_parse_datatype(data_type);
+                effect_parameter *out;
                 switch(datatype) {
                     case PARAM_DATATYPE_INT: {
-                        return new effect_parameter_int(shader_param, param_metadata);
+                        out = new effect_parameter_int(shader_param);
+                        break;
                     }
                     case PARAM_DATATYPE_DOUBLE: {
-                        return new effect_parameter_double(shader_param, param_metadata);
+                        out = new effect_parameter_double(shader_param);
+                        break;
                     }
                     case PARAM_DATATYPE_LIST_INT: {
-                        return new effect_parameter_list_int(shader_param, param_metadata);
+                        out = new effect_parameter_list_int(shader_param);
+                        break;
                     }
-                    case PARAM_DATATYPE_UNKNOWN: {
-                        return new effect_parameter_unknown(shader_param, param_metadata);
+                    case PARAM_DATATYPE_UNKNOWN: default: {
+                        out = new effect_parameter_unknown(shader_param);
+                        break;
                     }
                 }
-                return new effect_parameter_unknown(shader_param, param_metadata);
+                out->load_common_fields(param_metadata);
+                out->set_defaults(param_metadata);
+                return out;
             }
         }
 

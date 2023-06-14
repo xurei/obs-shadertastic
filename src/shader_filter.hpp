@@ -46,6 +46,7 @@ void shadertastic_filter_destroy(void *data) {
     struct shadertastic_filter *s = static_cast<shadertastic_filter*>(data);
 
     obs_enter_graphics();
+    gs_texture_destroy(s->transparent_texture);
     gs_texrender_destroy(s->interm_texrender[0]);
     gs_texrender_destroy(s->interm_texrender[1]);
     obs_leave_graphics();
@@ -81,11 +82,9 @@ void shadertastic_filter_update(void *data, obs_data_t *settings) {
     if (s->selected_effect != NULL) {
         //debug("Selected Effect: %s", selected_effect_name);
         for (auto &[_, param] : s->selected_effect->effect_params) {
-            const char *param_name = obs_data_get_string(param->get_metadata(), "name");
-            char full_param_name[512];
-            sprintf(full_param_name, "%s.%s", selected_effect_name, param_name);
+            std::string full_param_name = param->get_full_param_name(selected_effect_name);
 
-            param->set_data_from_settings(settings, full_param_name);
+            param->set_data_from_settings(settings, full_param_name.c_str());
             //info("Assigned value:  %s %lu", full_param_name, param.data_size);
         }
     }
@@ -102,37 +101,6 @@ static void shadertastic_filter_tick(void *data, float seconds) {
 
     s->width = obs_source_get_base_width(target);
     s->height = obs_source_get_base_height(target);
-}
-//----------------------------------------------------------------------------------------------------------------------
-
-void shadertastic_filter_shader_render(void *data, gs_texture_t *a, gs_texture_t *b, float t, uint32_t cx, uint32_t cy) {
-    struct shadertastic_filter *s = static_cast<shadertastic_filter*>(data);
-
-    const bool previous = gs_framebuffer_srgb_enabled();
-    gs_enable_framebuffer_srgb(true);
-
-    shadertastic_effect_t *effect = s->selected_effect;
-
-    if (effect != NULL) {
-        gs_texture_t *interm_texture = s->transparent_texture;
-        for (int current_step=0; current_step < effect->nb_steps - 1; ++current_step) {
-            //debug("%d", current_step);
-            s->interm_texrender_buffer = (s->interm_texrender_buffer+1) & 1;
-            gs_texrender_reset(s->interm_texrender[s->interm_texrender_buffer]);
-            gs_texrender_begin(s->interm_texrender[s->interm_texrender_buffer], cx, cy);
-            effect->set_params(a, b, t, cx, cy, s->rand_seed);
-            effect->set_step_params(current_step, interm_texture);
-            effect->render_shader(cx, cy);
-            gs_texrender_end(s->interm_texrender[s->interm_texrender_buffer]);
-            s->interm_texture = gs_texrender_get_texture(s->interm_texrender[s->interm_texrender_buffer]);
-            interm_texture = s->interm_texture;
-        }
-        effect->set_params(a, b, t, cx, cy, s->rand_seed);
-        effect->set_step_params(effect->nb_steps - 1, interm_texture);
-        effect->render_shader(cx, cy);
-    }
-
-    gs_enable_framebuffer_srgb(previous);
 }
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -182,8 +150,7 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
                 obs_source_process_filter_end(s->source, selected_effect->main_shader.effect, 0, 0);
                 if (current_step < selected_effect->nb_steps - 1) {
                     gs_texrender_end(s->interm_texrender[s->interm_texrender_buffer]);
-                    s->interm_texture = gs_texrender_get_texture(s->interm_texrender[s->interm_texrender_buffer]);
-                    interm_texture = s->interm_texture;
+                    interm_texture = gs_texrender_get_texture(s->interm_texrender[s->interm_texrender_buffer]);
                 }
                 gs_blend_state_pop();
             }

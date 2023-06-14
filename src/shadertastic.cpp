@@ -49,6 +49,7 @@ void load_effect(shadertastic_effect_t &effect, std::string parent_dir, std::str
     char *shader_path = obs_module_file((std::string("effects/") + parent_dir + "/" +effect_name + "/main.hlsl").c_str());
 
     effect.name = effect_name;
+    effect.main_shader.release();
 
     if (shader_path != NULL) {
         effect.main_shader.load(shader_path);

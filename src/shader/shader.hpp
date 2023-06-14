@@ -53,4 +53,14 @@ class transition_shader {
             param_nb_steps = gs_effect_get_param_by_name(effect, "nb_steps");
         }
     }
+
+    void release() {
+        if (effect != NULL) {
+            debug("Release shader");
+            obs_enter_graphics();
+            gs_effect_destroy(effect);
+            effect = NULL;
+            obs_leave_graphics();
+        }
+    }
 };

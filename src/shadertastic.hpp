@@ -5,7 +5,6 @@ struct shadertastic_transition {
     bool transition_started;
     bool transitioning;
     float transition_point;
-    gs_texture_t *transition_texture;
     gs_texrender_t *transition_texrender[2];
     int transition_texrender_buffer = 0;
     gs_texture_t *transparent_texture;
@@ -38,7 +37,6 @@ struct shadertastic_transition {
 
 struct shadertastic_filter {
     obs_source_t *source;
-    gs_texture_t *interm_texture;
     gs_texrender_t *interm_texrender[2];
     int interm_texrender_buffer = 0;
     gs_texture_t *transparent_texture;

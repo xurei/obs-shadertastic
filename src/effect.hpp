@@ -60,17 +60,17 @@ struct shadertastic_effect_t {
                                 memcpy(effect_param->get_data(), previous_param->second->get_data(), effect_param->get_data_size());
                             }
                             else {
-                                effect_param->set_data_from_default(param_metadata);
+                                effect_param->set_data_from_default();
                             }
-
-                            previous_effect_params.erase(previous_param);
                         }
                         else {
-                            effect_param->set_data_from_default(param_metadata);
+                            effect_param->set_data_from_default();
                         }
 
                         effect_params[param_name_str] = effect_param;
                     }
+
+                    obs_data_release(param_metadata);
                 }
 
                 // Clear memory of removed params
@@ -144,12 +144,7 @@ struct shadertastic_effect_t {
     }
 
     void release() {
-        if (main_shader.effect != NULL) {
-            obs_enter_graphics();
-            gs_effect_destroy(main_shader.effect);
-            obs_leave_graphics();
-            main_shader.effect = NULL;
-        }
+        main_shader.release();
         for (auto& [_, effect_param] : effect_params) {
             delete effect_param;
         }

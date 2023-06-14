@@ -20,7 +20,6 @@ static void *shadertastic_transition_create(obs_data_t *settings, obs_source_t *
         shadertastic_effect_t effect;
         load_effect(effect, "transitions", dir);
         if (effect.main_shader.effect != NULL) {
-            const char *effect_label = effect.label.c_str();
             s->effects->insert(shadertastic_effects_map_t::value_type(dir, effect));
 
             // Defaults must be set here and not in the transition_defaults() function.
@@ -55,6 +54,7 @@ void shadertastic_transition_destroy(void *data) {
     struct shadertastic_transition *s = static_cast<shadertastic_transition*>(data);
 
     obs_enter_graphics();
+    gs_texture_destroy(s->transparent_texture);
     gs_texrender_destroy(s->transition_texrender[0]);
     gs_texrender_destroy(s->transition_texrender[1]);
     obs_leave_graphics();
@@ -123,11 +123,8 @@ void shadertastic_transition_update(void *data, obs_data_t *settings) {
     if (s->selected_effect != NULL) {
         //debug("Selected Effect: %s", selected_effect_name);
         for (auto &[_, param] : s->selected_effect->effect_params) {
-            const char *param_name = obs_data_get_string(param->get_metadata(), "name");
-            char full_param_name[512];
-            sprintf(full_param_name, "%s.%s", selected_effect_name, param_name);
-
-            param->set_data_from_settings(settings, full_param_name);
+            std::string full_param_name = param->get_full_param_name(selected_effect_name);
+            param->set_data_from_settings(settings, full_param_name.c_str());
             //info("Assigned value:  %s %lu", full_param_name, param.data_size);
         }
     }
@@ -166,7 +163,6 @@ void shadertastic_transition_render_init(void *data, gs_texture_t *a, gs_texture
     UNUSED_PARAMETER(cy);
     struct shadertastic_transition *s = static_cast<shadertastic_transition*>(data);
     s->transition_texrender_buffer = 0;
-    //s->transition_texture = gs_texrender_get_texture(s->transition_texrender[0]);
 }
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -190,8 +186,7 @@ void shadertastic_transition_shader_render(void *data, gs_texture_t *a, gs_textu
                 effect->set_step_params(current_step, interm_texture);
                 effect->render_shader(cx, cy);
                 gs_texrender_end(s->transition_texrender[s->transition_texrender_buffer]);
-                s->transition_texture = gs_texrender_get_texture(s->transition_texrender[s->transition_texrender_buffer]);
-                interm_texture = s->transition_texture;
+                interm_texture = gs_texrender_get_texture(s->transition_texrender[s->transition_texrender_buffer]);
             }
         }
         effect->set_params(a, b, t, cx, cy, s->rand_seed);
@@ -200,8 +195,6 @@ void shadertastic_transition_shader_render(void *data, gs_texture_t *a, gs_textu
     }
 
     gs_enable_framebuffer_srgb(previous);
-
-//    s->transition_texture = gs_texrender_get_texture(s->transition_texrender);
 }
 //----------------------------------------------------------------------------------------------------------------------
 
