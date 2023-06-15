@@ -158,7 +158,10 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
                 if (obs_source_process_filter_begin_with_color_space(s->source, format, source_space, OBS_NO_DIRECT_RENDERING)) {
                     uint64_t frame_time = obs_get_video_frame_time();
                     uint64_t frame_time2 = frame_time - s->start_time;
-                    float filter_time = (float)(s->speed < 0.001 ? 0.0 : (float)((frame_time - s->start_time) / (1000000000.0) * s->speed));
+                    float filter_time = (float)(
+                        s->speed < 0.001 ? 0.0 :
+                        (float)((frame_time - s->start_time) / (1000000000.0)) * s->speed/100.0
+                    );
                     //filter_time = filter_time - floor(filter_time);
                     //debug("frame_time: %lu -> %lu -> %f", frame_time, frame_time2, filter_time);
                     //filter_time = 0.3f;
@@ -231,7 +234,7 @@ obs_properties_t *shadertastic_filter_properties(void *data) {
     obs_property_t *p;
 
     // Filter settings
-    obs_properties_add_float_slider(props, "speed", "Speed", 0.0, 300.0, 1.0);
+    obs_properties_add_float_slider(props, "speed", "Speed", 0.0, 100.0, 1.0);
     obs_properties_add_button(props, "reload_btn", "Reload", shadertastic_filter_reload_button_click);
 
     // Shader mode

@@ -63,7 +63,7 @@ float sigmoid_centered(float strength, float center, float n) {
     }
 }
 
-inline float gaussian(float x) {
+float gaussian(float x) {
     return exp(-x*x);
 }
 
