@@ -1,0 +1,24 @@
+{
+  "label": "Gaussian Blur",
+  "steps": 2,
+  "parameters": [
+    {
+      "name": "blur_level_x",
+      "label": "Blur level (X)",
+      "type": "int",
+      "slider": true,
+      "min": 0,
+      "max": 100,
+      "default": 50
+    },
+    {
+      "name": "blur_level_y",
+      "label": "Blur level (Y)",
+      "type": "int",
+      "slider": true,
+      "min": 0,
+      "max": 100,
+      "default": 50
+    }
+  ]
+}

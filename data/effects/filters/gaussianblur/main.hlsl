@@ -1,6 +1,8 @@
-uniform float breaking_point;
-uniform float max_blur_level;
+uniform int blur_level_x;
+uniform int blur_level_y;
 //----------------------------------------------------------------------------------------------------------------------
+
+#define PI 3.1415926535
 
 sampler_state textureSampler {
     Filter    = Linear;
@@ -26,55 +28,20 @@ VertData VSDefault(VertData v_in)
 }
 //----------------------------------------------------------------------------------------------------------------------
 
-float sigmoid(float strength, float n) {
-    // Vanilla sigmoid ; this is not symetric between 0 and 1
-    //return (1 / (1 + exp(-n)));
-
-    n = strength * (n*2 - 1);
-    float v0 = (1 / (1 + exp(strength)));
-    float v1 = 1 - v0; // simplified from v1 = (1 / (1 + exp(-1 * strength)));
-
-    return (1 / (1 + exp(-n)) - v0) / (v1-v0);
-
-//    if (n < 0.5) {
-//        if (n < 0.0) {
-//            return 0.0;
-//        }
-//        return 4.0*n*n*n;
-//    }
-//    else {
-//        if (n > 1.0) {
-//            return 1.0;
-//        }
-//        float xx = -2.0*n+2.0;
-//        return 1.0 - xx*xx*xx / 2.0;
-//    }
-}
-
-float sigmoid_centered(float strength, float center, float n) {
-    if (center < 0.5) {
-        float width = 2 * center;
-        return sigmoid(strength, n/width);
-    }
-    else {
-        float width = 2 * (1-center);
-        float m = (n - center + width/2) / width;
-        return sigmoid(strength, m);
-    }
-}
-
-inline float gaussian(float x) {
+float gaussian(float x) {
     return exp(-x*x);
+    //Approximation of the gaussian using cos
+    //return (1.0 + cos(x*3.0));
 }
 
 float4 getGaussianU(float2 uv, int nb_samples) {
     float gaussian_sum = gaussian(0);
-    float4 px_out = tex_interm.Sample(textureSampler, uv) * gaussian_sum;
+    float4 px_out = image.Sample(textureSampler, uv) * gaussian_sum;
     float nb_samples_f = float(nb_samples);
     for (int i=1; i<nb_samples; ++i) {
         float du = i*upixel;
-        float4 px_right = tex_interm.Sample(textureSampler, float2(uv[0]+du, uv[1]));
-        float4 px_left = tex_interm.Sample(textureSampler, float2(uv[0]-du, uv[1]));
+        float4 px_right = image.Sample(textureSampler, float2(uv[0]+du, uv[1]));
+        float4 px_left = image.Sample(textureSampler, float2(uv[0]-du, uv[1]));
 
         float k = gaussian(float(i) / nb_samples_f);
         px_out += (px_right + px_left)*k;
@@ -104,33 +71,13 @@ float4 EffectLinear(float2 uv)
     float u = uv[0];
     float v = uv[1];
 
-    float break_point = breaking_point / 100.0;
-
     if (current_step == 0) {
-        float lerp_ratio = sigmoid_centered(10, break_point, time);
-        return lerp(
-            tex_a.Sample(textureSampler, uv),
-            tex_b.Sample(textureSampler, uv),
-            lerp_ratio
-        );
+        int nb_samples = max(1, blur_level_x);
+        return getGaussianU(uv, nb_samples);
     }
     else {
-        float t = time;
-        if (t < break_point) {
-            t = sigmoid_centered(5, break_point/2.0, t);
-        }
-        else {
-            t = -1 * sigmoid_centered(5, break_point + (1.0-break_point) / 2.0, t) + 1;
-        }
-
-        int nb_samples = int(max(1, 10*max_blur_level * t));
-
-        if (current_step == 1) {
-            return getGaussianU(uv, nb_samples);
-        }
-        else {
-            return getGaussianV(uv, nb_samples);
-        }
+        int nb_samples = max(1, blur_level_y);
+        return getGaussianV(uv, nb_samples);
     }
 }
 //----------------------------------------------------------------------------------------------------------------------
@@ -138,7 +85,7 @@ float4 EffectLinear(float2 uv)
 float4 PSEffect(FragData f_in) : TARGET
 {
     float4 rgba = EffectLinear(f_in.uv);
-    rgba.rgb = srgb_nonlinear_to_linear(rgba.rgb);
+    //rgba.rgb = srgb_nonlinear_to_linear(rgba.rgb);
     return rgba;
 }
 
@@ -154,14 +101,5 @@ technique Draw
     {
         vertex_shader = VSDefault(v_in);
         pixel_shader = PSEffect(f_in);
-    }
-}
-
-technique DrawLinear
-{
-    pass
-    {
-        vertex_shader = VSDefault(v_in);
-        pixel_shader = PSEffectLinear(f_in);
     }
 }
