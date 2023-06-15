@@ -25,11 +25,8 @@
       "label": "Direction",
       "type": "list_int",
       "values": [
-        {"label": "Top", "value": 0},
-        {"label": "Bottom", "value": 1},
-        {"label": "Left", "value": 2},
-        {"label": "Right", "value": 3},
-        {"label": "Random", "value": 4}
+        {"label": "Right to Left", "value": 2},
+        {"label": "Left to Right", "value": 3}
       ],
       "default": 2
     },

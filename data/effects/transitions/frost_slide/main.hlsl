@@ -87,6 +87,9 @@ float4 getGaussianU(float2 uv, int nb_samples) {
     float gaussian_sum = gaussian(0);
     float4 px_out = tex_interm.Sample(textureSampler, uv) * gaussian_sum;
     float nb_samples_f = float(nb_samples);
+    #ifdef _D3D11
+    [loop]
+    #endif
     for (int i=1; i<nb_samples; ++i) {
         float du = i*upixel;
         float4 px_right = tex_interm.Sample(textureSampler, float2(uv[0]+du, uv[1]));
@@ -103,6 +106,9 @@ float4 getGaussianV(float2 uv, int nb_samples) {
     float gaussian_sum = gaussian(0);
     float4 px_out = tex_interm.Sample(textureSampler, uv) * gaussian_sum;
     float nb_samples_f = float(nb_samples);
+    #ifdef _D3D11
+    [loop]
+    #endif
     for (int i=1; i<nb_samples; ++i) {
         float dv = i*vpixel;
         float4 px_right = tex_interm.Sample(textureSampler, float2(uv[0], uv[1]+dv));
@@ -116,19 +122,42 @@ float4 getGaussianV(float2 uv, int nb_samples) {
 }
 
 bool isFrost(float2 uv, float2 bar_orig, float2 bar_vec) {
-    return (bar_orig[0] < uv[0] && uv[0] < bar_orig[0]+frost_width/100.0);
+    if (direction == 2) { //left
+        return (bar_orig[0] < uv[0] && uv[0] < bar_orig[0]+frost_width/100.0);
+    }
+    else { //right
+        return (bar_orig[0] > uv[0] && uv[0] > bar_orig[0]-frost_width/100.0);
+    }
 }
 bool isSceneA(float2 uv, float2 bar_orig, float2 bar_vec) {
-    return (bar_orig[0] > uv[0]);
+    if (direction == 2) { //left
+        return (bar_orig[0] > uv[0]);
+    }
+    else { //right
+        return (bar_orig[0] < uv[0]);
+    }
 }
 bool isBorderA(float2 uv, float2 bar_orig, float2 bar_vec) {
-    return (
-        (bar_orig[0] > uv[0] - 4.0*upixel)
-    );
+    if (direction == 2) { //left
+        return (
+            (bar_orig[0] > uv[0] - 4.0*upixel)
+        );
+    }
+    else { //right
+        return (
+            (bar_orig[0] < uv[0] + 4.0*upixel)
+        );
+    }
 }
 bool isBorderB(float2 uv, float2 bar_orig, float2 bar_vec) {
-    float border_start = bar_orig[0]+frost_width/100.0;
-    return (border_start < uv[0] && uv[0] < border_start + 4.0*upixel);
+    if (direction == 2) { //left
+        float border_start = bar_orig[0]+frost_width/100.0;
+        return (border_start < uv[0] && uv[0] < border_start + 4.0*upixel);
+    }
+    else { //right
+        float border_start = bar_orig[0]-frost_width/100.0;
+        return (border_start > uv[0] && uv[0] > border_start - 4.0*upixel);
+    }
 }
 
 float4 EffectLinear(FragData f_in)
@@ -151,8 +180,16 @@ float4 EffectLinear(FragData f_in)
 //    }
 
     float bar_displace_for_v = bar_vec[0]/bar_vec[1];
-    float bar_orig_initial = 1.0 + abs(bar_displace_for_v);
-    float bar_orig_final = -frost_width/100.0 - (angle < 90 ? abs(bar_displace_for_v) : 0.0);
+    float bar_orig_initial;
+    float bar_orig_final;
+    if (direction == 2) { //left
+        bar_orig_initial = 1.0 + (angle < 90 ? 0.0 : abs(bar_displace_for_v));
+        bar_orig_final = -frost_width/100.0 - (angle < 90 ? abs(bar_displace_for_v) : 0.0);
+    }
+    else { //right
+        bar_orig_initial = 0.0 - (angle < 90 ? abs(bar_displace_for_v) : 0.0);
+        bar_orig_final = 1.0 + frost_width/100.0 + (angle < 90 ? 0.0 : abs(bar_displace_for_v));
+    }
     float2 bar_orig = float2(lerp(bar_orig_initial, bar_orig_final, t), 0.0);
     bar_orig = float2(bar_orig[0] + bar_displace_for_v * uv[1], bar_orig[1]);
 
