@@ -126,6 +126,8 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
     //debug("--------");
     UNUSED_PARAMETER(effect);
     struct shadertastic_filter *s = static_cast<shadertastic_filter*>(data);
+    uint64_t frame_time = obs_get_video_frame_time();
+    uint64_t frame_time2 = frame_time - s->start_time;
 
     const enum gs_color_space preferred_spaces[] = {
         GS_CS_SRGB,
@@ -147,17 +149,16 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
         gs_blend_function(GS_BLEND_ONE, GS_BLEND_INVSRCALPHA);
         for (int current_step=0; current_step < selected_effect->nb_steps; ++current_step) {
             bool texrender_ok = true;
+            bool is_interm_step = (current_step < selected_effect->nb_steps - 1);
 
-            if (current_step < selected_effect->nb_steps - 1) {
+            if (is_interm_step) {
                 s->interm_texrender_buffer = (s->interm_texrender_buffer+1) & 1;
                 gs_texrender_reset(s->interm_texrender[s->interm_texrender_buffer]);
-                texrender_ok = gs_texrender_begin(s->interm_texrender[s->interm_texrender_buffer], cx*3, cy*3);
+                texrender_ok = gs_texrender_begin(s->interm_texrender[s->interm_texrender_buffer], cx, cy);
             }
 
             if (texrender_ok) {
                 if (obs_source_process_filter_begin_with_color_space(s->source, format, source_space, OBS_NO_DIRECT_RENDERING)) {
-                    uint64_t frame_time = obs_get_video_frame_time();
-                    uint64_t frame_time2 = frame_time - s->start_time;
                     float filter_time = (float)(
                         s->speed < 0.001 ? 0.0 :
                         (float)((frame_time - s->start_time) / (1000000000.0)) * s->speed/100.0
@@ -172,8 +173,8 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
 
                     //shadertastic_filter_shader_render(s, source_tex, s->transparent_texture, filter_time, cx, cy);
 
-                    obs_source_process_filter_end(s->source, selected_effect->main_shader.effect, 0, 0);
-                    if (current_step < selected_effect->nb_steps - 1) {
+                    obs_source_process_filter_end(s->source, selected_effect->main_shader.effect, cx, cy);
+                    if (is_interm_step) {
                         gs_texrender_end(s->interm_texrender[s->interm_texrender_buffer]);
                         interm_texture = gs_texrender_get_texture(s->interm_texrender[s->interm_texrender_buffer]);
                     }
