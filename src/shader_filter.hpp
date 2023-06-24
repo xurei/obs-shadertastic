@@ -234,6 +234,7 @@ bool shadertastic_filter_reload_button_click(obs_properties_t *props, obs_proper
 
     reload_effect("filters", s->selected_effect);
     s->should_reload = true;
+    s->rand_seed = (float)rand() / RAND_MAX;
     obs_source_update(s->source, NULL);
     return true;
 }
