@@ -17,6 +17,7 @@
 
 enum effect_param_datatype {
     PARAM_DATATYPE_UNKNOWN,
+    PARAM_DATATYPE_BOOL,
     PARAM_DATATYPE_INT,
     PARAM_DATATYPE_DOUBLE,
     PARAM_DATATYPE_LIST_INT,
@@ -39,6 +40,10 @@ class effect_parameter_factory {
                 effect_param_datatype datatype = effect_parse_datatype(data_type);
                 effect_parameter *out;
                 switch(datatype) {
+                    case PARAM_DATATYPE_BOOL: {
+                        out = new effect_parameter_bool(shader_param);
+                        break;
+                    }
                     case PARAM_DATATYPE_INT: {
                         out = new effect_parameter_int(shader_param);
                         break;
@@ -66,6 +71,9 @@ class effect_parameter_factory {
         static effect_param_datatype effect_parse_datatype(const char *datatype_str) {
             if (strcmp(datatype_str, "float") == 0 || strcmp(datatype_str, "double") == 0) {
                 return PARAM_DATATYPE_DOUBLE;
+            }
+            else if (strcmp(datatype_str, "bool") == 0) {
+                return PARAM_DATATYPE_BOOL;
             }
             else if (strcmp(datatype_str, "int") == 0) {
                 return PARAM_DATATYPE_INT;

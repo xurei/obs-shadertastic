@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [0.0.2] - 2023-06-24
 ### Added 
 - Added the metadata field `input_time` defaulting to `false`. This is a breaking change for time-dependent filters
+- Added boolean parameters in effects
 
 ### Changed
 - Slightly improved performance of the filters rendering
