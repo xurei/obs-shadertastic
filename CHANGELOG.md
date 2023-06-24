@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [0.0.2] - 2023-06-24
 ### Changed
 - Slightly improved performance of the filters rendering
+- Gaussian blur transition : changed "breaking_point" 0->100 to "break_point" 0->1
 
 ### Fixed
 - Fixed multi-step rendering of filter and transitions when the source is not full-screen

@@ -1,4 +1,4 @@
-uniform float breaking_point;
+uniform float break_point;
 uniform float max_blur_level;
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -104,15 +104,16 @@ float4 EffectLinear(float2 uv)
     float u = uv[0];
     float v = uv[1];
 
-    float break_point = breaking_point / 100.0;
-
     if (current_step == 0) {
         float lerp_ratio = sigmoid_centered(10, break_point, time);
-        return lerp(
-            tex_a.Sample(textureSampler, uv),
-            tex_b.Sample(textureSampler, uv),
+        float4 px_a = tex_a.Sample(textureSampler, uv);
+        float4 px_b = tex_b.Sample(textureSampler, uv);
+        float4 px = lerp(
+            px_a,
+            px_b,
             lerp_ratio
         );
+        return px;
     }
     else {
         float t = time;
