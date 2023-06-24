@@ -192,16 +192,27 @@ void shadertastic_transition_shader_render(void *data, gs_texture_t *a, gs_textu
 
     if (effect != NULL) {
         gs_texture_t *interm_texture = s->transparent_texture;
+        struct vec4 clear_color;
+        vec4_zero(&clear_color);
 
         for (int current_step=0; current_step < effect->nb_steps - 1; ++current_step) {
             //debug("%d", current_step);
             s->transition_texrender_buffer = (s->transition_texrender_buffer+1) & 1;
             gs_texrender_reset(s->transition_texrender[s->transition_texrender_buffer]);
-            if (gs_texrender_begin(s->transition_texrender[s->transition_texrender_buffer], cx*3, cy*3)) {
+            if (gs_texrender_begin(s->transition_texrender[s->transition_texrender_buffer], cx, cy)) {
+                gs_blend_state_push();
+                gs_blend_function_separate(
+                    GS_BLEND_SRCALPHA, GS_BLEND_INVSRCALPHA,
+                    GS_BLEND_ONE, GS_BLEND_INVSRCALPHA
+                );
+                gs_clear(GS_CLEAR_COLOR, &clear_color, 0.0f, 0);
+                gs_ortho(0.0f, (float)cx, 0.0f, (float)cy, -100.0f, 100.0f); // This line took me A WHOLE WEEK to figure out
+
                 effect->set_params(a, b, t, cx, cy, s->rand_seed);
                 effect->set_step_params(current_step, interm_texture);
                 effect->render_shader(cx, cy);
                 gs_texrender_end(s->transition_texrender[s->transition_texrender_buffer]);
+                gs_blend_state_pop();
                 interm_texture = gs_texrender_get_texture(s->transition_texrender[s->transition_texrender_buffer]);
             }
         }
