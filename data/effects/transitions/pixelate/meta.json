@@ -2,13 +2,14 @@
   "label": "Pixelate",
   "parameters": [
     {
-      "name": "breaking_point",
+      "name": "break_point",
       "label": "Breaking point",
       "type": "double",
       "slider": true,
-      "min": 0,
-      "max": 100,
-      "default": 50
+      "min": 0.0,
+      "max": 1.0,
+      "step": 0.01,
+      "default": 0.5
     },
     {
       "name": "max_pixelation_level",

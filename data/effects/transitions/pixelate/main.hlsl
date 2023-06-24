@@ -1,4 +1,4 @@
-uniform float breaking_point;
+uniform float break_point;
 uniform float max_pixelation_level;
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -41,7 +41,6 @@ float4 EffectLinear(float2 uv)
 {
     float u = uv[0];
     float v = uv[1];
-    float break_point = breaking_point / 100.0;
 
     float size_ratio = (time < break_point) ? time / break_point : (1.0-time) / (1.0-break_point);
 
