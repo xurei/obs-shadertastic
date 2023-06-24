@@ -28,7 +28,9 @@ static void *shadertastic_transition_create(obs_data_t *settings, obs_source_t *
     bfree(transitions_dir);
     uint8_t transparent_tex_data[2 * 2 * 4] = {0};
     const uint8_t *transparent_tex = transparent_tex_data;
+    obs_enter_graphics();
     s->transparent_texture = gs_texture_create(2, 2, GS_RGBA, 1, &transparent_tex, 0);
+    obs_leave_graphics();
     s->transition_texrender[0] = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
     s->transition_texrender[1] = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
 
@@ -200,11 +202,11 @@ void shadertastic_transition_shader_render(void *data, gs_texture_t *a, gs_textu
             s->transition_texrender_buffer = (s->transition_texrender_buffer+1) & 1;
             gs_texrender_reset(s->transition_texrender[s->transition_texrender_buffer]);
             if (gs_texrender_begin(s->transition_texrender[s->transition_texrender_buffer], cx, cy)) {
-                gs_blend_state_push();
-                gs_blend_function_separate(
-                    GS_BLEND_SRCALPHA, GS_BLEND_INVSRCALPHA,
-                    GS_BLEND_ONE, GS_BLEND_INVSRCALPHA
-                );
+//                gs_blend_state_push();
+//                gs_blend_function_separate(
+//                    GS_BLEND_SRCALPHA, GS_BLEND_INVSRCALPHA,
+//                    GS_BLEND_ONE, GS_BLEND_INVSRCALPHA
+//                );
                 gs_clear(GS_CLEAR_COLOR, &clear_color, 0.0f, 0);
                 gs_ortho(0.0f, (float)cx, 0.0f, (float)cy, -100.0f, 100.0f); // This line took me A WHOLE WEEK to figure out
 
@@ -212,13 +214,20 @@ void shadertastic_transition_shader_render(void *data, gs_texture_t *a, gs_textu
                 effect->set_step_params(current_step, interm_texture);
                 effect->render_shader(cx, cy);
                 gs_texrender_end(s->transition_texrender[s->transition_texrender_buffer]);
-                gs_blend_state_pop();
+//                gs_blend_state_pop();
                 interm_texture = gs_texrender_get_texture(s->transition_texrender[s->transition_texrender_buffer]);
             }
         }
+
+//        gs_blend_state_push();
+//        gs_blend_function_separate(
+//            GS_BLEND_SRCALPHA, GS_BLEND_INVSRCALPHA,
+//            GS_BLEND_ONE, GS_BLEND_INVSRCALPHA
+//        );
         effect->set_params(a, b, t, cx, cy, s->rand_seed);
         effect->set_step_params(effect->nb_steps - 1, interm_texture);
         effect->render_shader(cx, cy);
+//        gs_blend_state_pop();
     }
 
     gs_enable_framebuffer_srgb(previous);
@@ -259,6 +268,7 @@ void shadertastic_transition_video_render(void *data, gs_effect_t *effect) {
     }
     else {
         enum obs_transition_target target = t < s->transition_point ? OBS_TRANSITION_SOURCE_A : OBS_TRANSITION_SOURCE_B;
+        //debug("render direct");
         obs_transition_video_render_direct(s->source, target);
         //obs_transition_video_render_direct(s->source, OBS_TRANSITION_SOURCE_A);
     }

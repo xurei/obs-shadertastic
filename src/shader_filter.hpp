@@ -32,7 +32,9 @@ static void *shadertastic_filter_create(obs_data_t *settings, obs_source_t *sour
 
     uint8_t transparent_tex_data[2 * 2 * 4] = {0};
     const uint8_t *transparent_tex = transparent_tex_data;
+    obs_enter_graphics();
     s->transparent_texture = gs_texture_create(2, 2, GS_RGBA, 1, &transparent_tex, 0);
+    obs_leave_graphics();
     s->interm_texrender[0] = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
     s->interm_texrender[1] = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
 
