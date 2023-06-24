@@ -13,3 +13,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Rewritten shadertastic_filter_get_color_space to match a filter, not a transition
 - Fixed transparent texture not created correctly
 - Filter reload should update the filter UI without the need to switch filters
+
+### Removed
+- Removed dead code used for debugging purposes

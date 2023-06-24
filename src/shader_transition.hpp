@@ -56,15 +56,6 @@ static void *shadertastic_transition_create(obs_data_t *settings, obs_source_t *
     obs_source_update(source, settings);
     return s;
 }
-#ifdef DEV_MODE
-static void *shadertastic_transition_filter_create(obs_data_t *settings, obs_source_t *source) {
-    struct shadertastic_transition *s = static_cast<shadertastic_transition*>(shadertastic_transition_create(settings, source));
-    s->is_filter = true;
-    s->filter_source_a_texrender = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
-    s->filter_source_b_texrender = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
-    return s;
-}
-#endif
 //----------------------------------------------------------------------------------------------------------------------
 
 void shadertastic_transition_destroy(void *data) {
@@ -83,16 +74,6 @@ void shadertastic_transition_destroy(void *data) {
     bfree(data);
     debug("Destroyed");
 }
-#ifdef DEV_MODE
-void shadertastic_transition_filter_destroy(void *data) {
-    shadertastic_transition_destroy(data);
-    struct shadertastic_transition *s = static_cast<shadertastic_transition*>(data);
-    obs_enter_graphics();
-    gs_texrender_destroy(s->filter_source_a_texrender);
-    gs_texrender_destroy(s->filter_source_b_texrender);
-    obs_leave_graphics();
-}
-#endif
 //----------------------------------------------------------------------------------------------------------------------
 
 static inline float calc_fade(float t, float mul) {
@@ -154,19 +135,6 @@ void shadertastic_transition_update(void *data, obs_data_t *settings) {
     else {
         s->mix_a = mix_a_fade_in_out;
         s->mix_b = mix_b_fade_in_out;
-    }
-
-    if (s->is_filter) {
-        s->filter_time = obs_data_get_double(settings, "t");
-
-        if (s->filter_scene_b != NULL) {
-            obs_source_remove_active_child(s->source, s->filter_scene_b);
-        }
-        s->filter_scene_b = obs_scene_get_source(obs_get_scene_by_name(obs_data_get_string(settings, "scene_b")));
-        if (s->filter_scene_b != NULL) {
-            obs_source_add_active_child(s->source, s->filter_scene_b);
-        }
-        //debug("SELECTED SCENE: %s %p", obs_data_get_string(settings, "scene_b"), s->filter_scene_b);
     }
 }
 //----------------------------------------------------------------------------------------------------------------------
@@ -275,54 +243,6 @@ void shadertastic_transition_video_render(void *data, gs_effect_t *effect) {
 }
 //----------------------------------------------------------------------------------------------------------------------
 
-#ifdef DEV_MODE
-void shadertastic_transition_filter_video_render(void *data, gs_effect_t *effect_unused) {
-    UNUSED_PARAMETER(effect_unused);
-    struct shadertastic_transition *s = static_cast<shadertastic_transition*>(data);
-    const enum gs_color_space preferred_spaces[] = {
-        GS_CS_SRGB,
-        GS_CS_SRGB_16F,
-        GS_CS_709_EXTENDED,
-    };
-
-    obs_source_t *target_source = obs_filter_get_target(s->source);
-    obs_source_t *parent_source = obs_filter_get_parent(s->source);
-
-    const enum gs_color_space source_space = obs_source_get_color_space(
-        target_source,
-        OBS_COUNTOF(preferred_spaces),
-        preferred_spaces
-    );
-    const enum gs_color_format format = gs_get_format_from_space(source_space);
-    uint32_t cx = obs_source_get_width(s->source);
-    uint32_t cy = obs_source_get_height(s->source);
-    //if (gs_texrender_begin_with_color_space(s->filter_source_a_texrender, cx, cy, source_space))
-
-    shadertastic_effect_t *effect = s->selected_effect;
-    if (effect != NULL) {
-        gs_texrender_reset(s->filter_source_a_texrender);
-        gs_texrender_reset(s->filter_source_b_texrender);
-        if (gs_texrender_begin(s->filter_source_a_texrender, cx, cy)) {
-            obs_source_video_render(target_source);
-            gs_texrender_end(s->filter_source_a_texrender);
-            gs_texture_t *source_a_tex = gs_texrender_get_texture(s->filter_source_a_texrender);
-
-            gs_texture_t *source_b_tex = s->transparent_texture;
-            if (s->filter_scene_b != NULL) {
-                if (gs_texrender_begin(s->filter_source_b_texrender, cx, cy)) {
-                    obs_source_video_render(s->filter_scene_b);
-                    gs_texrender_end(s->filter_source_b_texrender);
-                    source_b_tex = gs_texrender_get_texture(s->filter_source_b_texrender);
-                }
-            }
-
-            shadertastic_transition_shader_render(s, source_a_tex, source_b_tex, s->filter_time, cx, cy);
-        }
-    }
-}
-#endif
-//----------------------------------------------------------------------------------------------------------------------
-
 static bool shadertastic_transition_audio_render(void *data, uint64_t *ts_out, struct obs_source_audio_mix *audio, uint32_t mixers, size_t channels, size_t sample_rate) {
     struct shadertastic_transition *s = static_cast<shadertastic_transition*>(data);
     if (!s) {
@@ -403,23 +323,12 @@ obs_properties_t *shadertastic_transition_properties(void *data) {
     obs_property_t *auto_reload = obs_properties_add_bool(props, "auto_reload", obs_module_text("AutoReload"));
 
     // audio fade settings
-    if (!s->is_filter) {
-        obs_property_t *audio_fade_style = obs_properties_add_list(
-            props, "audio_fade_style", obs_module_text("AudioFadeStyle"),
-            OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT
-        );
-        obs_property_list_add_int(audio_fade_style, obs_module_text("CrossFade"), 0);
-        obs_property_list_add_int(audio_fade_style, obs_module_text("FadeOutFadeIn"), 1);
-    }
-
-    // Filter settings
-    if (s->is_filter) {
-        obs_properties_add_float_slider(props, "t", "Time", 0.0, 1.0, 0.01);
-
-        p = obs_properties_add_list(props, "scene_b", "Scene", OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
-	    obs_enum_scenes(add_sources, p);
-	    obs_properties_add_button(props, "reload_btn", "Reload", shadertastic_transition_reload_button_click);
-    }
+    obs_property_t *audio_fade_style = obs_properties_add_list(
+        props, "audio_fade_style", obs_module_text("AudioFadeStyle"),
+        OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT
+    );
+    obs_property_list_add_int(audio_fade_style, obs_module_text("CrossFade"), 0);
+    obs_property_list_add_int(audio_fade_style, obs_module_text("FadeOutFadeIn"), 1);
 
     // Shader mode
     p = obs_properties_add_list(props, "effect", "Effect", OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);

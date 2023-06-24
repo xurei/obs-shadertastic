@@ -32,13 +32,6 @@ class effect_parameter {
 
         virtual ~effect_parameter() {
             bfree(this->data);
-            #ifndef DEV_MODE
-                // FIXME This seems to make the windows version crash. Needs to be inspected
-                //if (data != NULL) {
-                //    bfree(data);
-                //    data = NULL;
-                //}
-            #endif
         }
 
         void load_common_fields(obs_data_t *metadata) {

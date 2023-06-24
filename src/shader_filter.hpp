@@ -115,7 +115,6 @@ void shadertastic_filter_update(void *data, obs_data_t *settings) {
     }
 
     s->speed = obs_data_get_double(settings, "speed");
-    //debug("SELECTED SCENE: %s %p", obs_data_get_string(settings, "scene_b"), s->filter_scene_b);
 }
 //----------------------------------------------------------------------------------------------------------------------
 

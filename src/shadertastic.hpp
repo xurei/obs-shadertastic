@@ -29,12 +29,6 @@ struct shadertastic_transition {
 
     bool auto_reload = false;
 
-    bool is_filter = false;
-    gs_texrender_t *filter_source_a_texrender;
-    gs_texrender_t *filter_source_b_texrender;
-    double filter_time = 0.0;
-    obs_source_t *filter_scene_b;
-
     obs_transition_audio_mix_callback_t mix_a;
     obs_transition_audio_mix_callback_t mix_b;
     float transition_a_mul;

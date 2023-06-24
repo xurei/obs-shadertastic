@@ -138,23 +138,6 @@ bool obs_module_load(void) {
     shadertastic_transition_info.video_get_color_space = shadertastic_transition_get_color_space;
     obs_register_source(&shadertastic_transition_info);
 
-//    #ifdef DEV_MODE
-//        struct obs_source_info shadertastic_transition_dev_info = {};
-//        shadertastic_transition_dev_info.id = "shadertastic_filter_dev";
-//        shadertastic_transition_dev_info.type = OBS_SOURCE_TYPE_FILTER;
-//        shadertastic_transition_dev_info.output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_SRGB;
-//        shadertastic_transition_dev_info.get_name = shadertastic_transition_filter_get_name;
-//        shadertastic_transition_dev_info.create = shadertastic_transition_filter_create;
-//        shadertastic_transition_dev_info.destroy = shadertastic_transition_filter_destroy;
-//        shadertastic_transition_dev_info.get_properties = shadertastic_transition_properties;
-//        shadertastic_transition_dev_info.update = shadertastic_transition_update;
-//        shadertastic_transition_dev_info.video_render = shadertastic_transition_filter_video_render;
-//        shadertastic_transition_dev_info.load = shadertastic_transition_update;
-//        shadertastic_transition_dev_info.get_defaults2 = shadertastic_transition_defaults;
-//        shadertastic_transition_dev_info.video_get_color_space = shadertastic_transition_get_color_space;
-//        obs_register_source(&shadertastic_transition_dev_info);
-//    #endif
-
     struct obs_source_info shadertastic_filter_info = {};
     shadertastic_filter_info.id = "shadertastic_filter";
     shadertastic_filter_info.type = OBS_SOURCE_TYPE_FILTER;
