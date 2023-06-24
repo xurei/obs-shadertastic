@@ -66,6 +66,8 @@ struct shadertastic_filter {
     double speed = 1.0;
     uint64_t start_time = 0;
 
+    bool should_reload = false;
+
     shadertastic_effects_map_t *effects;
     shadertastic_effect_t *selected_effect;
 

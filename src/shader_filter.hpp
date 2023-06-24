@@ -97,6 +97,11 @@ void shadertastic_filter_update(void *data, obs_data_t *settings) {
     struct shadertastic_filter *s = static_cast<shadertastic_filter*>(data);
     //debug("Update : %s", obs_data_get_json(settings));
 
+    if (s->should_reload) {
+        s->should_reload = false;
+        obs_source_update_properties(s->source);
+    }
+
     const char *selected_effect_name = obs_data_get_string(settings, "effect");
     s->selected_effect = &((*s->effects)[selected_effect_name]);
 
@@ -229,14 +234,14 @@ bool shadertastic_filter_reload_button_click(obs_properties_t *props, obs_proper
     struct shadertastic_filter *s = static_cast<shadertastic_filter*>(data);
 
     reload_effect("filters", s->selected_effect);
+    s->should_reload = true;
+    obs_source_update(s->source, NULL);
     return true;
 }
 
 obs_properties_t *shadertastic_filter_properties(void *data) {
     struct shadertastic_filter *s = static_cast<shadertastic_filter*>(data);
-    //struct shadertastic_filter *shadertastic_filter = data;
     obs_properties_t *props = obs_properties_create();
-    //obs_properties_set_flags(props, OBS_PROPERTIES_DEFER_UPDATE);
 
     obs_property_t *p;
 
