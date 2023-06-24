@@ -275,10 +275,11 @@ void shadertastic_filter_defaults(void *data, obs_data_t *settings) {
 //----------------------------------------------------------------------------------------------------------------------
 
 static enum gs_color_space shadertastic_filter_get_color_space(void *data, size_t count, const enum gs_color_space *preferred_spaces) {
-    UNUSED_PARAMETER(count);
-    UNUSED_PARAMETER(preferred_spaces);
-
     struct shadertastic_filter *s = static_cast<shadertastic_filter*>(data);
-    return obs_transition_video_get_color_space(s->source);
+    const enum gs_color_space source_space = obs_source_get_color_space(
+        obs_filter_get_target(s->source),
+        count, preferred_spaces);
+
+    return source_space;
 }
 //----------------------------------------------------------------------------------------------------------------------
