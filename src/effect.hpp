@@ -20,6 +20,9 @@ struct shadertastic_effect_t {
     std::string label;
     int nb_steps;
     bool is_fallback = false;
+    bool input_time = false;
+    //bool input_face_detection = false;
+    //bool input_sound_spectrum = false;
 
     std::map<std::string, effect_parameter *> effect_params;
 
@@ -50,6 +53,13 @@ struct shadertastic_effect_t {
                 }
                 obs_data_set_default_int(metadata, "steps", 1);
                 nb_steps = (int)obs_data_get_int(metadata, "steps");
+
+                obs_data_set_default_bool(metadata, "input_time", false);
+                input_time = obs_data_get_bool(metadata, "input_time");
+                //obs_data_set_default_bool(metadata, "input_face_detection", false);
+                //input_face_detection = obs_data_get_bool(metadata, "input_face_detection");
+                //obs_data_set_default_int(metadata, "input_sound_spectrum", false);
+                //input_sound_spectrum = obs_data_get_bool(metadata, "input_sound_spectrum");
 
                 obs_data_array_t *parameters = obs_data_get_array(metadata, "parameters");
                 if (parameters == NULL) {

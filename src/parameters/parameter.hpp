@@ -15,6 +15,10 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
+std::string get_full_param_name_static(std::string effect_name, std::string param_name) {
+    return effect_name + '.' + param_name;
+}
+
 class effect_parameter {
     protected:
         void *data;
@@ -54,7 +58,7 @@ class effect_parameter {
             return get_full_param_name(effect_name_str);
         }
         std::string get_full_param_name(std::string effect_name) {
-            return std::string(effect_name) + '.' + this->name;
+            return get_full_param_name_static(effect_name, this->name);
         }
 
         gs_eparam_t * get_shader_param() {

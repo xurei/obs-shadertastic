@@ -54,16 +54,14 @@ struct shadertastic_filter {
     int interm_texrender_buffer = 0;
     gs_texture_t *transparent_texture;
     float rand_seed;
-
     int width, height;
-
-    double speed = 1.0;
-    uint64_t start_time = 0;
-
     bool should_reload = false;
-
     shadertastic_effects_map_t *effects;
     shadertastic_effect_t *selected_effect;
+
+    // Fields for "input_time": true in metadata
+    double speed = 1.0;
+    double time = 0.0;
 
     void release() {
         for (auto& [key, effect] : *this->effects) {

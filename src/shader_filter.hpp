@@ -20,7 +20,6 @@ static void *shadertastic_filter_create(obs_data_t *settings, obs_source_t *sour
     s->source = source;
     s->effects = new shadertastic_effects_map_t();
     s->rand_seed = (float)rand() / RAND_MAX;
-    s->start_time = obs_get_video_frame_time();
 
     debug("Settings : %s", obs_data_get_json(settings));
 
@@ -114,7 +113,7 @@ void shadertastic_filter_update(void *data, obs_data_t *settings) {
         }
     }
 
-    s->speed = obs_data_get_double(settings, "speed");
+    s->speed = obs_data_get_double(settings, get_full_param_name_static(selected_effect_name, "speed").c_str());
 }
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -132,12 +131,11 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
     //debug("--------");
     UNUSED_PARAMETER(effect);
     struct shadertastic_filter *s = static_cast<shadertastic_filter*>(data);
-    uint64_t frame_time = obs_get_video_frame_time();
-    uint64_t frame_time2 = frame_time - s->start_time;
-    float filter_time = (float)(
-        s->speed < 0.001 ? 0.0 :
-        (float)((frame_time - s->start_time) / (1000000000.0)) * s->speed/100.0
+    uint64_t frame_interval = obs_get_frame_interval_ns();
+    s->time += (double)(
+        s->speed < 0.0001 ? 0.0 : ((frame_interval/1000000000.0) * s->speed)
     );
+    float filter_time = (float)s->time;
 
     const enum gs_color_space preferred_spaces[] = {
         GS_CS_SRGB,
@@ -246,7 +244,6 @@ obs_properties_t *shadertastic_filter_properties(void *data) {
     obs_property_t *p;
 
     // Filter settings
-    obs_properties_add_float_slider(props, "speed", "Speed", 0.0, 100.0, 1.0);
     obs_properties_add_button(props, "reload_btn", "Reload", shadertastic_filter_reload_button_click);
 
     // Shader mode
@@ -257,12 +254,15 @@ obs_properties_t *shadertastic_filter_properties(void *data) {
     }
     obs_property_set_modified_callback2(p, shadertastic_filter_properties_change_effect_callback, data);
 
-    obs_property_t *bla = obs_properties_get(props, "effect");
-
     for (auto& [effect_name, effect] : *(s->effects)) {
         const char *effect_label = effect.label.c_str();
         obs_properties_t *effect_group = obs_properties_create();
         //obs_properties_add_text(effect_group, "", effect_name, OBS_TEXT_INFO);
+
+        if (effect.input_time) {
+            obs_properties_add_float_slider(effect_group, get_full_param_name_static(effect_name, std::string("speed")).c_str(), "Speed", 0.0, 1.0, 0.01);
+        }
+
         for (auto &[_, param] : effect.effect_params) {
             std::string full_param_name = param->get_full_param_name(effect_name);
             param->render_property_ui(full_param_name.c_str(), effect_group);
