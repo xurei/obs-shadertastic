@@ -9,7 +9,7 @@
       "slider": true,
       "min": 0,
       "max": 100,
-      "default": 50
+      "default": 10
     },
     {
       "name": "blur_level_y",
@@ -18,7 +18,7 @@
       "slider": true,
       "min": 0,
       "max": 100,
-      "default": 50
+      "default": 10
     }
   ]
 }

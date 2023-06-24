@@ -2,8 +2,6 @@ uniform int blur_level_x;
 uniform int blur_level_y;
 //----------------------------------------------------------------------------------------------------------------------
 
-#define PI 3.1415926535
-
 sampler_state textureSampler {
     Filter    = Linear;
     AddressU  = Clamp;

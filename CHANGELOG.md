@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 - Slightly improved performance of the filters rendering
 - Gaussian blur and Pixelate transition : changed `breaking_point` 0->100 to `break_point` 0->1
+- Gaussian blur filter : default levels to 10 (to avoid lags on small configs)
 - Filters : reset rand_seed on reload
 
 ### Fixed
