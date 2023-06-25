@@ -57,6 +57,7 @@
 #include "parameters/parameter_int.hpp"
 #include "parameters/parameter_list_int.hpp"
 #include "parameters/parameter_unknown.hpp"
+#include "parameters/parameter_image.hpp"
 #include "parameters/parameter_factory.hpp"
 #include "effect.hpp"
 #include "shadertastic.hpp"

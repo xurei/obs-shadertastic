@@ -70,4 +70,8 @@ class effect_parameter {
         inline void * get_data() {
             return data;
         }
+
+        virtual void try_gs_set_val() {
+            try_gs_effect_set_val(shader_param, data, data_size);
+        }
 };

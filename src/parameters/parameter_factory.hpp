@@ -21,6 +21,7 @@ enum effect_param_datatype {
     PARAM_DATATYPE_INT,
     PARAM_DATATYPE_DOUBLE,
     PARAM_DATATYPE_LIST_INT,
+    PARAM_DATATYPE_IMAGE,
 };
 
 class effect_parameter_factory {
@@ -56,6 +57,10 @@ class effect_parameter_factory {
                         out = new effect_parameter_list_int(shader_param);
                         break;
                     }
+                    case PARAM_DATATYPE_IMAGE: {
+                        out = new effect_parameter_image(shader_param);
+                        break;
+                    }
                     case PARAM_DATATYPE_UNKNOWN: default: {
                         out = new effect_parameter_unknown(shader_param);
                         break;
@@ -80,6 +85,9 @@ class effect_parameter_factory {
             }
             else if (strcmp(datatype_str, "list_int") == 0) {
                 return PARAM_DATATYPE_LIST_INT;
+            }
+            else if (strcmp(datatype_str, "image") == 0) {
+                return PARAM_DATATYPE_IMAGE;
             }
             else {
                 return PARAM_DATATYPE_UNKNOWN;

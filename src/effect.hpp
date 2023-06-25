@@ -136,7 +136,7 @@ struct shadertastic_effect_t {
         //debug("common params set");
 
         for (auto &[param_name, param] : effect_params) {
-            try_gs_effect_set_val(param->get_shader_param(), param->get_data(), param->get_data_size());
+            param->try_gs_set_val();
         }
         //debug("all params set");
     }
