@@ -79,14 +79,12 @@ void shadertastic_filter_destroy(void *data) {
 }
 //----------------------------------------------------------------------------------------------------------------------
 
-uint32_t shadertastic_filter_getwidth(void *data)
-{
+uint32_t shadertastic_filter_getwidth(void *data) {
     struct shadertastic_filter *s = static_cast<shadertastic_filter*>(data);
     return s->width;
 }
 
-uint32_t shadertastic_filter_getheight(void *data)
-{
+uint32_t shadertastic_filter_getheight(void *data) {
     struct shadertastic_filter *s = static_cast<shadertastic_filter*>(data);
     return s->height;
 }
@@ -111,9 +109,9 @@ void shadertastic_filter_update(void *data, obs_data_t *settings) {
             param->set_data_from_settings(settings, full_param_name.c_str());
             //info("Assigned value:  %s %lu", full_param_name, param.data_size);
         }
-    }
 
-    s->speed = obs_data_get_double(settings, get_full_param_name_static(selected_effect_name, "speed").c_str());
+        s->speed = obs_data_get_double(settings, get_full_param_name_static(selected_effect_name, "speed").c_str());
+    }
 }
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -124,6 +122,11 @@ static void shadertastic_filter_tick(void *data, float seconds) {
 
     s->width = obs_source_get_base_width(target);
     s->height = obs_source_get_base_height(target);
+
+    uint64_t frame_interval = obs_get_frame_interval_ns();
+    s->time += (double)(
+        s->speed < 0.0001 ? 0.0 : ((frame_interval/1000000000.0) * s->speed)
+    );
 }
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -131,10 +134,6 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
     //debug("--------");
     UNUSED_PARAMETER(effect);
     struct shadertastic_filter *s = static_cast<shadertastic_filter*>(data);
-    uint64_t frame_interval = obs_get_frame_interval_ns();
-    s->time += (double)(
-        s->speed < 0.0001 ? 0.0 : ((frame_interval/1000000000.0) * s->speed)
-    );
     float filter_time = (float)s->time;
 
     const enum gs_color_space preferred_spaces[] = {
