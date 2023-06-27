@@ -59,8 +59,12 @@ struct shadertastic_filter {
     shadertastic_effects_map_t *effects;
     shadertastic_effect_t *selected_effect;
 
+    // Filter previous state (enabled/disabled)
+    bool was_enabled = false;
+
     // Fields for "input_time": true in metadata
     double speed = 1.0;
+    bool reset_time_on_show = false;
     double time = 0.0;
 
     void release() {

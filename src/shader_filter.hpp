@@ -111,6 +111,8 @@ void shadertastic_filter_update(void *data, obs_data_t *settings) {
         }
 
         s->speed = obs_data_get_double(settings, get_full_param_name_static(selected_effect_name, "speed").c_str());
+        s->reset_time_on_show = obs_data_get_bool(settings, get_full_param_name_static(selected_effect_name, "reset_time_on_show").c_str());
+        debug("%s RESET %i", get_full_param_name_static(selected_effect_name, "reset_time_on_show").c_str(), s->reset_time_on_show ? 1 : 0);
     }
 }
 //----------------------------------------------------------------------------------------------------------------------
@@ -123,6 +125,15 @@ static void shadertastic_filter_tick(void *data, float seconds) {
     s->width = obs_source_get_base_width(target);
     s->height = obs_source_get_base_height(target);
 
+    bool is_enabled = obs_source_enabled(s->source);
+    if (is_enabled != s->was_enabled) {
+        s->was_enabled = is_enabled;
+        debug("TOGGLE ENABLED %i", is_enabled ? 1 : 0);
+
+        if (s->reset_time_on_show) {
+            s->time = 0.0;
+        }
+    }
     uint64_t frame_interval = obs_get_frame_interval_ns();
     s->time += (double)(
         s->speed < 0.0001 ? 0.0 : ((frame_interval/1000000000.0) * s->speed)
@@ -260,6 +271,7 @@ obs_properties_t *shadertastic_filter_properties(void *data) {
 
         if (effect.input_time) {
             obs_properties_add_float_slider(effect_group, get_full_param_name_static(effect_name, std::string("speed")).c_str(), "Speed", 0.0, 1.0, 0.01);
+            obs_properties_add_bool(effect_group, get_full_param_name_static(effect_name, std::string("reset_time_on_show")).c_str(), "Reset time when shown");
         }
 
         for (auto &[_, param] : effect.effect_params) {
