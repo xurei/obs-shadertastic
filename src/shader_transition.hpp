@@ -31,8 +31,8 @@ static void *shadertastic_transition_create(obs_data_t *settings, obs_source_t *
     obs_enter_graphics();
     s->transparent_texture = gs_texture_create(2, 2, GS_RGBA, 1, &transparent_tex, 0);
     obs_leave_graphics();
-    s->transition_texrender[0] = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
-    s->transition_texrender[1] = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
+    s->transition_texrender[0] = gs_texrender_create(GS_RGBA16, GS_ZS_NONE);
+    s->transition_texrender[1] = gs_texrender_create(GS_RGBA16, GS_ZS_NONE);
 
     for (const auto &dir : dirs) {
         shadertastic_effect_t effect;
