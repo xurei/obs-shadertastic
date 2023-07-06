@@ -1,5 +1,7 @@
 {
   "label": "TEMPLATE",
+  "steps": 1,
+  "input_time": true,
   "parameters": [
     {
       "name": "random_amount",
