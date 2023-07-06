@@ -1,0 +1,16 @@
+{
+  "label": "Pixelate",
+  "steps": 2,
+  "parameters": [
+    {
+      "name": "square_width_px",
+      "label": "Square size",
+      "type": "int",
+      "slider": true,
+      "min": 1,
+      "max": 120,
+      "default": 15,
+      "step": 1
+    }
+  ]
+}
