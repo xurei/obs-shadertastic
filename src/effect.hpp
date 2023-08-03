@@ -170,6 +170,24 @@ struct shadertastic_effect_t {
         //debug("end of draw");
     }
 
+    void show() {
+        debug("show %s", this->name.c_str());
+        for (auto param: this->effect_params) {
+            if (param != NULL) {
+                param->show();
+            }
+        }
+    }
+
+    void hide() {
+        debug("hide %s", this->name.c_str());
+        for (auto param: this->effect_params) {
+            if (param != NULL) {
+                param->hide();
+            }
+        }
+    }
+
     void release() {
         main_shader.release();
         for (auto effect_param: effect_params) {

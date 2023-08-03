@@ -17,9 +17,8 @@
 
 class effect_parameter_image : public effect_parameter {
     private:
-        std::string path; // c'est le path en fait MERCI MAHONEKO VRAIMENT !
+        std::string path;
         gs_texture_t * texture = NULL;
-
 
     public:
         effect_parameter_image(gs_eparam_t *shader_param) : effect_parameter(sizeof(float), shader_param) {
@@ -27,7 +26,10 @@ class effect_parameter_image : public effect_parameter {
 
         virtual ~effect_parameter_image() {
             if (this->texture != NULL) {
+                obs_enter_graphics();
                 gs_texture_destroy(this->texture);
+                this->texture = NULL;
+                obs_leave_graphics();
             }
         }
 
@@ -50,8 +52,7 @@ class effect_parameter_image : public effect_parameter {
             this->path = std::string("");
         }
 
-        virtual void set_data_from_settings(obs_data_t *settings,
-                                            const char *full_param_name) {
+        virtual void set_data_from_settings(obs_data_t *settings, const char *full_param_name) {
             const char *path_ = obs_data_get_string(settings, full_param_name);
             if (path_ != NULL) {
                 this->path = std::string(path_);
@@ -59,14 +60,15 @@ class effect_parameter_image : public effect_parameter {
             }
             else {
                 if (this->texture != NULL) {
+                    obs_enter_graphics();
                     gs_texture_destroy(this->texture);
                     this->texture = NULL;
+                    obs_leave_graphics();
                 }
             }
         }
 
         void load_texture() {
-            // C'est pour gérer l'ouverture du fichier, courage c'est presque fini
             obs_enter_graphics();
             if (this->texture != NULL) {
                 gs_texture_destroy(this->texture);

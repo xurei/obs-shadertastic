@@ -78,4 +78,18 @@ class effect_parameter {
         virtual void try_gs_set_val() {
             try_gs_effect_set_val(shader_param, data, data_size);
         }
+
+        /**
+         * Do something if the effect containing this parameter is shown
+         */
+        virtual void show() {
+            // By default, do nothing
+        }
+
+        /**
+         * Do something if the effect containing this parameter is hidden
+         */
+        virtual void hide() {
+            // By default, do nothing
+        }
 };
