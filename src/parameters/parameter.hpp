@@ -53,6 +53,10 @@ class effect_parameter {
 
         virtual void set_data_from_default() = 0;
 
+        std::string get_name() {
+            return name;
+        }
+
         std::string get_full_param_name(const char *effect_name) {
             std::string effect_name_str = std::string(effect_name);
             return get_full_param_name(effect_name_str);

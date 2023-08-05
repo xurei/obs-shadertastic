@@ -15,6 +15,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
+#include "params_list.hpp"
+
 struct shadertastic_effect_t {
     std::string name;
     std::string label;
@@ -22,9 +24,8 @@ struct shadertastic_effect_t {
     bool is_fallback = false;
     bool input_time = false;
     //bool input_face_detection = false;
-    //bool input_sound_spectrum = false;
 
-    std::map<std::string, effect_parameter *> effect_params;
+    params_list effect_params;
 
     transition_shader main_shader;
 
@@ -68,7 +69,7 @@ struct shadertastic_effect_t {
                 }
 
                 // Copy the effect params map to allow recycling
-                std::map<std::string, effect_parameter *> previous_effect_params(effect_params);
+                params_list previous_effect_params(effect_params);
                 effect_params.clear();
 
                 for (size_t i=0; i < obs_data_array_count(parameters); i++) {
@@ -79,11 +80,11 @@ struct shadertastic_effect_t {
 
                     if (effect_param != NULL) {
                         std::string param_name_str = std::string(param_name);
-                        auto previous_param = previous_effect_params.find(param_name_str);
-                        if (previous_param != previous_effect_params.end()) {
-                            if (previous_param->second->get_data_size() == effect_param->get_data_size()) {
+                        effect_parameter *previous_param = previous_effect_params.get(param_name_str);
+                        if (previous_param != NULL) {
+                            if (previous_param->get_data_size() == effect_param->get_data_size()) {
                                 debug("Recycling data for %s (size: %i)", param_name_str.c_str(), (int)effect_param->get_data_size());
-                                memcpy(effect_param->get_data(), previous_param->second->get_data(), effect_param->get_data_size());
+                                memcpy(effect_param->get_data(), previous_param->get_data(), effect_param->get_data_size());
                             }
                             else {
                                 effect_param->set_data_from_default();
@@ -93,15 +94,15 @@ struct shadertastic_effect_t {
                             effect_param->set_data_from_default();
                         }
 
-                        effect_params[param_name_str] = effect_param;
+                        effect_params.put(param_name_str, effect_param);
                     }
 
                     obs_data_release(param_metadata);
                 }
 
                 // Clear memory of removed params
-                for (auto &[param_name, param] : previous_effect_params) {
-                    debug ("Free removed param %s", param_name.c_str());
+                for (auto param: previous_effect_params) {
+                    debug ("Free removed param %s", param->get_name().c_str());
                     delete param;
                 }
 
@@ -135,7 +136,7 @@ struct shadertastic_effect_t {
         try_gs_effect_set_int(main_shader.param_nb_steps, nb_steps);
         //debug("common params set");
 
-        for (auto &[param_name, param] : effect_params) {
+        for (auto param: effect_params) {
             param->try_gs_set_val();
         }
         //debug("all params set");
@@ -171,7 +172,7 @@ struct shadertastic_effect_t {
 
     void release() {
         main_shader.release();
-        for (auto& [_, effect_param] : effect_params) {
+        for (auto effect_param: effect_params) {
             delete effect_param;
         }
     }

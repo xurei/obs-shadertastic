@@ -42,7 +42,7 @@ static void *shadertastic_transition_create(obs_data_t *settings, obs_source_t *
 
             // Defaults must be set here and not in the transition_defaults() function.
             // as the effects are not loaded yet in transition_defaults()
-            for (auto &[_, param] : effect.effect_params) {
+            for (auto param: effect.effect_params) {
                 std::string full_param_name = param->get_full_param_name(effect.name.c_str());
                 param->set_default(settings, full_param_name.c_str());
             }
@@ -121,7 +121,7 @@ void shadertastic_transition_update(void *data, obs_data_t *settings) {
 
     if (s->selected_effect != NULL) {
         //debug("Selected Effect: %s", selected_effect_name);
-        for (auto &[_, param] : s->selected_effect->effect_params) {
+        for (auto param: s->selected_effect->effect_params) {
             std::string full_param_name = param->get_full_param_name(selected_effect_name);
             param->set_data_from_settings(settings, full_param_name.c_str());
             //info("Assigned value:  %s %lu", full_param_name, param.data_size);
@@ -344,7 +344,7 @@ obs_properties_t *shadertastic_transition_properties(void *data) {
         const char *effect_label = effect.label.c_str();
         obs_properties_t *effect_group = obs_properties_create();
         //obs_properties_add_text(effect_group, "", effect_name, OBS_TEXT_INFO);
-        for (auto &[_, param] : effect.effect_params) {
+        for (auto param: effect.effect_params) {
             std::string full_param_name = param->get_full_param_name(effect_name);
             param->render_property_ui(full_param_name.c_str(), effect_group);
         }
