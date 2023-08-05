@@ -29,6 +29,8 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <cctype>
+#include <list>
 #include <map>
 
 #if defined(_WIN32)
@@ -58,6 +60,7 @@
 #include "parameters/parameter_list_int.hpp"
 #include "parameters/parameter_unknown.hpp"
 #include "parameters/parameter_image.hpp"
+#include "parameters/parameter_source.hpp"
 #include "parameters/parameter_factory.hpp"
 #include "effect.hpp"
 #include "shadertastic.hpp"
@@ -143,7 +146,7 @@ bool obs_module_load(void) {
     struct obs_source_info shadertastic_filter_info = {};
     shadertastic_filter_info.id = "shadertastic_filter";
     shadertastic_filter_info.type = OBS_SOURCE_TYPE_FILTER;
-    shadertastic_filter_info.output_flags = OBS_SOURCE_VIDEO;
+    shadertastic_filter_info.output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_CUSTOM_DRAW /*| OBS_SOURCE_COMPOSITE*/;
     shadertastic_filter_info.get_name = shadertastic_filter_get_name;
     shadertastic_filter_info.create = shadertastic_filter_create;
     shadertastic_filter_info.destroy = shadertastic_filter_destroy;
@@ -154,6 +157,8 @@ bool obs_module_load(void) {
 	shadertastic_filter_info.get_height = shadertastic_filter_getheight,
     shadertastic_filter_info.video_render = shadertastic_filter_video_render;
     shadertastic_filter_info.load = shadertastic_filter_update;
+	shadertastic_filter_info.show = shadertastic_filter_show;
+	shadertastic_filter_info.hide = shadertastic_filter_hide;
     shadertastic_filter_info.get_defaults2 = shadertastic_filter_defaults;
     shadertastic_filter_info.video_get_color_space = shadertastic_filter_get_color_space;
     obs_register_source(&shadertastic_filter_info);

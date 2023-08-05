@@ -305,3 +305,21 @@ static enum gs_color_space shadertastic_filter_get_color_space(void *data, size_
     return source_space;
 }
 //----------------------------------------------------------------------------------------------------------------------
+
+void shadertastic_filter_show(void *data) {
+    struct shadertastic_filter *s = static_cast<shadertastic_filter*>(data);
+    shadertastic_effect_t *selected_effect = s->selected_effect;
+    if (selected_effect != NULL) {
+        selected_effect->show();
+    }
+}
+//----------------------------------------------------------------------------------------------------------------------
+
+void shadertastic_filter_hide(void *data) {
+    struct shadertastic_filter *s = static_cast<shadertastic_filter*>(data);
+    shadertastic_effect_t *selected_effect = s->selected_effect;
+    if (selected_effect != NULL) {
+        selected_effect->hide();
+    }
+}
+//----------------------------------------------------------------------------------------------------------------------

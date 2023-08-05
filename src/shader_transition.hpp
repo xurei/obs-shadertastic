@@ -288,18 +288,6 @@ bool shadertastic_transition_properties_change_effect_callback(void *priv, obs_p
     return true;
 }
 
-static bool add_sources(void *data, obs_source_t *source)
-{
-    obs_property_t *p = static_cast<obs_property_t*>(data);
-
-    if (obs_source_is_scene(source)) {
-        const char *name = obs_source_get_name(source);
-        debug("SOURCE %s", name);
-        obs_property_list_add_string(p, name, name);
-    }
-	return true;
-}
-
 bool shadertastic_transition_reload_button_click(obs_properties_t *props, obs_property_t *property, void *data) {
     UNUSED_PARAMETER(props);
     UNUSED_PARAMETER(property);

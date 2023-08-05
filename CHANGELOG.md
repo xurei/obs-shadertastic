@@ -7,11 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 ### Added
 - Added Parameter type `image`
+- Added Parameter type `source`
 - Added "Reset time when shown" parameter on type-dependant filters
 - Filters : Pixelate effect
 
 ### Changed
 - Using RGBA with 16bit channels for intermediate textures
+- Parameters are now ordered as they appear in the meta file
 
 ### Fixed
 - Fixed time increased multiple times when a source is duplicated
