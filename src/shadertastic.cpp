@@ -53,6 +53,7 @@
 #define try_gs_effect_set_texture_srgb(param, val) if (param) { gs_effect_set_texture_srgb(param, val); }
 
 #include "shader/shader.hpp"
+#include "shader/shaders_library.hpp"
 #include "parameters/parameter.hpp"
 #include "parameters/parameter_bool.hpp"
 #include "parameters/parameter_double.hpp"
@@ -66,47 +67,6 @@
 #include "shadertastic.hpp"
 //----------------------------------------------------------------------------------------------------------------------
 
-void load_effect(shadertastic_effect_t &effect, std::string parent_dir, std::string effect_name) {
-    debug(">>>>>>>>>>>>>>> load_effect %s", effect_name.c_str());
-    char *metadata_path = obs_module_file((std::string("effects/") + parent_dir + "/" + effect_name + "/meta.json").c_str());
-    char *shader_path = obs_module_file((std::string("effects/") + parent_dir + "/" +effect_name + "/main.hlsl").c_str());
-
-    effect.name = effect_name;
-    effect.main_shader.release();
-
-    if (shader_path != NULL) {
-        effect.main_shader.load(shader_path);
-        if (effect.main_shader.effect == NULL) {
-            char *fallback_shader_path = obs_module_file((std::string("effects/") + parent_dir + "/fallback_effect.hlsl").c_str());
-            debug("FALLBACK %s", fallback_shader_path);
-            effect.main_shader.load(fallback_shader_path);
-            bfree(fallback_shader_path);
-            effect.is_fallback = true;
-        }
-
-        effect.load_metadata(metadata_path);
-    }
-    if (shader_path != NULL) {
-        bfree(shader_path);
-    }
-    if (metadata_path != NULL) {
-        bfree(metadata_path);
-    }
-}
-//----------------------------------------------------------------------------------------------------------------------
-
-void reload_effect(std::string parent_dir, shadertastic_effect_t *selected_effect) {
-    if (selected_effect != NULL) {
-        std::string effect_name = selected_effect->name;
-        load_effect(*selected_effect, parent_dir, effect_name);
-    }
-}
-//----------------------------------------------------------------------------------------------------------------------
-
-#include "shader_filter.hpp"
-#include "shader_transition.hpp"
-//----------------------------------------------------------------------------------------------------------------------
-
 OBS_DECLARE_MODULE()
 OBS_MODULE_AUTHOR("xurei")
 OBS_MODULE_USE_DEFAULT_LOCALE(
@@ -116,6 +76,34 @@ OBS_MODULE_USE_DEFAULT_LOCALE(
       "shadertastic"
     #endif
 , "en-US")
+//----------------------------------------------------------------------------------------------------------------------
+
+void load_effect(shadertastic_effect_t &effect, std::string parent_dir, std::string effect_name) {
+    debug(">>>>>>>>>>>>>>> load_effect %s", effect_name.c_str());
+    char *metadata_path = obs_module_file((std::string("effects/") + parent_dir + "/" + effect_name + "/meta.json").c_str());
+
+    effect.name = effect_name;
+    effect.main_shader = shaders_library.get(parent_dir + "/" +effect_name);
+
+    effect.load_metadata(metadata_path);
+    if (metadata_path != NULL) {
+        bfree(metadata_path);
+    }
+}
+//----------------------------------------------------------------------------------------------------------------------
+
+void reload_effect(std::string parent_dir, shadertastic_effect_t *selected_effect) {
+    if (selected_effect != NULL) {
+        std::string effect_name = selected_effect->name;
+        shaders_library.reload(parent_dir + "/" + effect_name);
+        load_effect(*selected_effect, parent_dir, effect_name);
+    }
+}
+//----------------------------------------------------------------------------------------------------------------------
+
+#include "shader_filter.hpp"
+#include "shader_transition.hpp"
+//----------------------------------------------------------------------------------------------------------------------
 
 bool obs_module_load(void) {
     info("loaded version %s", PROJECT_VERSION);
@@ -127,6 +115,9 @@ bool obs_module_load(void) {
         #else
           "shadertastic_transition";
         #endif
+
+    shaders_library.load();
+
     shadertastic_transition_info.type = OBS_SOURCE_TYPE_TRANSITION;
     shadertastic_transition_info.get_name = shadertastic_transition_get_name;
     shadertastic_transition_info.create = shadertastic_transition_create;
@@ -164,5 +155,10 @@ bool obs_module_load(void) {
     obs_register_source(&shadertastic_filter_info);
 
     return true;
+}
+//----------------------------------------------------------------------------------------------------------------------
+
+void obs_module_unload(void) {
+    shaders_library.unload();
 }
 //----------------------------------------------------------------------------------------------------------------------

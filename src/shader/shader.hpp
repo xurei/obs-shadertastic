@@ -15,7 +15,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
-class transition_shader {
+class effect_shader {
     public:
     gs_effect_t *effect = NULL;
     gs_eparam_t *param_tex_a = NULL;
@@ -28,7 +28,7 @@ class transition_shader {
     gs_eparam_t *param_current_step = NULL;
     gs_eparam_t *param_nb_steps = NULL;
 
-    void load(const char *shader_path) {
+    void load42(const char *shader_path) {
         debug("SHADER PATH: %s", shader_path);
         char *error_string = NULL;
         char *shader_source_ = os_quick_read_utf8_file(shader_path);
@@ -73,7 +73,7 @@ class transition_shader {
         }
     }
 
-    void release() {
+    void release42() {
         if (effect != NULL) {
             debug("Release shader");
             obs_enter_graphics();
