@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - Added Parameter type `image`
 - Added Parameter type `source`
+- Added Parameter type `audiolevel`
 - Added "Reset time when shown" parameter on type-dependant filters
 - Filters : Pixelate effect
 

@@ -67,9 +67,11 @@
     #define debug(format, ...)
 #endif
 
+#include "util/compare_nocase.hpp"
 #include "shader/shader.hpp"
 #include "shader/shaders_library.hpp"
 #include "parameters/parameter.hpp"
+#include "parameters/parameter_audiolevel.hpp"
 #include "parameters/parameter_bool.hpp"
 #include "parameters/parameter_double.hpp"
 #include "parameters/parameter_int.hpp"

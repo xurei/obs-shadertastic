@@ -23,6 +23,7 @@ enum effect_param_datatype {
     PARAM_DATATYPE_LIST_INT,
     PARAM_DATATYPE_IMAGE,
     PARAM_DATATYPE_SOURCE,
+    PARAM_DATATYPE_AUDIOLEVEL,
 };
 
 class effect_parameter_factory {
@@ -66,6 +67,10 @@ class effect_parameter_factory {
                         out = new effect_parameter_source(shader_param);
                         break;
                     }
+                    case PARAM_DATATYPE_AUDIOLEVEL: {
+                        out = new effect_parameter_audiolevel(shader_param);
+                        break;
+                    }
                     case PARAM_DATATYPE_UNKNOWN: default: {
                         out = new effect_parameter_unknown(shader_param);
                         break;
@@ -96,6 +101,9 @@ class effect_parameter_factory {
             }
             else if (strcmp(datatype_str, "source") == 0) {
                 return PARAM_DATATYPE_SOURCE;
+            }
+            else if (strcmp(datatype_str, "audiolevel") == 0) {
+                return PARAM_DATATYPE_AUDIOLEVEL;
             }
             else {
                 return PARAM_DATATYPE_UNKNOWN;
