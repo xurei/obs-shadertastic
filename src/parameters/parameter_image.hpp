@@ -55,8 +55,11 @@ class effect_parameter_image : public effect_parameter {
         virtual void set_data_from_settings(obs_data_t *settings, const char *full_param_name) {
             const char *path_ = obs_data_get_string(settings, full_param_name);
             if (path_ != NULL) {
-                this->path = std::string(path_);
-                this->load_texture();
+                std::string path_str = std::string(path_);
+                if (this->path != path_str) {
+                    this->path = path_str;
+                    this->load_texture();
+                }
             }
             else {
                 if (this->texture != NULL) {
@@ -64,6 +67,7 @@ class effect_parameter_image : public effect_parameter {
                     gs_texture_destroy(this->texture);
                     this->texture = NULL;
                     obs_leave_graphics();
+                    this->path = "";
                 }
             }
         }
