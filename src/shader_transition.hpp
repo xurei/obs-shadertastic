@@ -343,7 +343,8 @@ obs_properties_t *shadertastic_transition_properties(void *data) {
         obs_property_set_visible(obs_properties_get(props, (s->selected_effect->name + "__params").c_str()), true);
     }
 
-//    TODO ABOUT PLUGIN SHOULD GO HERE
+    about_property(props);
+
     return props;
 }
 //----------------------------------------------------------------------------------------------------------------------

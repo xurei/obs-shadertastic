@@ -95,6 +95,16 @@ const char *shadertastic_filter_get_name(void *type_data) {
 }
 //----------------------------------------------------------------------------------------------------------------------
 
+void about_property(obs_properties_t *props) {
+    obs_properties_add_text(
+        props,
+        "plugin_info",
+        "<a href=\"https://shadertastic.com\">Shadertastic</a> (" PROJECT_VERSION ") by <a href=\"http://about.xurei.io/\">xurei</a>",
+        OBS_TEXT_INFO
+    );
+}
+//----------------------------------------------------------------------------------------------------------------------
+
 MODULE_EXPORT const char *obs_module_name(void) {
     #ifdef DEV_MODE
         return "Shader Transitions (dev)";
