@@ -19,9 +19,6 @@ class effect_parameter_unknown : public effect_parameter {
     public:
         effect_parameter_unknown(gs_eparam_t *shader_param) : effect_parameter(sizeof(int), shader_param) {
         }
-        virtual ~effect_parameter_unknown() {
-
-        }
 
         virtual void set_defaults(obs_data_t *metadata) {
             UNUSED_PARAMETER(metadata);
@@ -33,9 +30,12 @@ class effect_parameter_unknown : public effect_parameter {
         }
 
         virtual void render_property_ui(const char *full_param_name, obs_properties_t *props) {
-            char message[1024];
-            sprintf(message, "Unknown type for %s", full_param_name);
-            obs_properties_add_text(props, "", message, OBS_TEXT_INFO);
+            obs_properties_add_text(
+                props,
+                full_param_name,
+                (std::string("Unknown type for ") + std::string(full_param_name)).c_str(),
+                OBS_TEXT_INFO
+            );
         }
 
         virtual void set_data_from_settings(obs_data_t *settings, const char *full_param_name) {
