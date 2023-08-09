@@ -27,7 +27,7 @@ struct shadertastic_effect_t {
 
     params_list effect_params;
 
-    transition_shader main_shader;
+    effect_shader *main_shader = NULL;
 
     void load_metadata(const char *metadata_path) {
         if (metadata_path == NULL) {
@@ -75,7 +75,7 @@ struct shadertastic_effect_t {
                 for (size_t i=0; i < obs_data_array_count(parameters); i++) {
                     obs_data_t *param_metadata = obs_data_array_item(parameters, i);
                     const char *param_name = obs_data_get_string(param_metadata, "name");
-                    gs_eparam_t *shader_param = gs_effect_get_param_by_name(main_shader.effect, param_name);
+                    gs_eparam_t *shader_param = gs_effect_get_param_by_name(main_shader->effect, param_name);
                     effect_parameter *effect_param = parameter_factory.create(name, shader_param, param_metadata);
 
                     if (effect_param != NULL) {
@@ -119,21 +119,21 @@ struct shadertastic_effect_t {
         /* texture setters look reversed, but they aren't */
         if (gs_get_color_space() == GS_CS_SRGB) {
             /* users want nonlinear fade */
-            try_gs_effect_set_texture(main_shader.param_tex_a, a);
-            try_gs_effect_set_texture(main_shader.param_tex_b, b);
+            try_gs_effect_set_texture(main_shader->param_tex_a, a);
+            try_gs_effect_set_texture(main_shader->param_tex_b, b);
         }
         else {
             /* nonlinear fade is too wrong, so use linear fade */
-            try_gs_effect_set_texture_srgb(main_shader.param_tex_a, a);
-            try_gs_effect_set_texture_srgb(main_shader.param_tex_b, b);
+            try_gs_effect_set_texture_srgb(main_shader->param_tex_a, a);
+            try_gs_effect_set_texture_srgb(main_shader->param_tex_b, b);
         }
         //debug("input textures set");
 
-        try_gs_effect_set_float(main_shader.param_time, t);
-        try_gs_effect_set_float(main_shader.param_upixel, (float)(1.0/cx));
-        try_gs_effect_set_float(main_shader.param_vpixel, (float)(1.0/cy));
-        try_gs_effect_set_float(main_shader.param_rand_seed, rand_seed);
-        try_gs_effect_set_int(main_shader.param_nb_steps, nb_steps);
+        try_gs_effect_set_float(main_shader->param_time, t);
+        try_gs_effect_set_float(main_shader->param_upixel, (float)(1.0/cx));
+        try_gs_effect_set_float(main_shader->param_vpixel, (float)(1.0/cy));
+        try_gs_effect_set_float(main_shader->param_rand_seed, rand_seed);
+        try_gs_effect_set_int(main_shader->param_nb_steps, nb_steps);
         //debug("common params set");
 
         for (auto param: effect_params) {
@@ -145,13 +145,13 @@ struct shadertastic_effect_t {
     void set_step_params(int current_step, gs_texture_t *interm) {
         if (gs_get_color_space() == GS_CS_SRGB) {
             /* users want nonlinear fade */
-            try_gs_effect_set_texture(main_shader.param_tex_interm, interm);
+            try_gs_effect_set_texture(main_shader->param_tex_interm, interm);
         }
         else {
             /* nonlinear fade is too wrong, so use linear fade */
-            try_gs_effect_set_texture_srgb(main_shader.param_tex_interm, interm);
+            try_gs_effect_set_texture_srgb(main_shader->param_tex_interm, interm);
         }
-        try_gs_effect_set_int(main_shader.param_current_step, current_step);
+        try_gs_effect_set_int(main_shader->param_current_step, current_step);
     }
 
     void render_shader(uint32_t cx, uint32_t cy) {
@@ -164,7 +164,7 @@ struct shadertastic_effect_t {
             tech_name = "DrawLinear";
         }
 
-        while (gs_effect_loop(main_shader.effect, tech_name)) {
+        while (gs_effect_loop(main_shader->effect, tech_name)) {
             gs_draw_sprite(NULL, 0, cx, cy);
         }
         //debug("end of draw");
@@ -189,7 +189,6 @@ struct shadertastic_effect_t {
     }
 
     void release() {
-        main_shader.release();
         for (auto effect_param: effect_params) {
             delete effect_param;
         }

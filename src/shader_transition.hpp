@@ -37,7 +37,7 @@ static void *shadertastic_transition_create(obs_data_t *settings, obs_source_t *
     for (const auto &dir : dirs) {
         shadertastic_effect_t effect;
         load_effect(effect, "transitions", dir);
-        if (effect.main_shader.effect != NULL) {
+        if (effect.main_shader != NULL) {
             s->effects->insert(shadertastic_effects_map_t::value_type(dir, effect));
 
             // Defaults must be set here and not in the transition_defaults() function.
@@ -48,8 +48,7 @@ static void *shadertastic_transition_create(obs_data_t *settings, obs_source_t *
             }
         }
         else {
-            debug ("NOT LOADING %s", dir.c_str());
-            debug ("NOT LOADING main_shader %p", effect.main_shader.effect);
+            debug ("NOT LOADING TRANSITION %s", dir.c_str());
         }
     }
 

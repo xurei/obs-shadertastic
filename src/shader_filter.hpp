@@ -40,7 +40,7 @@ static void *shadertastic_filter_create(obs_data_t *settings, obs_source_t *sour
     for (const auto &dir : dirs) {
         shadertastic_effect_t effect;
         load_effect(effect, "filters", dir);
-        if (effect.main_shader.effect != NULL) {
+        if (effect.main_shader != NULL) {
             s->effects->insert(shadertastic_effects_map_t::value_type(dir, effect));
 
             // Defaults must be set here and not in the transition_defaults() function.
@@ -51,8 +51,7 @@ static void *shadertastic_filter_create(obs_data_t *settings, obs_source_t *sour
             }
         }
         else {
-            debug ("NOT LOADING %s", dir.c_str());
-            debug ("NOT LOADING main_shader %p", effect.main_shader.effect);
+            debug ("NOT LOADING FILTER %s", dir.c_str());
         }
     }
 
@@ -161,7 +160,7 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
     const enum gs_color_format format = gs_get_format_from_space(source_space);
 
     shadertastic_effect_t *selected_effect = s->selected_effect;
-    if (selected_effect != NULL) {
+    if (selected_effect != NULL && selected_effect->main_shader != NULL) {
         gs_texture_t *interm_texture = s->transparent_texture;
         if (obs_source_process_filter_begin_with_color_space(s->source, format, source_space, OBS_ALLOW_DIRECT_RENDERING)) {
             gs_blend_state_push();
@@ -191,7 +190,7 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
                     selected_effect->set_params(NULL, NULL, filter_time, cx, cy, s->rand_seed);
                     selected_effect->set_step_params(current_step, interm_texture);
 
-                    obs_source_process_filter_end(s->source, selected_effect->main_shader.effect, cx, cy);
+                    obs_source_process_filter_end(s->source, selected_effect->main_shader->effect, cx, cy);
                     if (is_interm_step) {
                         gs_texrender_end(s->interm_texrender[s->interm_texrender_buffer]);
                         interm_texture = gs_texrender_get_texture(s->interm_texrender[s->interm_texrender_buffer]);
@@ -271,7 +270,7 @@ obs_properties_t *shadertastic_filter_properties(void *data) {
 
         if (effect.input_time) {
             obs_properties_add_float_slider(effect_group, get_full_param_name_static(effect_name, std::string("speed")).c_str(), "Speed", 0.0, 1.0, 0.01);
-            obs_properties_add_bool(effect_group, get_full_param_name_static(effect_name, std::string("reset_time_on_show")).c_str(), "Reset time when shown");
+            obs_properties_add_bool(effect_group, get_full_param_name_static(effect_name, std::string("reset_time_on_show")).c_str(), "Reset time on visibility toggle");
         }
 
         for (auto param: effect.effect_params) {
