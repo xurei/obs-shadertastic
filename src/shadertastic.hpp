@@ -35,7 +35,7 @@ struct shadertastic_transition {
     float transition_b_mul;
 
     shadertastic_effects_map_t *effects;
-    shadertastic_effect_t *selected_effect;
+    shadertastic_effect_t *selected_effect = NULL;
 
     void release() {
         for (auto& [key, effect] : *this->effects) {
@@ -57,7 +57,7 @@ struct shadertastic_filter {
     int width, height;
     bool should_reload = false;
     shadertastic_effects_map_t *effects;
-    shadertastic_effect_t *selected_effect;
+    shadertastic_effect_t *selected_effect = NULL;
 
     // Filter previous state (enabled/disabled)
     bool was_enabled = false;

@@ -99,7 +99,10 @@ void shadertastic_filter_update(void *data, obs_data_t *settings) {
     }
 
     const char *selected_effect_name = obs_data_get_string(settings, "effect");
-    s->selected_effect = &((*s->effects)[selected_effect_name]);
+    auto selected_effect_it = s->effects->find(selected_effect_name);
+    if (selected_effect_it != s->effects->end()) {
+        s->selected_effect = &(selected_effect_it->second);
+    }
 
     if (s->selected_effect != NULL) {
         //debug("Selected Effect: %s", selected_effect_name);
