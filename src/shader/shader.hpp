@@ -28,7 +28,7 @@ class effect_shader {
     gs_eparam_t *param_current_step = NULL;
     gs_eparam_t *param_nb_steps = NULL;
 
-    void load42(const char *shader_path) {
+    void load(const char *shader_path) {
         debug("SHADER PATH: %s", shader_path);
         char *error_string = NULL;
         char *shader_source_ = os_quick_read_utf8_file(shader_path);
@@ -74,7 +74,7 @@ class effect_shader {
         }
     }
 
-    void release42() {
+    void release() {
         if (effect != NULL) {
             debug("Release shader");
             obs_enter_graphics();

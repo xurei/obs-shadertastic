@@ -7,7 +7,7 @@ class shaders_library_t {
         void load() {
             char *fallback_shader_path = obs_module_file("effects/fallback_effect.hlsl");
             debug("fallback_shader_path %s", fallback_shader_path);
-            fallback_shader.load42(fallback_shader_path);
+            fallback_shader.load(fallback_shader_path);
             bfree(fallback_shader_path);
         }
 
@@ -22,7 +22,7 @@ class shaders_library_t {
                 }
                 else {
                     effect_shader *new_shader = new effect_shader();
-                    new_shader->load42(shader_path);
+                    new_shader->load(shader_path);
                     if (new_shader->effect == NULL) {
                         shaders.emplace(path, &fallback_shader);
                     }
@@ -47,10 +47,10 @@ class shaders_library_t {
         void unload() {
             for (auto & [_, shader]: this->shaders) {
                 if (shader != &fallback_shader) {
-                    shader->release42();
+                    shader->release();
                     delete shader;
                 }
-                fallback_shader.release42();
+                fallback_shader.release();
             }
         }
 
@@ -58,7 +58,7 @@ class shaders_library_t {
             effect_shader *shader = this->get(path);
             char *shader_path = this->get_shader_path(path);
             if (shader != NULL && shader_path != NULL) {
-                shader->load42(shader_path);
+                shader->load(shader_path);
                 bfree(shader_path);
             }
         }
