@@ -55,10 +55,16 @@ class shaders_library_t {
         }
 
         void reload(std::string path) {
-            effect_shader *shader = this->get(path);
             char *shader_path = this->get_shader_path(path);
-            if (shader != NULL && shader_path != NULL) {
-                shader->load(shader_path);
+            if (shader_path != NULL) {
+                effect_shader *shader = this->get(path);
+                if (shader == &fallback_shader) {
+                    shaders.erase(path);
+                    shader = this->get(path);
+                }
+                if (shader != NULL && shader != &fallback_shader) {
+                    shader->load(shader_path);
+                }
                 bfree(shader_path);
             }
         }

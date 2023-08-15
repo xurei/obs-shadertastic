@@ -58,7 +58,7 @@ class effect_shader {
         obs_leave_graphics();
 
         if (!effect) {
-            do_log(LOG_ERROR, "Could not open shader file: %s", error_string);
+            do_log(LOG_ERROR, "Could not open shader file %s : %s", shader_path, error_string);
             bfree(error_string);
         }
         else {

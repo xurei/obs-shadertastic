@@ -61,7 +61,6 @@ static void *shadertastic_filter_create(obs_data_t *settings, obs_source_t *sour
 //----------------------------------------------------------------------------------------------------------------------
 
 void shadertastic_filter_destroy(void *data) {
-    debug("Destroy");
     struct shadertastic_filter *s = static_cast<shadertastic_filter*>(data);
 
     obs_enter_graphics();
@@ -69,12 +68,8 @@ void shadertastic_filter_destroy(void *data) {
     gs_texrender_destroy(s->interm_texrender[0]);
     gs_texrender_destroy(s->interm_texrender[1]);
     obs_leave_graphics();
-    debug("Destroy2");
-
     s->release();
-    debug("Destroy3");
     bfree(data);
-    debug("Destroyed");
 }
 //----------------------------------------------------------------------------------------------------------------------
 
