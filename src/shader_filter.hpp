@@ -207,7 +207,7 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
         }
     }
     else {
-        info("No effect selected");
+        info("%s : No effect selected", obs_source_get_name(s->source));
         obs_source_skip_video_filter(s->source);
     }
 }

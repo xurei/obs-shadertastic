@@ -172,11 +172,11 @@ void shadertastic_transition_shader_render(void *data, gs_texture_t *a, gs_textu
             s->transition_texrender_buffer = (s->transition_texrender_buffer+1) & 1;
             gs_texrender_reset(s->transition_texrender[s->transition_texrender_buffer]);
             if (gs_texrender_begin(s->transition_texrender[s->transition_texrender_buffer], cx, cy)) {
-//                gs_blend_state_push();
-//                gs_blend_function_separate(
-//                    GS_BLEND_SRCALPHA, GS_BLEND_INVSRCALPHA,
-//                    GS_BLEND_ONE, GS_BLEND_INVSRCALPHA
-//                );
+                gs_blend_state_push();
+                gs_blend_function_separate(
+                    GS_BLEND_SRCALPHA, GS_BLEND_INVSRCALPHA,
+                    GS_BLEND_ONE, GS_BLEND_INVSRCALPHA
+                );
                 gs_clear(GS_CLEAR_COLOR, &clear_color, 0.0f, 0);
                 gs_ortho(0.0f, (float)cx, 0.0f, (float)cy, -100.0f, 100.0f); // This line took me A WHOLE WEEK to figure out
 
@@ -184,7 +184,7 @@ void shadertastic_transition_shader_render(void *data, gs_texture_t *a, gs_textu
                 effect->set_step_params(current_step, interm_texture);
                 effect->render_shader(cx, cy);
                 gs_texrender_end(s->transition_texrender[s->transition_texrender_buffer]);
-//                gs_blend_state_pop();
+                gs_blend_state_pop();
                 interm_texture = gs_texrender_get_texture(s->transition_texrender[s->transition_texrender_buffer]);
             }
         }
@@ -213,6 +213,7 @@ void shadertastic_transition_video_render(void *data, gs_effect_t *effect) {
         obs_source_t *scene_b = obs_transition_get_source(s->source, OBS_TRANSITION_SOURCE_B);
 
         if (s->auto_reload) {
+            debug("AUTO RELOAD");
             reload_effect("transitions", s->selected_effect);
         }
 
@@ -287,17 +288,6 @@ bool shadertastic_transition_properties_change_effect_callback(void *priv, obs_p
         obs_property_set_visible(obs_properties_get(props, (selected_effect->second.name + "__params").c_str()), true);
     }
 
-    return true;
-}
-
-bool shadertastic_transition_reload_button_click(obs_properties_t *props, obs_property_t *property, void *data) {
-    UNUSED_PARAMETER(props);
-    UNUSED_PARAMETER(property);
-    struct shadertastic_transition *s = static_cast<shadertastic_transition*>(data);
-
-    if (s->auto_reload) {
-        reload_effect("transitions", s->selected_effect);
-    }
     return true;
 }
 

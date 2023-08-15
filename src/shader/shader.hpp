@@ -47,6 +47,7 @@ class effect_shader {
             "uniform float vpixel;\n" +
             "uniform float rand_seed;\n" +
             "uniform int current_step;\n" +
+            "uniform int nb_steps;\n" +
             "float srgb_nonlinear_to_linear_channel(float u) { return (u <= 0.04045) ? (u / 12.92) : pow((u + 0.055) / 1.055, 2.4); }\n" +
             "float3 srgb_nonlinear_to_linear(float3 v) { return float3(srgb_nonlinear_to_linear_channel(v.r), srgb_nonlinear_to_linear_channel(v.g), srgb_nonlinear_to_linear_channel(v.b)); }\n" +
             "float fract(float v) { return v - floor(v); }\n" +
