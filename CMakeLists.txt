@@ -30,7 +30,10 @@ target_sources(${PROJECT_NAME} PRIVATE
 
 if(BUILD_OUT_OF_TREE)
     find_package(libobs REQUIRED)
+    set(OBS_FRONTEND_API_NAME "obs-frontend-api")
     include(cmake/ObsPluginHelpers.cmake)
+else()
+    set(OBS_FRONTEND_API_NAME "frontend-api")
 endif()
 
 if(OS_WINDOWS)
@@ -55,7 +58,11 @@ elseif(OS_MACOS)
         target_compile_options(${PROJECT_NAME} PRIVATE -Wall)
 endif()
 
+# lines if you want add Qt UI in your plugin
+find_qt(COMPONENTS Core Widgets Gui)
+
 target_link_libraries(${PROJECT_NAME}
+    Qt::Widgets
     OBS::libobs)
 
 if(BUILD_OUT_OF_TREE)

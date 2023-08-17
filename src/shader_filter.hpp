@@ -23,36 +23,22 @@ static void *shadertastic_filter_create(obs_data_t *settings, obs_source_t *sour
 
     debug("Settings : %s", obs_data_get_json(settings));
 
-    debug("%s", obs_data_get_json(settings));
-
-    char *filters_dir = obs_module_file("effects/filters");
-    std::vector<std::string> dirs = list_directories(filters_dir);
-    bfree(filters_dir);
-
     uint8_t transparent_tex_data[2 * 2 * 4] = {0};
     const uint8_t *transparent_tex = transparent_tex_data;
     obs_enter_graphics();
     s->transparent_texture = gs_texture_create(2, 2, GS_RGBA, 1, &transparent_tex, 0);
-    obs_leave_graphics();
     s->interm_texrender[0] = gs_texrender_create(GS_RGBA16, GS_ZS_NONE);
     s->interm_texrender[1] = gs_texrender_create(GS_RGBA16, GS_ZS_NONE);
+    obs_leave_graphics();
 
-    for (const auto &dir : dirs) {
-        shadertastic_effect_t effect;
-        load_effect(effect, "filters", dir);
-        if (effect.main_shader != NULL) {
-            s->effects->insert(shadertastic_effects_map_t::value_type(dir, effect));
+    char *filters_dir_ = obs_module_file("effects/filters");
+    std::vector<std::string> dirs = list_directories(filters_dir_);
+    std::string filters_dir(filters_dir_);
+    bfree(filters_dir_);
 
-            // Defaults must be set here and not in the transition_defaults() function.
-            // as the effects are not loaded yet in transition_defaults()
-            for (auto param: effect.effect_params) {
-                std::string full_param_name = param->get_full_param_name(effect.name.c_str());
-                param->set_default(settings, full_param_name.c_str());
-            }
-        }
-        else {
-            debug ("NOT LOADING FILTER %s", dir.c_str());
-        }
+    load_effects(s, settings, filters_dir);
+    if (shadertastic_settings.effects_path != NULL) {
+        load_effects(s, settings, *(shadertastic_settings.effects_path) + "/filters");
     }
 
     obs_source_update(source, settings);
@@ -202,7 +188,7 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
         }
     }
     else {
-        info("%s : No effect selected", obs_source_get_name(s->source));
+        //debug("%s : No effect selected", obs_source_get_name(s->source));
         obs_source_skip_video_filter(s->source);
     }
 }
@@ -237,7 +223,9 @@ bool shadertastic_filter_reload_button_click(obs_properties_t *props, obs_proper
     UNUSED_PARAMETER(property);
     struct shadertastic_filter *s = static_cast<shadertastic_filter*>(data);
 
-    reload_effect("filters", s->selected_effect);
+    if (s->selected_effect != NULL) {
+        s->selected_effect->reload();
+    }
     s->should_reload = true;
     s->rand_seed = (float)rand() / RAND_MAX;
     obs_source_update(s->source, NULL);
