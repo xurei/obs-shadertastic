@@ -30,8 +30,9 @@ target_sources(${PROJECT_NAME} PRIVATE
 
 if(BUILD_OUT_OF_TREE)
     find_package(libobs REQUIRED)
-    set(OBS_FRONTEND_API_NAME "obs-frontend-api")
+    find_package(obs-frontend-api REQUIRED)
     include(cmake/ObsPluginHelpers.cmake)
+    set(OBS_FRONTEND_API_NAME "obs-frontend-api")
 else()
     set(OBS_FRONTEND_API_NAME "frontend-api")
 endif()
@@ -60,8 +61,10 @@ endif()
 
 # lines if you want add Qt UI in your plugin
 find_qt(COMPONENTS Core Widgets Gui)
+set_target_properties(${PROJECT_NAME} PROPERTIES AUTOMOC ON AUTOUIC ON AUTORCC ON)
 
 target_link_libraries(${PROJECT_NAME}
+    OBS::${OBS_FRONTEND_API_NAME}
     Qt::Widgets
     OBS::libobs)
 
@@ -78,6 +81,7 @@ if(BUILD_OUT_OF_TREE)
     install(DIRECTORY data/locale
         DESTINATION ${CMAKE_INSTALL_PREFIX}/${DATA_OUT_DIR})
 else()
+    target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/UI/obs-frontend-api")
     set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "plugins/xurei")
 endif()
 setup_plugin_target(${PROJECT_NAME})
