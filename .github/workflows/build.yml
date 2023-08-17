@@ -2,7 +2,7 @@ name: build obs plugin
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, ci, dev ]
   #pull_request:
   #  branches: [ main ]
 
@@ -230,6 +230,35 @@ jobs:
       - name: Add plugin to obs cmake
         shell: cmd
         run: echo add_subdirectory(${{ env.PLUGIN_NAME }}) >> plugins/CMakeLists.txt
+      - name: Remove un-needed plugins for this build
+        shell: pwsh
+        run: |
+          Set-Content -Path "plugins\CMakeLists.txt" -Value (get-content -Path "plugins\CMakeLists.txt" | Select-String -Pattern 'add_subdirectory\(aja\)' -NotMatch)
+          Set-Content -Path "plugins\CMakeLists.txt" -Value (get-content -Path "plugins\CMakeLists.txt" | Select-String -Pattern 'add_subdirectory\(decklink\)' -NotMatch)
+          Set-Content -Path "plugins\CMakeLists.txt" -Value (get-content -Path "plugins\CMakeLists.txt" | Select-String -Pattern 'add_subdirectory\(image-source\)' -NotMatch)
+          Set-Content -Path "plugins\CMakeLists.txt" -Value (get-content -Path "plugins\CMakeLists.txt" | Select-String -Pattern 'add_subdirectory\(obs-ffmpeg\)' -NotMatch)
+          Set-Content -Path "plugins\CMakeLists.txt" -Value (get-content -Path "plugins\CMakeLists.txt" | Select-String -Pattern 'add_subdirectory\(obs-filters\)' -NotMatch)
+          Set-Content -Path "plugins\CMakeLists.txt" -Value (get-content -Path "plugins\CMakeLists.txt" | Select-String -Pattern 'add_subdirectory\(obs-libfdk\)' -NotMatch)
+          Set-Content -Path "plugins\CMakeLists.txt" -Value (get-content -Path "plugins\CMakeLists.txt" | Select-String -Pattern 'add_subdirectory\(obs-outputs\)' -NotMatch)
+          Set-Content -Path "plugins\CMakeLists.txt" -Value (get-content -Path "plugins\CMakeLists.txt" | Select-String -Pattern 'add_subdirectory\(obs-qsv11\)' -NotMatch)
+          Set-Content -Path "plugins\CMakeLists.txt" -Value (get-content -Path "plugins\CMakeLists.txt" | Select-String -Pattern 'add_subdirectory\(obs-transitions\)' -NotMatch)
+          Set-Content -Path "plugins\CMakeLists.txt" -Value (get-content -Path "plugins\CMakeLists.txt" | Select-String -Pattern 'add_subdirectory\(obs-vst\)' -NotMatch)
+          Set-Content -Path "plugins\CMakeLists.txt" -Value (get-content -Path "plugins\CMakeLists.txt" | Select-String -Pattern 'add_subdirectory\(obs-x264\)' -NotMatch)
+          Set-Content -Path "plugins\CMakeLists.txt" -Value (get-content -Path "plugins\CMakeLists.txt" | Select-String -Pattern 'add_subdirectory\(rtmp-services\)' -NotMatch)
+          Set-Content -Path "plugins\CMakeLists.txt" -Value (get-content -Path "plugins\CMakeLists.txt" | Select-String -Pattern 'add_subdirectory\(text-freetype2\)' -NotMatch)
+          Set-Content -Path "plugins\CMakeLists.txt" -Value (get-content -Path "plugins\CMakeLists.txt" | Select-String -Pattern 'add_subdirectory\(vlc-video\)' -NotMatch)
+          Set-Content -Path "plugins\CMakeLists.txt" -Value (get-content -Path "plugins\CMakeLists.txt" | Select-String -Pattern 'add_subdirectory\(win-capture\)' -NotMatch)
+          Set-Content -Path "plugins\CMakeLists.txt" -Value (get-content -Path "plugins\CMakeLists.txt" | Select-String -Pattern 'add_subdirectory\(win-dshow\)' -NotMatch)
+          Set-Content -Path "plugins\CMakeLists.txt" -Value (get-content -Path "plugins\CMakeLists.txt" | Select-String -Pattern 'add_subdirectory\(win-ivcam\)' -NotMatch)
+          Set-Content -Path "plugins\CMakeLists.txt" -Value (get-content -Path "plugins\CMakeLists.txt" | Select-String -Pattern 'add_subdirectory\(win-mf\)' -NotMatch)
+          Set-Content -Path "plugins\CMakeLists.txt" -Value (get-content -Path "plugins\CMakeLists.txt" | Select-String -Pattern 'add_subdirectory\(win-wasapi\)' -NotMatch)
+          type plugins\CMakeLists.txt
+          echo "------------------------------------------------------------------------------------"
+          Set-Content -Path "UI\frontend-plugins\CMakeLists.txt" -Value (get-content -Path "UI\frontend-plugins\CMakeLists.txt" | Select-String -Pattern 'add_subdirectory\(aja-output-ui\)' -NotMatch)
+          Set-Content -Path "UI\frontend-plugins\CMakeLists.txt" -Value (get-content -Path "UI\frontend-plugins\CMakeLists.txt" | Select-String -Pattern 'add_subdirectory\(decklink-output-ui\)' -NotMatch)
+          Set-Content -Path "UI\frontend-plugins\CMakeLists.txt" -Value (get-content -Path "UI\frontend-plugins\CMakeLists.txt" | Select-String -Pattern 'add_subdirectory\(frontend-tools\)' -NotMatch)
+          Set-Content -Path "UI\frontend-plugins\CMakeLists.txt" -Value (get-content -Path "UI\frontend-plugins\CMakeLists.txt" | Select-String -Pattern 'add_subdirectory\(decklink-captions\)' -NotMatch)
+          type UI\frontend-plugins\CMakeLists.txt
       - name: Fetch Git Tags
         run: git fetch --prune --tags --unshallow
       - name: 'Install prerequisite: QT'
