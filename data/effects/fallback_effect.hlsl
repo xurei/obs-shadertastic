@@ -22,16 +22,28 @@ VertData VSDefault(VertData v_in)
 }
 //----------------------------------------------------------------------------------------------------------------------
 
-float4 PSEffectLinear(FragData f_in) : TARGET
+float4 EffectLinear(float2 uv)
 {
-    float4 px = float4(1.0, 0.0, 0.0, 1.0);
+    float4 img_px = image.Sample(textureSampler, uv);
+    float4 texb_px = tex_b.Sample(textureSampler, uv);
+    float4 px = texb_px + img_px;
+    px[3] = 1.0;
+    px *= float4(1.0, 0.0, 0.0, 1.0);// * (tex_b.Sample(textureSampler, uv));
     return px;
 }
 
 float4 PSEffect(FragData f_in) : TARGET
 {
-    float4 rgba = PSEffectLinear(f_in);
-    rgba.rgb = srgb_nonlinear_to_linear(rgba.rgb);
+    float4 rgba = EffectLinear(f_in.uv);
+    if (current_step == nb_steps - 1) {
+        rgba.rgb = srgb_nonlinear_to_linear(rgba.rgb);
+    }
+    return rgba;
+}
+
+float4 PSEffectLinear(FragData f_in) : TARGET
+{
+    float4 rgba = EffectLinear(f_in.uv);
     return rgba;
 }
 

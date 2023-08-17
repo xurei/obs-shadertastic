@@ -16,8 +16,22 @@
 ******************************************************************************/
 
 typedef std::map<std::string, shadertastic_effect_t> shadertastic_effects_map_t;
+//----------------------------------------------------------------------------------------------------------------------
 
-struct shadertastic_transition {
+struct shadertastic_settings_t {
+    // Path where the user can add their own effects
+    std::string *effects_path = NULL;
+};
+#define SETTING_EFFECTS_PATH "effects_path"
+//----------------------------------------------------------------------------------------------------------------------
+
+struct shadertastic_common {
+    shadertastic_effects_map_t *effects;
+    shadertastic_effect_t *selected_effect = NULL;
+};
+//----------------------------------------------------------------------------------------------------------------------
+
+struct shadertastic_transition : public shadertastic_common {
     obs_source_t *source;
     bool transition_started;
     bool transitioning;
@@ -34,9 +48,6 @@ struct shadertastic_transition {
     float transition_a_mul;
     float transition_b_mul;
 
-    shadertastic_effects_map_t *effects;
-    shadertastic_effect_t *selected_effect;
-
     void release() {
         for (auto& [key, effect] : *this->effects) {
             effect.release();
@@ -48,7 +59,7 @@ struct shadertastic_transition {
 };
 //----------------------------------------------------------------------------------------------------------------------
 
-struct shadertastic_filter {
+struct shadertastic_filter : public shadertastic_common {
     obs_source_t *source;
     gs_texrender_t *interm_texrender[2];
     int interm_texrender_buffer = 0;
@@ -56,8 +67,6 @@ struct shadertastic_filter {
     float rand_seed;
     int width, height;
     bool should_reload = false;
-    shadertastic_effects_map_t *effects;
-    shadertastic_effect_t *selected_effect;
 
     // Filter previous state (enabled/disabled)
     bool was_enabled = false;

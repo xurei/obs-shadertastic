@@ -76,7 +76,9 @@ float4 EffectLinear(float2 uv)
 float4 PSEffect(FragData f_in) : TARGET
 {
     float4 rgba = EffectLinear(f_in.uv);
-    rgba.rgb = srgb_nonlinear_to_linear(rgba.rgb);
+    if (current_step == nb_steps - 1) {
+        rgba.rgb = srgb_nonlinear_to_linear(rgba.rgb);
+    }
     return rgba;
 }
 

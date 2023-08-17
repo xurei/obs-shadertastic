@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Parameters are now ordered as they appear in the meta file
 
 ### Fixed
+- Fixed crash when no effect is chosen in a transition (issue #2)
+- Fixed multistep transitions handling of color in RGBA mode
 - Fixed time increased multiple times when a source is duplicated
 
 ## [0.0.2] - 2023-06-24

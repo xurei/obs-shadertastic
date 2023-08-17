@@ -18,104 +18,104 @@
 #include "params_list.hpp"
 
 struct shadertastic_effect_t {
+    const std::string path;
     std::string name;
     std::string label;
     int nb_steps;
     bool is_fallback = false;
     bool input_time = false;
-    //bool input_face_detection = false;
-
     params_list effect_params;
-
     effect_shader *main_shader = NULL;
 
-    void load_metadata(const char *metadata_path) {
-        if (metadata_path == NULL) {
+    shadertastic_effect_t(std::string name_, std::string path_): name(name_), path(path_) {}
+
+    static bool is_effect(std::string path) {
+        return os_file_exists((path + "/meta.json").c_str());
+    }
+
+    void load() {
+        std::string metadata_path = normalize_path(this->path + "/meta.json");
+        debug(">>>>>>>>>>>>>>> load_effect %s %s %s", this->name.c_str(), this->path.c_str(), metadata_path.c_str());
+
+        this->main_shader = shaders_library.get(this->path);
+
+        obs_data_t *metadata = obs_data_create_from_json_file(metadata_path.c_str());
+        if (metadata == NULL) {
             // Something went wrong -> set default configuration
-            warn("Missing metadata file for effect %s", name.c_str());
+            warn("Unable to open metadata file for effect %s. Check the JSON syntax", name.c_str());
             label = name;
             nb_steps = 1;
         }
         else {
-            obs_data_t *metadata = obs_data_create_from_json_file(metadata_path);
-            if (metadata == NULL) {
-                // Something went wrong -> set default configuration
-                warn("Unable to open metadata file for effect %s. Check the JSON syntax", name.c_str());
+            const char *effect_label = obs_data_get_string(metadata, "label");
+            if (effect_label == NULL) {
                 label = name;
-                nb_steps = 1;
             }
             else {
-                const char *effect_label = obs_data_get_string(metadata, "label");
-                if (effect_label == NULL) {
-                    label = name;
-                }
-                else {
-                    label = std::string(effect_label);
-                }
-                obs_data_set_default_int(metadata, "steps", 1);
-                nb_steps = (int)obs_data_get_int(metadata, "steps");
+                label = std::string(effect_label);
+            }
+            obs_data_set_default_int(metadata, "steps", 1);
+            nb_steps = (int)obs_data_get_int(metadata, "steps");
 
-                obs_data_set_default_bool(metadata, "input_time", false);
-                input_time = obs_data_get_bool(metadata, "input_time");
-                //obs_data_set_default_bool(metadata, "input_face_detection", false);
-                //input_face_detection = obs_data_get_bool(metadata, "input_face_detection");
-                //obs_data_set_default_int(metadata, "input_sound_spectrum", false);
-                //input_sound_spectrum = obs_data_get_bool(metadata, "input_sound_spectrum");
+            obs_data_set_default_bool(metadata, "input_time", false);
+            input_time = obs_data_get_bool(metadata, "input_time");
 
-                obs_data_array_t *parameters = obs_data_get_array(metadata, "parameters");
-                if (parameters == NULL) {
-                    warn("No parameters specified for effect %s", name.c_str());
-                    parameters = obs_data_array_create();
-                }
+            obs_data_array_t *parameters = obs_data_get_array(metadata, "parameters");
+            if (parameters == NULL) {
+                warn("No parameters specified for effect %s", name.c_str());
+                parameters = obs_data_array_create();
+            }
 
-                // Copy the effect params map to allow recycling
-                params_list previous_effect_params(effect_params);
-                effect_params.clear();
+            // Copy the effect params map to allow recycling
+            params_list previous_effect_params(effect_params);
+            effect_params.clear();
 
-                for (size_t i=0; i < obs_data_array_count(parameters); i++) {
-                    obs_data_t *param_metadata = obs_data_array_item(parameters, i);
-                    const char *param_name = obs_data_get_string(param_metadata, "name");
-                    gs_eparam_t *shader_param = gs_effect_get_param_by_name(main_shader->effect, param_name);
-                    effect_parameter *effect_param = parameter_factory.create(name, shader_param, param_metadata);
+            for (size_t i=0; i < obs_data_array_count(parameters); i++) {
+                obs_data_t *param_metadata = obs_data_array_item(parameters, i);
+                const char *param_name = obs_data_get_string(param_metadata, "name");
+                gs_eparam_t *shader_param = gs_effect_get_param_by_name(main_shader->effect, param_name);
+                effect_parameter *effect_param = parameter_factory.create(name, shader_param, param_metadata);
 
-                    if (effect_param != NULL) {
-                        std::string param_name_str = std::string(param_name);
-                        effect_parameter *previous_param = previous_effect_params.get(param_name_str);
-                        if (previous_param != NULL) {
-                            if (previous_param->get_data_size() == effect_param->get_data_size()) {
-                                debug("Recycling data for %s (size: %i)", param_name_str.c_str(), (int)effect_param->get_data_size());
-                                memcpy(effect_param->get_data(), previous_param->get_data(), effect_param->get_data_size());
-                            }
-                            else {
-                                effect_param->set_data_from_default();
-                            }
+                if (effect_param != NULL) {
+                    std::string param_name_str = std::string(param_name);
+                    effect_parameter *previous_param = previous_effect_params.get(param_name_str);
+                    if (previous_param != NULL) {
+                        if (previous_param->get_data_size() == effect_param->get_data_size()) {
+                            debug("Recycling data for %s (size: %i)", param_name_str.c_str(), (int)effect_param->get_data_size());
+                            memcpy(effect_param->get_data(), previous_param->get_data(), effect_param->get_data_size());
                         }
                         else {
                             effect_param->set_data_from_default();
                         }
-
-                        effect_params.put(param_name_str, effect_param);
+                    }
+                    else {
+                        effect_param->set_data_from_default();
                     }
 
-                    obs_data_release(param_metadata);
+                    effect_params.put(param_name_str, effect_param);
                 }
 
-                // Clear memory of removed params
-                for (auto param: previous_effect_params) {
-                    debug ("Free removed param %s", param->get_name().c_str());
-                    delete param;
-                }
-
-                obs_data_array_release(parameters);
-                obs_data_release(metadata);
-                debug("Loaded effect %s from %s", name.c_str(), metadata_path);
+                obs_data_release(param_metadata);
             }
+
+            // Clear memory of removed params
+            for (auto param: previous_effect_params) {
+                debug ("Free removed param %s", param->get_name().c_str());
+                delete param;
+            }
+
+            obs_data_array_release(parameters);
+            obs_data_release(metadata);
+            debug("Loaded effect %s from %s", name.c_str(), metadata_path.c_str());
         }
     }
 
+    void reload() {
+        shaders_library.reload(this->path);
+        load();
+    }
+
     void set_params(gs_texture_t *a, gs_texture_t *b, float t, uint32_t cx, uint32_t cy, float rand_seed) {
-        //debug("--------------------");
-        //debug("cx %d; cy %d", cx, cy);
         /* texture setters look reversed, but they aren't */
         if (gs_get_color_space() == GS_CS_SRGB) {
             /* users want nonlinear fade */

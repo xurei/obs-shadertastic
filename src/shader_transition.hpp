@@ -34,22 +34,9 @@ static void *shadertastic_transition_create(obs_data_t *settings, obs_source_t *
     s->transition_texrender[0] = gs_texrender_create(GS_RGBA16, GS_ZS_NONE);
     s->transition_texrender[1] = gs_texrender_create(GS_RGBA16, GS_ZS_NONE);
 
-    for (const auto &dir : dirs) {
-        shadertastic_effect_t effect;
-        load_effect(effect, "transitions", dir);
-        if (effect.main_shader != NULL) {
-            s->effects->insert(shadertastic_effects_map_t::value_type(dir, effect));
-
-            // Defaults must be set here and not in the transition_defaults() function.
-            // as the effects are not loaded yet in transition_defaults()
-            for (auto param: effect.effect_params) {
-                std::string full_param_name = param->get_full_param_name(effect.name.c_str());
-                param->set_default(settings, full_param_name.c_str());
-            }
-        }
-        else {
-            debug ("NOT LOADING TRANSITION %s", dir.c_str());
-        }
+    load_effects(s, settings, transitions_dir);
+    if (shadertastic_settings.effects_path != NULL) {
+        load_effects(s, settings, *(shadertastic_settings.effects_path) + "/transitions");
     }
 
     obs_source_update(source, settings);
@@ -116,14 +103,15 @@ void shadertastic_transition_update(void *data, obs_data_t *settings) {
     s->transition_b_mul = (1.0f / (1.0f - s->transition_point));
 
     const char *selected_effect_name = obs_data_get_string(settings, "effect");
-    s->selected_effect = &((*s->effects)[selected_effect_name]);
+    auto selected_effect_it = s->effects->find(selected_effect_name);
+    if (selected_effect_it != s->effects->end()) {
+        s->selected_effect = &(selected_effect_it->second);
+    }
 
     if (s->selected_effect != NULL) {
-        //debug("Selected Effect: %s", selected_effect_name);
         for (auto param: s->selected_effect->effect_params) {
             std::string full_param_name = param->get_full_param_name(selected_effect_name);
             param->set_data_from_settings(settings, full_param_name.c_str());
-            //info("Assigned value:  %s %lu", full_param_name, param.data_size);
         }
     }
 
@@ -169,11 +157,11 @@ void shadertastic_transition_shader_render(void *data, gs_texture_t *a, gs_textu
             s->transition_texrender_buffer = (s->transition_texrender_buffer+1) & 1;
             gs_texrender_reset(s->transition_texrender[s->transition_texrender_buffer]);
             if (gs_texrender_begin(s->transition_texrender[s->transition_texrender_buffer], cx, cy)) {
-//                gs_blend_state_push();
-//                gs_blend_function_separate(
-//                    GS_BLEND_SRCALPHA, GS_BLEND_INVSRCALPHA,
-//                    GS_BLEND_ONE, GS_BLEND_INVSRCALPHA
-//                );
+                gs_blend_state_push();
+                gs_blend_function_separate(
+                    GS_BLEND_SRCALPHA, GS_BLEND_INVSRCALPHA,
+                    GS_BLEND_ONE, GS_BLEND_INVSRCALPHA
+                );
                 gs_clear(GS_CLEAR_COLOR, &clear_color, 0.0f, 0);
                 gs_ortho(0.0f, (float)cx, 0.0f, (float)cy, -100.0f, 100.0f); // This line took me A WHOLE WEEK to figure out
 
@@ -181,20 +169,20 @@ void shadertastic_transition_shader_render(void *data, gs_texture_t *a, gs_textu
                 effect->set_step_params(current_step, interm_texture);
                 effect->render_shader(cx, cy);
                 gs_texrender_end(s->transition_texrender[s->transition_texrender_buffer]);
-//                gs_blend_state_pop();
+                gs_blend_state_pop();
                 interm_texture = gs_texrender_get_texture(s->transition_texrender[s->transition_texrender_buffer]);
             }
         }
 
-//        gs_blend_state_push();
-//        gs_blend_function_separate(
-//            GS_BLEND_SRCALPHA, GS_BLEND_INVSRCALPHA,
-//            GS_BLEND_ONE, GS_BLEND_INVSRCALPHA
-//        );
+        gs_blend_state_push();
+        gs_blend_function_separate(
+            GS_BLEND_SRCALPHA, GS_BLEND_INVSRCALPHA,
+            GS_BLEND_ONE, GS_BLEND_INVSRCALPHA
+        );
         effect->set_params(a, b, t, cx, cy, s->rand_seed);
         effect->set_step_params(effect->nb_steps - 1, interm_texture);
         effect->render_shader(cx, cy);
-//        gs_blend_state_pop();
+        gs_blend_state_pop();
     }
 
     gs_enable_framebuffer_srgb(previous);
@@ -209,8 +197,9 @@ void shadertastic_transition_video_render(void *data, gs_effect_t *effect) {
         obs_source_t *scene_a = obs_transition_get_source(s->source, OBS_TRANSITION_SOURCE_A);
         obs_source_t *scene_b = obs_transition_get_source(s->source, OBS_TRANSITION_SOURCE_B);
 
-        if (s->auto_reload) {
-            reload_effect("transitions", s->selected_effect);
+        if (s->auto_reload && s->selected_effect != NULL) {
+            debug("AUTO RELOAD");
+            s->selected_effect->reload();
         }
 
         obs_transition_video_render(s->source, shadertastic_transition_render_init);
@@ -237,7 +226,6 @@ void shadertastic_transition_video_render(void *data, gs_effect_t *effect) {
         enum obs_transition_target target = t < s->transition_point ? OBS_TRANSITION_SOURCE_A : OBS_TRANSITION_SOURCE_B;
         //debug("render direct");
         obs_transition_video_render_direct(s->source, target);
-        //obs_transition_video_render_direct(s->source, OBS_TRANSITION_SOURCE_A);
     }
 }
 //----------------------------------------------------------------------------------------------------------------------
@@ -275,7 +263,6 @@ bool shadertastic_transition_properties_change_effect_callback(void *priv, obs_p
         obs_property_set_visible(obs_properties_get(props, (s->selected_effect->name + "__params").c_str()), false);
     }
 
-    //shadertastic_transition_properties(priv);
     const char *select_effect_name = obs_data_get_string(data, "effect");
     debug("CALLBACK : %s", select_effect_name);
     auto selected_effect = s->effects->find(std::string(select_effect_name));
@@ -287,22 +274,9 @@ bool shadertastic_transition_properties_change_effect_callback(void *priv, obs_p
     return true;
 }
 
-bool shadertastic_transition_reload_button_click(obs_properties_t *props, obs_property_t *property, void *data) {
-    UNUSED_PARAMETER(props);
-    UNUSED_PARAMETER(property);
-    struct shadertastic_transition *s = static_cast<shadertastic_transition*>(data);
-
-    if (s->auto_reload) {
-        reload_effect("transitions", s->selected_effect);
-    }
-    return true;
-}
-
 obs_properties_t *shadertastic_transition_properties(void *data) {
     struct shadertastic_transition *s = static_cast<shadertastic_transition*>(data);
-    //struct shadertastic_transition *shadertastic_transition = data;
     obs_properties_t *props = obs_properties_create();
-    //obs_properties_set_flags(props, OBS_PROPERTIES_DEFER_UPDATE);
 
     obs_property_t *p;
 
@@ -330,7 +304,6 @@ obs_properties_t *shadertastic_transition_properties(void *data) {
     for (auto& [effect_name, effect] : *(s->effects)) {
         const char *effect_label = effect.label.c_str();
         obs_properties_t *effect_group = obs_properties_create();
-        //obs_properties_add_text(effect_group, "", effect_name, OBS_TEXT_INFO);
         for (auto param: effect.effect_params) {
             std::string full_param_name = param->get_full_param_name(effect_name);
             param->render_property_ui(full_param_name.c_str(), effect_group);
@@ -363,14 +336,10 @@ void shadertastic_transition_start(void *data) {
     uint32_t cx = obs_source_get_width(s->source);
     uint32_t cy = obs_source_get_height(s->source);
 
-    //obs_transition_enable_fixed(s->source, true, (uint32_t) s->duration);
-
     if (!s->transition_started) {
         s->transition_started = true;
 
         debug("Started transition of %s", obs_source_get_name(s->source));
-
-        //obs_source_frame_t *frame_a = obs_source_get_frame(s->scene_source_a);
     }
 }
 //----------------------------------------------------------------------------------------------------------------------

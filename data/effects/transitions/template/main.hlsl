@@ -8,6 +8,7 @@ uniform float upixel;          // Width of a pixel in the UV space
 uniform float vpixel;          // Height of a pixel in the UV space
 uniform float rand_seed;       // Seed for random functions
 uniform int current_step;      // index of current step (for multistep effects)
+uniform int nb_steps;          // number of steps (for multisteps effects)
 */
 
 // Specific parameters of the shader. They must be defined in the meta.json file next to this one.
@@ -61,7 +62,9 @@ float4 EffectLinear(float2 uv)
 float4 PSEffect(FragData f_in) : TARGET
 {
     float4 rgba = EffectLinear(f_in.uv);
-    rgba.rgb = srgb_nonlinear_to_linear(rgba.rgb);
+    if (current_step == nb_steps - 1) {
+        rgba.rgb = srgb_nonlinear_to_linear(rgba.rgb);
+    }
     return rgba;
 }
 
