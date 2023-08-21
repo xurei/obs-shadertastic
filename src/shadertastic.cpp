@@ -276,6 +276,7 @@ bool obs_module_load(void) {
     info("loaded version %s", PROJECT_VERSION);
     obs_data_t *settings = load_settings();
     apply_settings(settings);
+    obs_data_release(settings);
 
     struct obs_source_info shadertastic_transition_info = {};
     shadertastic_transition_info.id =

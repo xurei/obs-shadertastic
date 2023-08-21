@@ -19,7 +19,7 @@
 
 struct shadertastic_effect_t {
     const std::string path;
-    std::string name;
+    const std::string name;
     std::string label;
     int nb_steps;
     bool is_fallback = false;
