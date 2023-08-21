@@ -42,8 +42,8 @@ class shaders_library_t {
                     shader->release();
                     delete shader;
                 }
-                fallback_shader.release();
             }
+            fallback_shader.release();
         }
 
         void reload(std::string path) {
