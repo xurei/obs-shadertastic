@@ -158,7 +158,10 @@ void load_effects(shadertastic_common *s, obs_data_t *settings, const std::strin
 
     for (const auto &dir : dirs) {
         std::string effect_path = effects_dir + "/" + dir;
-        if (shadertastic_effect_t::is_effect(effect_path)) {
+        if (s->effects->find(dir) != s->effects->end()) {
+            warn("NOT LOADING EFFECT %s/%s : an effect with the name '%s' already exist", effects_dir.c_str(), dir.c_str(), dir.c_str());
+        }
+        else if (shadertastic_effect_t::is_effect(effect_path)) {
             debug("Effect %s", effect_path.c_str());
             shadertastic_effect_t effect(dir, effect_path);
             effect.load();
@@ -173,7 +176,7 @@ void load_effects(shadertastic_common *s, obs_data_t *settings, const std::strin
                 }
             }
             else {
-                debug ("NOT LOADING FILTER %s", dir.c_str());
+                debug ("NOT LOADING EFFECT %s", dir.c_str());
             }
         }
     }
