@@ -62,7 +62,7 @@
 #define warn(format, ...) do_log(LOG_WARNING, format, ##__VA_ARGS__)
 
 #ifdef DEV_MODE
-    #define debug(format, ...) info(format, ##__VA_ARGS__)
+    #define debug(format, ...) info("(debug) " #format, ##__VA_ARGS__)
 #else
     #define debug(format, ...)
 #endif
