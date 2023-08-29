@@ -5,21 +5,26 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.0.3] - 2023-08-30
 ### Added
 - Added Parameter type `image`
 - Added Parameter type `source`
 - Added Parameter type `audiolevel`
-- Added "Reset time when shown" parameter on type-dependant filters
-- Filters : Pixelate effect
+- Added "Additionnal effects" folder config, found in Tools > Shadertastic Settings 
+- Added "Reset time on toggle" parameter on time-dependant filters
+- Filters : "Pixelate" effect
+- Filters : "Shake on sound" effect
 
 ### Changed
 - Using RGBA with 16bit channels for intermediate textures
 - Parameters are now ordered as they appear in the meta file
+- Performance improvement : shaders now load only once, instead of creating new shaders for each filter
 
 ### Fixed
 - Fixed crash when no effect is chosen in a transition (issue #2)
 - Fixed multistep transitions handling of color in RGBA mode
 - Fixed time increased multiple times when a source is duplicated
+- Fixed incorrect copyright name in comments 
 
 ## [0.0.2] - 2023-06-24
 ### Added 
