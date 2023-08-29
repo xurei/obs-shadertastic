@@ -55,6 +55,9 @@
 #define try_gs_effect_set_val(param, data, data_size) if (param) { gs_effect_set_val(param, data, data_size); }
 #define try_gs_effect_set_texture(param, val) if (param) { gs_effect_set_texture(param, val); }
 #define try_gs_effect_set_texture_srgb(param, val) if (param) { gs_effect_set_texture_srgb(param, val); }
+#define try_gs_effect_set_int(param, val) if (param) { gs_effect_set_int(param, val); }
+#define try_gs_effect_set_float(param, val) if (param) { gs_effect_set_float(param, val); }
+#define try_gs_effect_set_bool(param, val) if (param) { gs_effect_set_bool(param, val); }
 
 #define do_log(level, format, ...) \
     blog(level, "[shadertastic] " format, ##__VA_ARGS__)
@@ -70,6 +73,7 @@
 #include "util/compare_nocase.hpp"
 #include "shader/shader.hpp"
 #include "shader/shaders_library.hpp"
+#include "parameters/parameter_datatype.hpp"
 #include "parameters/parameter.hpp"
 #include "parameters/parameter_audiolevel.hpp"
 #include "parameters/parameter_bool.hpp"

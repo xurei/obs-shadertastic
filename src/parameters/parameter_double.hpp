@@ -15,8 +15,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
-#define try_gs_effect_set_float(param, val) if (param) { gs_effect_set_float(param, val); }
-
 class effect_parameter_double : public effect_parameter {
     private:
         double default_value;
@@ -27,6 +25,10 @@ class effect_parameter_double : public effect_parameter {
 
     public:
         effect_parameter_double(gs_eparam_t *shader_param) : effect_parameter(sizeof(float), shader_param) {
+        }
+
+        virtual effect_param_datatype type() {
+            return PARAM_DATATYPE_DOUBLE;
         }
 
         virtual void set_defaults(obs_data_t *metadata) {

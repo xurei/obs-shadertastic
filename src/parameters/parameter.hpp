@@ -38,6 +38,8 @@ class effect_parameter {
             bfree(this->data);
         }
 
+        virtual effect_param_datatype type() = 0;
+
         void load_common_fields(obs_data_t *metadata) {
             name = std::string(obs_data_get_string(metadata, "name"));
             label = std::string(obs_data_get_string(metadata, "label"));

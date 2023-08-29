@@ -15,8 +15,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
-#define try_gs_effect_set_int(param, val) if (param) { gs_effect_set_int(param, val); }
-
 class effect_parameter_int : public effect_parameter {
     private:
         int default_value;
@@ -27,6 +25,10 @@ class effect_parameter_int : public effect_parameter {
 
     public:
         effect_parameter_int(gs_eparam_t *shader_param) : effect_parameter(sizeof(int), shader_param) {
+        }
+
+        virtual effect_param_datatype type() {
+            return PARAM_DATATYPE_INT;
         }
 
         virtual void set_defaults(obs_data_t *metadata) {

@@ -33,6 +33,10 @@ class effect_parameter_list_int : public effect_parameter {
             obs_data_array_release(default_array);
         }
 
+        virtual effect_param_datatype type() {
+            return PARAM_DATATYPE_LIST_INT;
+        }
+
         virtual void set_defaults(obs_data_t *metadata) {
             default_array = obs_data_array_create();
             obs_data_set_default_array(metadata, "values", default_array);

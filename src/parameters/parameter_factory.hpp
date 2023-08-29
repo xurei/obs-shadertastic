@@ -15,17 +15,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
-enum effect_param_datatype {
-    PARAM_DATATYPE_UNKNOWN,
-    PARAM_DATATYPE_BOOL,
-    PARAM_DATATYPE_INT,
-    PARAM_DATATYPE_DOUBLE,
-    PARAM_DATATYPE_LIST_INT,
-    PARAM_DATATYPE_IMAGE,
-    PARAM_DATATYPE_SOURCE,
-    PARAM_DATATYPE_AUDIOLEVEL,
-};
-
 class effect_parameter_factory {
     public:
         effect_parameter *create(const std::string &effect_name, gs_eparam_t *shader_param, obs_data_t *param_metadata) {

@@ -55,6 +55,10 @@ class effect_parameter_audiolevel : public effect_parameter {
             obs_volmeter_destroy(this->obs_volmeter);
         }
 
+        virtual effect_param_datatype type() {
+            return PARAM_DATATYPE_AUDIOLEVEL;
+        }
+
         virtual void set_defaults(obs_data_t *metadata) {
             UNUSED_PARAMETER(metadata);
         }
@@ -122,7 +126,7 @@ class effect_parameter_audiolevel : public effect_parameter {
             float val = prev_val < clamped_peak ? clamped_peak : prev_val * param->smoothing + clamped_peak * (1.0 - param->smoothing);
 
             *((float*)param->data) = (float) val;
-            debug("AUDIO LEVEL CALLBACK %f", *((float*)param->data));
+            //debug("AUDIO LEVEL CALLBACK %f", *((float*)param->data));
         }
 };
 

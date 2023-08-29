@@ -20,6 +20,10 @@ class effect_parameter_unknown : public effect_parameter {
         effect_parameter_unknown(gs_eparam_t *shader_param) : effect_parameter(sizeof(int), shader_param) {
         }
 
+        virtual effect_param_datatype type() {
+            return PARAM_DATATYPE_UNKNOWN;
+        }
+
         virtual void set_defaults(obs_data_t *metadata) {
             UNUSED_PARAMETER(metadata);
         }

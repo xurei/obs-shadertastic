@@ -33,6 +33,10 @@ class effect_parameter_image : public effect_parameter {
             }
         }
 
+        virtual effect_param_datatype type() {
+            return PARAM_DATATYPE_IMAGE;
+        }
+
         virtual void set_defaults(obs_data_t *metadata) {
             UNUSED_PARAMETER(metadata);
         }

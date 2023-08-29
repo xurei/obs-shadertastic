@@ -15,8 +15,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
-#define try_gs_effect_set_bool(param, val) if (param) { gs_effect_set_bool(param, val); }
-
 class effect_parameter_bool : public effect_parameter {
     private:
         bool default_value;
@@ -24,6 +22,10 @@ class effect_parameter_bool : public effect_parameter {
     public:
         // Note: the shaders need a 4-byte data for booleans, this is NOT a mistake to use sizeof(int).
         effect_parameter_bool(gs_eparam_t *shader_param) : effect_parameter(sizeof(int), shader_param) {
+        }
+
+        virtual effect_param_datatype type() {
+            return PARAM_DATATYPE_BOOL;
         }
 
         virtual void set_defaults(obs_data_t *metadata) {

@@ -55,6 +55,10 @@ class effect_parameter_source : public effect_parameter {
             }
         }
 
+        virtual effect_param_datatype type() {
+            return PARAM_DATATYPE_SOURCE;
+        }
+
         virtual void set_defaults(obs_data_t *metadata) {
             UNUSED_PARAMETER(metadata);
         }
