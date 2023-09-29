@@ -21,11 +21,11 @@ static void *shadertastic_transition_create(obs_data_t *settings, obs_source_t *
     s->effects = new shadertastic_effects_map_t();
     s->rand_seed = (float)rand() / RAND_MAX;
 
-    debug("Settings : %s", obs_data_get_json(settings));
+    debug("TRANSITION %s Settings : %s", obs_source_get_name(source), obs_data_get_json(settings));
 
-    char *transitions_dir = obs_module_file("effects/transitions");
-    std::vector<std::string> dirs = list_directories(transitions_dir);
-    bfree(transitions_dir);
+    char *transitions_dir_ = obs_module_file("effects/transitions");
+    std::string transitions_dir(transitions_dir_);
+    bfree(transitions_dir_);
     uint8_t transparent_tex_data[2 * 2 * 4] = {0};
     const uint8_t *transparent_tex = transparent_tex_data;
     obs_enter_graphics();

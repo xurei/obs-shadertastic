@@ -21,7 +21,7 @@ static void *shadertastic_filter_create(obs_data_t *settings, obs_source_t *sour
     s->effects = new shadertastic_effects_map_t();
     s->rand_seed = (float)rand() / RAND_MAX;
 
-    debug("Settings : %s", obs_data_get_json(settings));
+    debug("FILTER %s Settings : %s", obs_source_get_name(source), obs_data_get_json(settings));
 
     uint8_t transparent_tex_data[2 * 2 * 4] = {0};
     const uint8_t *transparent_tex = transparent_tex_data;
@@ -32,7 +32,6 @@ static void *shadertastic_filter_create(obs_data_t *settings, obs_source_t *sour
     obs_leave_graphics();
 
     char *filters_dir_ = obs_module_file("effects/filters");
-    std::vector<std::string> dirs = list_directories(filters_dir_);
     std::string filters_dir(filters_dir_);
     bfree(filters_dir_);
 
