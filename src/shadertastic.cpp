@@ -234,7 +234,7 @@ static void show_settings_dialog() {
         "Two subfolders will be created: 'filters' and 'transitions', one for each type of effect."
     ));
     QLabel *effectsLabelDescription = new QLabel(
-        "You can also find more effects in the <a href=\"https://shadertastic.com/library\">Shadertastic library</a>"
+        "You can find more effects in the <a href=\"https://shadertastic.com/library\">Shadertastic library</a>"
     );
     effectsLabelDescription->setOpenExternalLinks(true);
     formLayout->addRow(effectsLabelDescription);
