@@ -200,6 +200,7 @@ void shadertastic_transition_video_render(void *data, gs_effect_t *effect) {
         if (s->auto_reload && s->selected_effect != NULL) {
             debug("AUTO RELOAD");
             s->selected_effect->reload();
+            obs_source_update(s->source, NULL);
         }
 
         obs_transition_video_render(s->source, shadertastic_transition_render_init);

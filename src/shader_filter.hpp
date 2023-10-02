@@ -94,7 +94,9 @@ void shadertastic_filter_update(void *data, obs_data_t *settings) {
 
         s->speed = obs_data_get_double(settings, get_full_param_name_static(selected_effect_name, "speed").c_str());
         s->reset_time_on_show = obs_data_get_bool(settings, get_full_param_name_static(selected_effect_name, "reset_time_on_show").c_str());
-        debug("%s RESET %i", get_full_param_name_static(selected_effect_name, "reset_time_on_show").c_str(), s->reset_time_on_show ? 1 : 0);
+        if (s->selected_effect->input_time) {
+            debug("%s RESET %i", get_full_param_name_static(selected_effect_name, "reset_time_on_show").c_str(), s->reset_time_on_show ? 1 : 0);
+        }
     }
 }
 //----------------------------------------------------------------------------------------------------------------------

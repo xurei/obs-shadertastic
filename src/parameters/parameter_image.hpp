@@ -20,6 +20,15 @@ class effect_parameter_image : public effect_parameter {
         std::string path;
         gs_texture_t * texture = NULL;
 
+        void load_texture() {
+            obs_enter_graphics();
+            if (this->texture != NULL) {
+                gs_texture_destroy(this->texture);
+            }
+            this->texture = gs_texture_create_from_file(path.c_str());
+            obs_leave_graphics();
+        }
+
     public:
         effect_parameter_image(gs_eparam_t *shader_param) : effect_parameter(sizeof(float), shader_param) {
         }
@@ -74,15 +83,6 @@ class effect_parameter_image : public effect_parameter {
                     this->path = "";
                 }
             }
-        }
-
-        void load_texture() {
-            obs_enter_graphics();
-            if (this->texture != NULL) {
-                gs_texture_destroy(this->texture);
-            }
-            this->texture = gs_texture_create_from_file(path.c_str());
-            obs_leave_graphics();
         }
 
         virtual void try_gs_set_val() {
