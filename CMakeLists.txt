@@ -1,3 +1,9 @@
+
+# Attempt to compile a static zip library directly from here, but does not work, I will look at this later
+#set(BUILD_SHARED_LIBS OFF)
+#add_subdirectory(zip/libzip)
+# set(BUILD_SHARED_LIBS ON)
+
 # --- Detect if the plugin is build out of tree or not ---
 if(CMAKE_PROJECT_NAME STREQUAL "obs-studio")
   set(BUILD_OUT_OF_TREE OFF)
@@ -24,9 +30,15 @@ add_library(${PROJECT_NAME} MODULE)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/version.h.in ${CMAKE_CURRENT_SOURCE_DIR}/src/version.h)
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2 -O3 -fopenmp")
+
+include_directories(AFTER zip/libzip/lib)
+include_directories(AFTER zip/libzip/build)
+
 target_sources(${PROJECT_NAME} PRIVATE
     src/shadertastic.cpp
-    src/version.h)
+    src/version.h
+)
 
 if(BUILD_OUT_OF_TREE)
     find_package(libobs REQUIRED)
@@ -66,7 +78,9 @@ set_target_properties(${PROJECT_NAME} PROPERTIES AUTOMOC ON AUTOUIC ON AUTORCC O
 target_link_libraries(${PROJECT_NAME}
     OBS::${OBS_FRONTEND_API_NAME}
     Qt::Widgets
-    OBS::libobs)
+    OBS::libobs
+    ${PROJECT_SOURCE_DIR}/zip/libzip/build/lib/libzip.a
+)
 
 if(BUILD_OUT_OF_TREE)
     if(NOT LIB_OUT_DIR)

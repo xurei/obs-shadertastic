@@ -29,20 +29,27 @@ struct shadertastic_effect_t {
 
     shadertastic_effect_t(std::string name_, std::string path_): name(name_), path(path_) {}
 
-    static bool is_effect(std::string path) {
-        return os_file_exists((path + "/meta.json").c_str());
-    }
-
     void load() {
         std::string metadata_path = normalize_path(this->path + "/meta.json");
         debug(">>>>>>>>>>>>>>> load_effect %s %s %s", this->name.c_str(), this->path.c_str(), metadata_path.c_str());
 
         this->main_shader = shaders_library.get(this->path);
 
-        obs_data_t *metadata = obs_data_create_from_json_file(metadata_path.c_str());
+        char *meta_json = load_file_zipped_or_local(metadata_path.c_str());
+
+        if (meta_json == NULL) {
+            // Something went wrong -> set default configuration
+            warn("Unable to open file for effect %s.", name.c_str());
+            label = name;
+            nb_steps = 1;
+            return;
+        }
+
+        obs_data_t *metadata = obs_data_create_from_json(meta_json);
+        bfree(meta_json);
         if (metadata == NULL) {
             // Something went wrong -> set default configuration
-            warn("Unable to open metadata file for effect %s. Check the JSON syntax", name.c_str());
+            warn("Unable to parse metadata for effect %s. Check the JSON syntax", name.c_str());
             label = name;
             nb_steps = 1;
         }

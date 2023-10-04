@@ -23,7 +23,7 @@ static void *shadertastic_transition_create(obs_data_t *settings, obs_source_t *
 
     debug("TRANSITION %s Settings : %s", obs_source_get_name(source), obs_data_get_json(settings));
 
-    char *transitions_dir_ = obs_module_file("effects/transitions");
+    char *transitions_dir_ = obs_module_file("effects");
     std::string transitions_dir(transitions_dir_);
     bfree(transitions_dir_);
     uint8_t transparent_tex_data[2 * 2 * 4] = {0};
@@ -34,9 +34,9 @@ static void *shadertastic_transition_create(obs_data_t *settings, obs_source_t *
     s->transition_texrender[0] = gs_texrender_create(GS_RGBA16, GS_ZS_NONE);
     s->transition_texrender[1] = gs_texrender_create(GS_RGBA16, GS_ZS_NONE);
 
-    load_effects(s, settings, transitions_dir);
+    load_effects(s, settings, transitions_dir, "transition");
     if (shadertastic_settings.effects_path != NULL) {
-        load_effects(s, settings, *(shadertastic_settings.effects_path) + "/transitions");
+        load_effects(s, settings, *(shadertastic_settings.effects_path), "transition");
     }
 
     obs_source_update(source, settings);

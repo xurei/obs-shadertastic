@@ -31,7 +31,7 @@ class effect_shader {
     void load(const char *shader_path) {
         debug("SHADER PATH: %s", shader_path);
         char *error_string = NULL;
-        char *shader_source_ = os_quick_read_utf8_file(shader_path);
+        char *shader_source_ = load_file_zipped_or_local(shader_path);
         if (shader_source_ == NULL) {
             do_log(LOG_ERROR, "Could not open shader file %s : File does not exist", shader_path);
         }
