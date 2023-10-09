@@ -18,11 +18,12 @@
 #include <filesystem>
 namespace fs = std::filesystem;
 
-char *load_file_zipped_or_local(const char *path) {
-    debug("load_file_zipped_or_local %s", path);
+char *load_file_zipped_or_local(std::string path) {
+    path = normalize_path(path);
+    debug("load_file_zipped_or_local %s", path.c_str());
 
-    if (os_file_exists(path)) {
-        return os_quick_read_utf8_file(path);
+    if (os_file_exists(path.c_str())) {
+        return os_quick_read_utf8_file(path.c_str());
     }
     else {
         fs::path fs_path(path);
@@ -33,7 +34,8 @@ char *load_file_zipped_or_local(const char *path) {
         }
 
         int zip_err_code;
-        const char *zip_entry = fs_path.filename().string().c_str();
+        std::string zip_entry = fs_path.filename().string();
+        debug("zip_entry: %s", zip_entry.c_str());
         struct zip_stat file_stat;
         zip_t *zip_archive = zip_open(zip_path.c_str(), ZIP_RDONLY, &zip_err_code);
 
@@ -45,15 +47,15 @@ char *load_file_zipped_or_local(const char *path) {
             return NULL;
         }
 
-        if (zip_stat(zip_archive, zip_entry, 0, &file_stat) != 0) {
-            do_log(LOG_ERROR, "Cannot open shadertastic file in archive '%s': unable to stat entry file %s\n", zip_path.c_str(), zip_entry);
+        if (zip_stat(zip_archive, zip_entry.c_str(), 0, &file_stat) != 0) {
+            do_log(LOG_ERROR, "Cannot open shadertastic file in archive '%s': unable to stat entry file %s : %s\n", zip_path.c_str(), zip_entry.c_str(), zip_error_strerror(zip_get_error(zip_archive)));
             return NULL;
         }
 
-        zip_file_t *zipped_file = zip_fopen(zip_archive, zip_entry, 0);
+        zip_file_t *zipped_file = zip_fopen(zip_archive, zip_entry.c_str(), 0);
 
         if (zipped_file == NULL) {
-            do_log(LOG_ERROR, "Cannot open shadertastic file in archive '%s': unable to open entry file %s\n", zip_path.c_str(), zip_entry);
+            do_log(LOG_ERROR, "Cannot open shadertastic file in archive '%s': unable to open entry file %s\n", zip_path.c_str(), zip_entry.c_str());
             return NULL;
         }
 
