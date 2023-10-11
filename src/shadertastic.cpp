@@ -30,6 +30,7 @@
 
 #include <obs-module.h>
 #include <obs-frontend-api.h>
+#include <graphics/vec4.h>
 #include <QAction>
 #include <QApplication>
 #include <QDialog>
@@ -77,6 +78,7 @@
 #include "parameters/parameter.hpp"
 #include "parameters/parameter_audiolevel.hpp"
 #include "parameters/parameter_bool.hpp"
+#include "parameters/parameter_color_alpha.hpp"
 #include "parameters/parameter_double.hpp"
 #include "parameters/parameter_int.hpp"
 #include "parameters/parameter_list_int.hpp"

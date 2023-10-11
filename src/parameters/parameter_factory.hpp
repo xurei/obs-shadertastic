@@ -60,6 +60,10 @@ class effect_parameter_factory {
                         out = new effect_parameter_audiolevel(shader_param);
                         break;
                     }
+                    case PARAM_DATATYPE_COLOR_ALPHA: {
+                        out = new effect_parameter_color_alpha(shader_param);
+                        break;
+                    }
                     case PARAM_DATATYPE_UNKNOWN: default: {
                         out = new effect_parameter_unknown(shader_param);
                         break;
@@ -93,6 +97,9 @@ class effect_parameter_factory {
             }
             else if (strcmp(datatype_str, "audiolevel") == 0) {
                 return PARAM_DATATYPE_AUDIOLEVEL;
+            }
+            else if (strcmp(datatype_str, "color") == 0) {
+                return PARAM_DATATYPE_COLOR_ALPHA;
             }
             else {
                 return PARAM_DATATYPE_UNKNOWN;
