@@ -21,6 +21,7 @@
 #include <cctype>
 #include <list>
 #include <map>
+#include <zip.h>
 
 #if defined(_WIN32)
 #include <windows.h>
@@ -47,8 +48,6 @@
 
 #include <util/platform.h>
 #include "version.h"
-#include "string_util.hpp"
-#include "list_files.hpp"
 
 #define LOG_OFFSET_DB 6.0f
 #define LOG_RANGE_DB 96.0f
@@ -71,6 +70,8 @@
     #define debug(format, ...)
 #endif
 
+#include "util/string_util.hpp"
+#include "util/file_util.hpp"
 #include "util/compare_nocase.hpp"
 #include "shader/shader.hpp"
 #include "shader/shaders_library.hpp"
@@ -161,19 +162,22 @@ void save_settings(obs_data_t *settings) {
 }
 //----------------------------------------------------------------------------------------------------------------------
 
-void load_effects(shadertastic_common *s, obs_data_t *settings, const std::string effects_dir) {
-    std::vector<std::string> dirs = list_directories(effects_dir.c_str());
+void load_effects(shadertastic_common *s, obs_data_t *settings, const std::string effects_dir, const std::string effects_type) {
+    std::vector<std::string> dirs = list_directories((effects_dir + "/" + effects_type + "s").c_str());
 
     for (const auto &dir : dirs) {
-        std::string effect_path = effects_dir + "/" + dir;
+        std::string effect_path = effects_dir + "/" + effects_type + "s/" + dir;
         if (s->effects->find(dir) != s->effects->end()) {
-            warn("NOT LOADING EFFECT %s/%s : an effect with the name '%s' already exist", effects_dir.c_str(), dir.c_str(), dir.c_str());
+            warn("NOT LOADING EFFECT %s/%ss/%s : an effect with the name '%s' already exist", effects_dir.c_str(), effects_type.c_str(), dir.c_str(), dir.c_str());
         }
-        else if (shadertastic_effect_t::is_effect(effect_path)) {
+        else if (os_file_exists((effect_path + "/meta.json").c_str())) {
             debug("Effect %s", effect_path.c_str());
             shadertastic_effect_t effect(dir, effect_path);
             effect.load();
-            if (effect.main_shader != NULL) {
+            if (effect.main_shader == NULL) {
+                debug ("NOT LOADING EFFECT %s", dir.c_str());
+            }
+            else {
                 s->effects->insert(shadertastic_effects_map_t::value_type(dir, effect));
 
                 // Defaults must be set here and not in the transition_defaults() function.
@@ -183,8 +187,40 @@ void load_effects(shadertastic_common *s, obs_data_t *settings, const std::strin
                     param->set_default(settings, full_param_name.c_str());
                 }
             }
+        }
+        else {
+            debug ("NOT LOADING EFFECT %s : no meta.json found", dir.c_str());
+        }
+    }
+
+    std::string extension = std::string(".") + effects_type + ".shadertastic";
+    std::vector<std::string> zips = list_files(effects_dir.c_str(), extension);
+    for (const auto &zip : zips) {
+        fs::path fs_path(zip);
+        std::string effect_name = fs_path.filename().string();
+        effect_name = effect_name.substr(0, effect_name.length() - extension.length());
+        std::string effect_path = zip.c_str();
+
+        if (s->effects->find(effect_name) != s->effects->end()) {
+            warn("NOT LOADING EFFECT %s/%s : an effect with the name '%s' already exist", effects_dir.c_str(), zip.c_str(), effect_name.c_str());
+        }
+        else if (true /*shadertastic_effect_t::is_effect(effect_path)*/) {
+            // TODO the check that meta.json exists is missing in archived effects... I should add it back
+            debug("Effect %s: %s", effect_name.c_str(), effect_path.c_str());
+            shadertastic_effect_t effect(effect_name, effect_path);
+            effect.load();
+            if (effect.main_shader == NULL) {
+                debug ("NOT LOADING EFFECT %s", zip.c_str());
+            }
             else {
-                debug ("NOT LOADING EFFECT %s", dir.c_str());
+                s->effects->insert(shadertastic_effects_map_t::value_type(effect_name, effect));
+
+                // Defaults must be set here and not in the transition_defaults() function.
+                // as the effects are not loaded yet in transition_defaults()
+                for (auto param: effect.effect_params) {
+                    std::string full_param_name = param->get_full_param_name(effect.name.c_str());
+                    param->set_default(settings, full_param_name.c_str());
+                }
             }
         }
     }

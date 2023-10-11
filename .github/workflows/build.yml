@@ -2,13 +2,14 @@ name: build obs plugin
 
 on:
   push:
-    branches: [ main, ci, dev ]
+    branches: [ main, ci, dev, zip-support ]
   #pull_request:
   #  branches: [ main ]
 
 env:
   PLUGIN_NAME: shadertastic
   OBS_VERSION: 28.1.2
+  LIBZIP_VERSION: v1.10.1
 jobs:
 #  macos:
 #    name: macOS
@@ -227,6 +228,42 @@ jobs:
         uses: actions/checkout@v3.1.0
         with:
           path: plugins/${{ env.PLUGIN_NAME}}
+          submodules: 'recursive'
+      - name: install libzip dependencies (Windows)
+        uses: lukka/run-vcpkg@v7
+        id: runvcpkg
+        with:
+          vcpkgGitCommitId: f93ba152d55e1d243160e690bc302ffe8638358e
+          vcpkgTriplet: x64-windows
+          vcpkgArguments: zlib
+      - name: "libzip: Cache"
+        uses: actions/cache/restore@v3
+        id: libzip-cache
+        with:
+          path: plugins/${{ env.PLUGIN_NAME }}/vendor/libzip/build
+          key: libzip-${{env.LIBZIP_VERSION}}
+      - name: "libzip: Build"
+        if: "steps.libzip-cache.outputs.cache-hit != 'true'"
+        shell: cmd
+        run: |
+          cd plugins/${{ env.PLUGIN_NAME }}/vendor/libzip
+          git fetch
+          git checkout ${{ env.LIBZIP_VERSION }}
+          mkdir build
+          cd build
+          cmake -G"${{ env.CMAKE_GENERATOR }}" -DBUILD_SHARED_LIBS=OFF -DENABLE_COMMONCRYPTO=OFF -DENABLE_ZSTD=OFF -DENABLE_BZIP2=OFF -DENABLE_LZMA=OFF -DCMAKE_TOOLCHAIN_FILE=${{env.VCPKG_ROOT}}/scripts/buildsystems/vcpkg.cmake ..
+          dir
+          cmake --build . --config Release
+          cd lib
+          dir
+          cd Release
+          dir
+      - name: "libzip: Save Cache"
+        if: "steps.libzip-cache.outputs.cache-hit != 'true'"
+        uses: actions/cache/save@v3
+        with:
+          path: plugins/${{ env.PLUGIN_NAME }}/vendor/libzip/build
+          key: ${{ steps.libzip-cache.outputs.cache-primary-key }}
       - name: Add plugin to obs cmake
         shell: cmd
         run: echo add_subdirectory(${{ env.PLUGIN_NAME }}) >> plugins/CMakeLists.txt
@@ -275,7 +312,8 @@ jobs:
           mkdir ./installer
           mkdir ./installer/media
           mkdir ./build
-          cmake -S . -B "${{ github.workspace }}/build" -G"${{ env.CMAKE_GENERATOR }}" -DCMAKE_PREFIX_PATH:PATH="${{ github.workspace }}/cmbuild/deps" -A"${{ matrix.cmake_build }}" -DCMAKE_SYSTEM_VERSION="${{ env.CMAKE_SYSTEM_VERSION }}" -DBUILD_BROWSER=false -DBUILD_VST=false -DBUILD_VIRTUALCAM=false -DBUILD_CAPTIONS=false -DCOMPILE_D3D12_HOOK=false -DENABLE_SCRIPTING=false -DDepsPath="${{ github.workspace }}/cmbuild/deps" -DDepsPath${{ matrix.deps_ext }}="${{ github.workspace }}/cmbuild/deps" -DQTDIR="${{ github.workspace }}/cmbuild/deps/qt6" -DCOPIED_DEPENDENCIES=FALSE -DCOPY_DEPENDENCIES=TRUE -DENABLE_PLUGINS=TRUE -DDISABLE_PLUGINS=FALSE -DENABLE_BROWSER=FALSE -DENABLE_WEBSOCKET=FALSE
+          cmake -S . -B "${{ github.workspace }}/build" -G"${{ env.CMAKE_GENERATOR }}" -DCMAKE_PREFIX_PATH:PATH="${{ github.workspace }}/cmbuild/deps" -A"${{ matrix.cmake_build }}" -DCMAKE_SYSTEM_VERSION="${{ env.CMAKE_SYSTEM_VERSION }}" -DBUILD_BROWSER=false -DBUILD_VST=false -DBUILD_VIRTUALCAM=false -DBUILD_CAPTIONS=false -DCOMPILE_D3D12_HOOK=false -DENABLE_SCRIPTING=false -DDepsPath="${{ github.workspace }}/cmbuild/deps" -DDepsPath${{ matrix.deps_ext }}="${{ github.workspace }}/cmbuild/deps" -DQTDIR="${{ github.workspace }}/cmbuild/deps/qt6" -DCOPIED_DEPENDENCIES=FALSE -DCOPY_DEPENDENCIES=TRUE -DENABLE_PLUGINS=TRUE -DDISABLE_PLUGINS=FALSE -DENABLE_BROWSER=FALSE -DENABLE_WEBSOCKET=FALSE -DLIBZIP_INCLUDE="plugins/${{ env.PLUGIN_NAME }}/vendor/libzip/lib" -DLIBZIP_INCLUDE_CONF="plugins/${{ env.PLUGIN_NAME }}/vendor/libzip/build" -DLIBZIP_LIBRARY="plugins/${{ env.PLUGIN_NAME }}/vendor/libzip/build/lib/Release/zip.lib"
+
       - name: 'Build'
         run: msbuild /m /p:Configuration=RelWithDebInfo .\build\obs-studio.sln
       - name: Package

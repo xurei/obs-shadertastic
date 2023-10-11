@@ -20,13 +20,19 @@ set(CMAKE_COMPILE_WARNING_AS_ERROR ON)
 set(MACOS_PACKAGE_UUID "90e83546-fa37-453a-9adb-b51149c78df1")
 set(MACOS_INSTALLER_UUID "14c0a640-0656-4528-8243-4a2ab2595dd5")
 
+# libzip
+set(LIBZIP_LIBRARY "" CACHE FILEPATH "Path to libzip library.")
+set(LIBZIP_INCLUDE "" CACHE PATH "Path zo libzip's includes.")
+set(LIBZIP_INCLUDE_CONF "" CACHE PATH "Path zo libzip's includes (config file).")
+
 add_library(${PROJECT_NAME} MODULE)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/version.h.in ${CMAKE_CURRENT_SOURCE_DIR}/src/version.h)
 
 target_sources(${PROJECT_NAME} PRIVATE
     src/shadertastic.cpp
-    src/version.h)
+    src/version.h
+)
 
 if(BUILD_OUT_OF_TREE)
     find_package(libobs REQUIRED)
@@ -38,6 +44,7 @@ else()
 endif()
 
 if(OS_WINDOWS)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /arch:avx2 /O2 /openmp")
     get_filename_component(ISS_FILES_DIR "${CMAKE_BINARY_DIR}\\..\\package" ABSOLUTE)
     file(TO_NATIVE_PATH "${ISS_FILES_DIR}" ISS_FILES_DIR)
     get_filename_component(ISS_PACKAGE_DIR "${CMAKE_PACKAGE_PREFIX}\\.." ABSOLUTE)
@@ -45,18 +52,36 @@ if(OS_WINDOWS)
     get_filename_component(ISS_SOURCE_DIR "${PROJECT_SOURCE_DIR}" ABSOLUTE)
     file(TO_NATIVE_PATH "${ISS_SOURCE_DIR}" ISS_SOURCE_DIR)
     configure_file("installer.iss.in"
-            "${PROJECT_BINARY_DIR}/installer.iss"
-        )
+        "${PROJECT_BINARY_DIR}/installer.iss"
+    )
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/resource.rc.in ${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}.rc)
+
+    include_directories(AFTER ${LIBZIP_INCLUDE})
+    include_directories(AFTER ${LIBZIP_INCLUDE_CONF})
+    target_link_libraries(${PROJECT_NAME}
+        ${LIBZIP_LIBRARY}
+    )
+    set(ZLIB_USE_STATIC_LIBS ON)
+    find_package(ZLIB REQUIRED)
+    target_link_libraries(${PROJECT_NAME} ${ZLIB_LIBRARIES})
+    include_directories(${ZLIB_INCLUDE_DIRS})
+
     target_sources(${PROJECT_NAME} PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}.rc)
 elseif(OS_MACOS)
-        set(MACOS_BUNDLEID "com.xureilab.${PROJECT_NAME}")
-        set(MACOSX_PLUGIN_GUI_IDENTIFIER "${MACOS_BUNDLEID}")
-        set(MACOSX_PLUGIN_BUNDLE_VERSION "${PROJECT_VERSION}")
-        set(MACOSX_PLUGIN_SHORT_VERSION_STRING "1")
-        configure_file(cmake/bundle/macos/installer-macos.pkgproj.in ${CMAKE_BINARY_DIR}/installer-macos.generated.pkgproj)
-        target_compile_options(${PROJECT_NAME} PRIVATE -Wall)
+    set(MACOS_BUNDLEID "com.xureilab.${PROJECT_NAME}")
+    set(MACOSX_PLUGIN_GUI_IDENTIFIER "${MACOS_BUNDLEID}")
+    set(MACOSX_PLUGIN_BUNDLE_VERSION "${PROJECT_VERSION}")
+    set(MACOSX_PLUGIN_SHORT_VERSION_STRING "1")
+    configure_file(cmake/bundle/macos/installer-macos.pkgproj.in ${CMAKE_BINARY_DIR}/installer-macos.generated.pkgproj)
+    target_compile_options(${PROJECT_NAME} PRIVATE -Wall)
+elseif(OS_LINUX)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2 -O3 -fopenmp")
+    include_directories(AFTER vendor/libzip/lib)
+    include_directories(AFTER vendor/libzip/build)
+    target_link_libraries(${PROJECT_NAME}
+        ${PROJECT_SOURCE_DIR}/vendor/libzip/build/lib/libzip.a
+    )
 endif()
 
 # lines if you want add Qt UI in your plugin
@@ -66,7 +91,8 @@ set_target_properties(${PROJECT_NAME} PROPERTIES AUTOMOC ON AUTOUIC ON AUTORCC O
 target_link_libraries(${PROJECT_NAME}
     OBS::${OBS_FRONTEND_API_NAME}
     Qt::Widgets
-    OBS::libobs)
+    OBS::libobs
+)
 
 if(BUILD_OUT_OF_TREE)
     if(NOT LIB_OUT_DIR)

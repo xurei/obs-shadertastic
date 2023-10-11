@@ -9,3 +9,12 @@ std::string normalize_path(const std::string input) {
     #endif
     return result;
 }
+
+bool ends_with(std::string &input, const std::string suffix) {
+    if (suffix.length() > input.length()) {
+        return false;
+    }
+    else {
+        return (input.substr(input.length() - suffix.length()) == suffix);
+    }
+}

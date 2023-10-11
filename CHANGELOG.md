@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 ### Added
 - Added Parameter type `color`
+- Added support for `.shadertastic` bundled effects
 
 ### Fixed
 - Fixed transition image parameter not being reloaded in auto reload mode
