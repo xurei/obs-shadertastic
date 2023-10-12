@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 - Fixed transition image parameter not being reloaded in auto reload mode
+- Fixed param type `source` messing up the colors
 
 ## [0.0.4] - 2023-09-29
 ### Fixed

@@ -71,6 +71,10 @@
     #define debug(format, ...)
 #endif
 
+#ifdef DEV_MODE
+#include "util/enum_util.hpp"
+#include "util/debug_util.hpp"
+#endif
 #include "util/string_util.hpp"
 #include "util/file_util.hpp"
 #include "util/compare_nocase.hpp"

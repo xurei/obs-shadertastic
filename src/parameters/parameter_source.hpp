@@ -39,7 +39,7 @@ class effect_parameter_source : public effect_parameter {
 
     public:
         effect_parameter_source(gs_eparam_t *shader_param) : effect_parameter(sizeof(float), shader_param) {
-            this->source_texrender = gs_texrender_create(GS_RGBA16, GS_ZS_NONE);
+            this->source_texrender = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
         }
 
         virtual ~effect_parameter_source() {
@@ -100,8 +100,8 @@ class effect_parameter_source : public effect_parameter {
         virtual void try_gs_set_val() {
             if (this->source != NULL) {
                 gs_texrender_reset(this->source_texrender);
-                int cx = obs_source_get_width(this->source);
-                int cy = obs_source_get_height(this->source);
+                uint32_t cx = obs_source_get_width(this->source);
+                uint32_t cy = obs_source_get_height(this->source);
                 if (gs_texrender_begin(this->source_texrender, cx, cy)) {
                     gs_ortho(0.0f, (float)cx, 0.0f, (float)cy, -100.0f, 100.0f); // This line took me A WHOLE WEEK to figure out
                     obs_source_video_render(this->source);
