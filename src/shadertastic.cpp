@@ -34,6 +34,7 @@
 #include <graphics/vec4.h>
 #include <QAction>
 #include <QApplication>
+#include <QCheckBox>
 #include <QDialog>
 #include <QFileDialog>
 #include <QFormLayout>
@@ -102,15 +103,13 @@ OBS_MODULE_USE_DEFAULT_LOCALE(
 , "en-US")
 //----------------------------------------------------------------------------------------------------------------------
 
-shadertastic_settings_t shadertastic_settings;
-//----------------------------------------------------------------------------------------------------------------------
-
 obs_data_t * load_settings() {
     char *file = obs_module_config_path("settings.json");
     char *path_abs = os_get_abs_path_ptr(file);
     debug("Settings path: %s", path_abs);
 
     obs_data_t *settings = obs_data_create_from_json_file(path_abs);
+    obs_data_set_default_bool(settings, SETTING_DEV_MODE_ENABLED, false);
 
     if (!settings) {
         info("Settings not found. Creating default settings in %s ...", file);
@@ -143,6 +142,8 @@ void apply_settings(obs_data_t *settings) {
     else {
         shadertastic_settings.effects_path = NULL;
     }
+
+    shadertastic_settings.dev_mode_enabled = obs_data_get_bool(settings, SETTING_DEV_MODE_ENABLED);
 }
 
 void save_settings(obs_data_t *settings) {
@@ -277,6 +278,33 @@ static void show_settings_dialog() {
     effectsLabelDescription->setOpenExternalLinks(true);
     formLayout->addRow(effectsLabelDescription);
 
+    // Separator
+    QFrame *line = new QFrame();
+    line->setFrameShape(QFrame::HLine);
+    line->setFrameShadow(QFrame::Sunken);
+    line->setLineWidth(0);
+    formLayout->addRow(line);
+
+    // Developper mode
+    QCheckBox *devmodeCheckbox = new QCheckBox("Developper mode");
+    devmodeCheckbox->setChecked(obs_data_get_bool(settings, SETTING_DEV_MODE_ENABLED));
+    QObject::connect(devmodeCheckbox, &QCheckBox::clicked, [=]() {
+        bool checked = devmodeCheckbox->isChecked();
+        obs_data_set_bool(settings, SETTING_DEV_MODE_ENABLED, checked);
+    });
+    formLayout->addRow(devmodeCheckbox);
+    formLayout->addRow(new QLabel(
+        "WARNING: this has a great impact on stability and performance.\n"
+        "Enable this if you are creating your own effects and allow to hot-reload them."
+    ));
+
+    // Separator
+    line = new QFrame();
+    line->setFrameShape(QFrame::HLine);
+    line->setFrameShadow(QFrame::Sunken);
+    line->setLineWidth(0);
+    formLayout->addRow(line);
+
     // OK & Cancel Buttons
     layout = new QHBoxLayout();
     layout->addStretch();
@@ -293,13 +321,6 @@ static void show_settings_dialog() {
         dialog->close();
     });
     layout->addWidget(saveButton);
-
-    // Separator
-    QFrame *line = new QFrame();
-    line->setFrameShape(QFrame::HLine);
-    line->setFrameShadow(QFrame::Sunken);
-    line->setLineWidth(0);
-    formLayout->addRow(line);
 
     // About
     layout = new QHBoxLayout();

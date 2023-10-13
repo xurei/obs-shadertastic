@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added Parameter type `color`
 - Added support for `.shadertastic` bundled effects
 
+### Changed
+- Dev mode setting, disabling the "Reload" and "Auto Reload" options by default
+
 ### Fixed
 - Fixed transition image parameter not being reloaded in auto reload mode
 

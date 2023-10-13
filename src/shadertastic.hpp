@@ -21,8 +21,12 @@ typedef std::map<std::string, shadertastic_effect_t> shadertastic_effects_map_t;
 struct shadertastic_settings_t {
     // Path where the user can add their own effects
     std::string *effects_path = NULL;
+    bool dev_mode_enabled = false;
 };
 #define SETTING_EFFECTS_PATH "effects_path"
+#define SETTING_DEV_MODE_ENABLED "dev_mode_enabled"
+
+shadertastic_settings_t shadertastic_settings;
 //----------------------------------------------------------------------------------------------------------------------
 
 struct shadertastic_common {

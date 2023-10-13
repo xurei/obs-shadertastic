@@ -282,7 +282,9 @@ obs_properties_t *shadertastic_transition_properties(void *data) {
     obs_property_t *p;
 
     // auto reload settings (for development)
-    obs_property_t *auto_reload = obs_properties_add_bool(props, "auto_reload", obs_module_text("AutoReload"));
+    if (shadertastic_settings.dev_mode_enabled) {
+        obs_property_t *auto_reload = obs_properties_add_bool(props, "auto_reload", obs_module_text("AutoReload"));
+    }
 
     // audio fade settings
     obs_property_t *audio_fade_style = obs_properties_add_list(

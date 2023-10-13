@@ -239,8 +239,10 @@ obs_properties_t *shadertastic_filter_properties(void *data) {
 
     obs_property_t *p;
 
-    // Filter settings
-    obs_properties_add_button(props, "reload_btn", "Reload", shadertastic_filter_reload_button_click);
+    // Dev mode settings
+    if (shadertastic_settings.dev_mode_enabled) {
+        obs_properties_add_button(props, "reload_btn", "Reload", shadertastic_filter_reload_button_click);
+    }
 
     // Shader mode
     p = obs_properties_add_list(props, "effect", "Effect", OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
