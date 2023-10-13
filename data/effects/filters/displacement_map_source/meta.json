@@ -1,0 +1,42 @@
+{
+  "label": "Displacement Map (Source)",
+  "steps": 1,
+  "input_time": false,
+  "parameters": [
+    {
+      "name": "color_space",
+      "label": "Color Space",
+      "type": "list_int",
+      "values": [
+        {"label": "RGB", "value": 0},
+        {"label": "YUV", "value": 1}
+      ],
+      "default": 0
+    },
+    {
+      "name": "displacement_strength_x",
+      "label": "Strength X",
+      "type": "double",
+      "slider": true,
+      "min": 0,
+      "max": 2.0,
+      "default": 0.05,
+      "step": 0.001
+    },
+    {
+      "name": "displacement_strength_y",
+      "label": "Strength Y",
+      "type": "double",
+      "slider": true,
+      "min": 0,
+      "max": 2.0,
+      "default": 0.05,
+      "step": 0.001
+    },
+    {
+      "name": "displacement_map",
+      "label": "Displacement Map",
+      "type": "source"
+    }
+  ]
+}
