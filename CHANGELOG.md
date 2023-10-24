@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - Added Parameter type `color`
 - Added support for `.shadertastic` bundled effects
+- Ink drop transition
+- Displacement transition
+- Displacement Map filter
 
 ### Changed
 - Dev mode setting, disabling the "Reload" and "Auto Reload" options by default
