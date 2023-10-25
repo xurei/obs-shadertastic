@@ -14,6 +14,17 @@
       "default": 1
     },
     {
+      "name": "sampler_mode",
+      "label": "Border method",
+      "type": "list_int",
+      "values": [
+        {"label": "Clamp", "value": 0},
+        {"label": "Mirror", "value": 1},
+        {"label": "Repeat", "value": 2}
+      ],
+      "default": 0
+    },
+    {
       "name": "displacement_strength_x",
       "label": "Strength X",
       "type": "double",
