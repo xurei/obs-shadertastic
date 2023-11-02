@@ -3,6 +3,7 @@ name: build obs plugin
 on:
   push:
     branches: [ main, ci, dev, zip-support ]
+    tags: [ '*' ]
   #pull_request:
   #  branches: [ main ]
 
@@ -210,6 +211,8 @@ jobs:
 #          - target: x86
 #            cmake_build: 'Win32'
 #            deps_ext: '32'
+    permissions:
+      contents: write # To allow the creation of a release
     env:
       QT_VERSION: '6.3.1'
       CMAKE_GENERATOR: "Visual Studio 17 2022"
@@ -338,6 +341,12 @@ jobs:
         with:
           name: 'installer-files'
           path: installer/*
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            ${{ env.FILE_NAME }}
 #  windows-package:
 #    name: 'Windows Package'
 #    runs-on: [windows-latest]
