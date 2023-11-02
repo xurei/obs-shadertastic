@@ -328,6 +328,7 @@ jobs:
           robocopy .\build\rundir\RelWithDebInfo\data\obs-plugins\${{ env.PLUGIN_NAME }}\ .\package\data\obs-plugins\${{ env.PLUGIN_NAME }}\ /E /XF .gitignore
           copy .\build\plugins\${{ env.PLUGIN_NAME }}\installer.iss .\installer\installer.iss
           robocopy .\plugins\${{ env.PLUGIN_NAME}}\media\ .\installer\media\ /E /XF .gitignore
+          zip -r "${env:FILE_NAME}.zip" package/*
           exit 0
       - name: Publish zip
         if: success()
@@ -345,8 +346,9 @@ jobs:
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: |
-            ${{ env.FILE_NAME }}
+          draft: true
+          fail_on_unmatched_files: true
+          files: '${{ env.FILE_NAME }}.zip'
 #  windows-package:
 #    name: 'Windows Package'
 #    runs-on: [windows-latest]
