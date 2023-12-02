@@ -232,41 +232,98 @@ jobs:
         with:
           path: plugins/${{ env.PLUGIN_NAME}}
           submodules: 'recursive'
-      - name: install libzip dependencies (Windows)
-        uses: lukka/run-vcpkg@v7
-        id: runvcpkg
+      - name: "zlib: Information"
+        shell: bash
+        id: zlib-info
+        run: |
+          cd "${PWD}/plugins/${{ env.PLUGIN_NAME}}/vendor/zlib-ng"
+          git fetch --all
+          version=$(git describe --tags --long --abbrev=8 HEAD)
+          echo "zlib: ${version}"
+          echo "version=${version}" >> $GITHUB_OUTPUT
+      - name: "zlib: Cache"
+        uses: actions/cache/restore@v3
+        id: zlib-cache
         with:
-          vcpkgGitCommitId: f93ba152d55e1d243160e690bc302ffe8638358e
-          vcpkgTriplet: x64-windows
-          vcpkgArguments: zlib
+            path: |
+                build/zlib/distrib
+            key: zlib-${{steps.zlib-info.outputs.version}}
+      - name: "zlib: Configure"
+        if: "steps.zlib-cache.outputs.cache-hit != 'true'"
+        shell: bash
+        run: |
+            cmake -Hplugins/${{ env.PLUGIN_NAME}}/vendor/zlib-ng -Bbuild/zlib/build \
+              -DCMAKE_INSTALL_PREFIX=build/zlib/distrib \
+              -DBIN_INSTALL_DIR=build/zlib/distrib/bin \
+              -DLIB_INSTALL_DIR=build/zlib/distrib/lib \
+              -DINC_INSTALL_DIR=build/zlib/distrib/include \
+              -DPKGCONFIG_INSTALL_DIR=build/zlib/distrib/lib/pkgconfig \
+              -DMAN_INSTALL_DIR=build/zlib/distrib/share/man \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DBUILD_SHARED_LIBS=OFF \
+              -DZLIB_COMPAT=ON \
+              -DZLIB_ENABLE_TESTS=OFF
+      - name: "zlib: Build"
+        if: "steps.zlib-cache.outputs.cache-hit != 'true'"
+        shell: bash
+        run: |
+            cmake --build build/zlib/build --config Release --target INSTALL
+      - name: "zlib: Save Cache"
+        if: "steps.zlib-cache.outputs.cache-hit != 'true'"
+        uses: actions/cache/save@v3
+        with:
+          path: build/zlib/build
+          key: zlib-${{steps.zlib-info.outputs.version}}
+      - name: "libzip: Information"
+        shell: bash
+        id: libzip-info
+        run: |
+          cd "${PWD}/plugins/${{ env.PLUGIN_NAME}}/vendor/libzip/"
+          git fetch --all
+          version=$(git describe --tags --long --abbrev=8 HEAD)
+          echo "libzip: ${version}"
+          echo "version=${version}" >> $GITHUB_OUTPUT
       - name: "libzip: Cache"
+        if: "steps.zlib-cache.outputs.cache-hit == 'true'"
         uses: actions/cache/restore@v3
         id: libzip-cache
         with:
-          path: plugins/${{ env.PLUGIN_NAME }}/vendor/libzip/build
-          key: libzip-${{env.LIBZIP_VERSION}}
-      - name: "libzip: Build"
-        if: "steps.libzip-cache.outputs.cache-hit != 'true'"
-        shell: cmd
+            path: |
+                build/libzip/distrib
+            key: libzip-${{steps.zlib-info.outputs.version}}-${{steps.libzip-info.outputs.version}}
+      - name: "libzip: Configure"
+        if: "(steps.zlib-cache.outputs.cache-hit != 'true') || (steps.libzip-cache.outputs.cache-hit != 'true')"
+        shell: bash
         run: |
-          cd plugins/${{ env.PLUGIN_NAME }}/vendor/libzip
-          git fetch
-          git checkout ${{ env.LIBZIP_VERSION }}
-          mkdir build
-          cd build
-          cmake -G"${{ env.CMAKE_GENERATOR }}" -DBUILD_SHARED_LIBS=OFF -DENABLE_COMMONCRYPTO=OFF -DENABLE_ZSTD=OFF -DENABLE_BZIP2=OFF -DENABLE_LZMA=OFF -DCMAKE_TOOLCHAIN_FILE=${{env.VCPKG_ROOT}}/scripts/buildsystems/vcpkg.cmake ..
-          dir
-          cmake --build . --config Release
-          cd lib
-          dir
-          cd Release
-          dir
+            cmake -Hplugins/${{ env.PLUGIN_NAME}}/vendor/libzip -Bbuild/libzip/build \
+              -DCMAKE_INSTALL_PREFIX=build/libzip/distrib \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DENABLE_BZIP2=OFF \
+              -DENABLE_LZMA=OFF \
+              -DENABLE_COMMONCRYPTO=OFF \
+              -DENABLE_GNUTLS=OFF \
+              -DENABLE_MBEDTLS=OFF \
+              -DENABLE_OPENSSL=OFF \
+              -DENABLE_WINDOWS_CRYPTO=OFF \
+              -DBUILD_DOC=OFF \
+              -DBUILD_EXAMPLES=OFF \
+              -DBUILD_REGRESS=OFF \
+              -DBUILD_SHARED_LIBS=OFF \
+              -DBUILD_TOOLS=OFF \
+              -DZLIB_INCLUDE_DIR=build/zlib/distrib/include \
+              -DZLIB_LIBRARY_DEBUG=build/zlib/distrib/lib/zlibstatic.lib \
+              -DZLIB_LIBRARY_RELEASE=build/zlib/distrib/lib/zlibstatic.lib
+      - name: "libzip: Build"
+        if: "(steps.zlib-cache.outputs.cache-hit != 'true') || (steps.libzip-cache.outputs.cache-hit != 'true')"
+        shell: bash
+        run: |
+            cmake --build build/libzip/build --config Release --target INSTALL
       - name: "libzip: Save Cache"
-        if: "steps.libzip-cache.outputs.cache-hit != 'true'"
         uses: actions/cache/save@v3
         with:
-          path: plugins/${{ env.PLUGIN_NAME }}/vendor/libzip/build
-          key: ${{ steps.libzip-cache.outputs.cache-primary-key }}
+            path: |
+                build/libzip/distrib
+            key: libzip-${{steps.zlib-info.outputs.version}}-${{steps.libzip-info.outputs.version}}
       - name: Add plugin to obs cmake
         shell: cmd
         run: echo add_subdirectory(${{ env.PLUGIN_NAME }}) >> plugins/CMakeLists.txt
@@ -310,25 +367,49 @@ jobs:
           curl -kLO https://github.com/obsproject/obs-deps/releases/download/${{ env.WINDOWS_DEPS_VERSION }}/windows-deps-${{ env.WINDOWS_DEPS_VERSION }}-${{ matrix.target }}.zip -f --retry 5 -C -
           7z x windows-deps-${{ env.WINDOWS_DEPS_VERSION }}-${{ matrix.target }}.zip -o"${{ github.workspace }}/cmbuild/deps"
       - name: Configure
+        shell: bash
         run: |
           mkdir ./package
           mkdir ./installer
           mkdir ./installer/media
-          mkdir ./build
-          cmake -S . -B "${{ github.workspace }}/build" -G"${{ env.CMAKE_GENERATOR }}" -DCMAKE_PREFIX_PATH:PATH="${{ github.workspace }}/cmbuild/deps" -A"${{ matrix.cmake_build }}" -DCMAKE_SYSTEM_VERSION="${{ env.CMAKE_SYSTEM_VERSION }}" -DBUILD_BROWSER=false -DBUILD_VST=false -DBUILD_VIRTUALCAM=false -DBUILD_CAPTIONS=false -DCOMPILE_D3D12_HOOK=false -DENABLE_SCRIPTING=false -DDepsPath="${{ github.workspace }}/cmbuild/deps" -DDepsPath${{ matrix.deps_ext }}="${{ github.workspace }}/cmbuild/deps" -DQTDIR="${{ github.workspace }}/cmbuild/deps/qt6" -DCOPIED_DEPENDENCIES=FALSE -DCOPY_DEPENDENCIES=TRUE -DENABLE_PLUGINS=TRUE -DDISABLE_PLUGINS=FALSE -DENABLE_BROWSER=FALSE -DENABLE_WEBSOCKET=FALSE -DLIBZIP_INCLUDE="plugins/${{ env.PLUGIN_NAME }}/vendor/libzip/lib" -DLIBZIP_INCLUDE_CONF="plugins/${{ env.PLUGIN_NAME }}/vendor/libzip/build" -DLIBZIP_LIBRARY="plugins/${{ env.PLUGIN_NAME }}/vendor/libzip/build/lib/Release/zip.lib"
+          cmake -S . -B "${{ github.workspace }}/build/obs-studio" \
+          -G"${{ env.CMAKE_GENERATOR }}" \
+          -DCMAKE_PREFIX_PATH:PATH="${{ github.workspace }}/cmbuild/deps" \
+          -A"${{ matrix.cmake_build }}" \
+          -DCMAKE_SYSTEM_VERSION="${{ env.CMAKE_SYSTEM_VERSION }}" \
+          -DBUILD_BROWSER=false \
+          -DBUILD_VST=false \
+          -DBUILD_VIRTUALCAM=false \
+          -DBUILD_CAPTIONS=false \
+          -DCOMPILE_D3D12_HOOK=false \
+          -DENABLE_SCRIPTING=false \
+          -DDepsPath="${{ github.workspace }}/cmbuild/deps" \
+          -DDepsPath${{ matrix.deps_ext }}="${{ github.workspace }}/cmbuild/deps" \
+          -DQTDIR="${{ github.workspace }}/cmbuild/deps/qt6" \
+          -DCOPIED_DEPENDENCIES=FALSE \
+          -DCOPY_DEPENDENCIES=TRUE \
+          -DENABLE_PLUGINS=TRUE \
+          -DDISABLE_PLUGINS=FALSE \
+          -DENABLE_BROWSER=FALSE \
+          -DENABLE_WEBSOCKET=FALSE \
+          -DZLIB_INCLUDE="${{ github.workspace }}/build/zlib/distrib/include" \
+          -DZLIB_LIBRARY="${{ github.workspace }}/build/zlib/distrib/lib/zlibstatic.lib" \
+          -DLIBZIP_INCLUDE="${{ github.workspace }}/build/libzip/distrib/include" \
+          -DLIBZIP_INCLUDE_CONF="${{ github.workspace }}/build/libzip/distrib/include" \
+          -DLIBZIP_LIBRARY="${{ github.workspace }}/build/libzip/distrib/lib/zip.lib"
 
       - name: 'Build'
-        run: msbuild /m /p:Configuration=RelWithDebInfo .\build\obs-studio.sln
+        run: msbuild /m /p:Configuration=RelWithDebInfo .\build\obs-studio\obs-studio.sln
       - name: Package
         if: success()
         run: |
           $env:FILE_NAME="${{ env.PLUGIN_NAME }}-${{ github.sha }}-windows-${{ matrix.target }}"
           echo "FILE_NAME=${env:FILE_NAME}" >> ${env:GITHUB_ENV}
-          robocopy .\build\rundir\RelWithDebInfo\obs-plugins\${{ matrix.deps_ext }}bit\ .\package\obs-plugins\${{ matrix.deps_ext }}bit ${{ env.PLUGIN_NAME }}.* /E /XF .gitignore
-          robocopy .\build\rundir\RelWithDebInfo\data\obs-plugins\${{ env.PLUGIN_NAME }}\ .\package\data\obs-plugins\${{ env.PLUGIN_NAME }}\ /E /XF .gitignore
-          copy .\build\plugins\${{ env.PLUGIN_NAME }}\installer.iss .\installer\installer.iss
+          robocopy .\build\obs-studio\rundir\RelWithDebInfo\obs-plugins\${{ matrix.deps_ext }}bit\ .\package\obs-plugins\${{ matrix.deps_ext }}bit ${{ env.PLUGIN_NAME }}.* /E /XF .gitignore
+          robocopy .\build\obs-studio\rundir\RelWithDebInfo\data\obs-plugins\${{ env.PLUGIN_NAME }}\ .\package\data\obs-plugins\${{ env.PLUGIN_NAME }}\ /E /XF .gitignore
+          copy .\build\obs-studio\plugins\${{ env.PLUGIN_NAME }}\installer.iss .\installer\installer.iss
           robocopy .\plugins\${{ env.PLUGIN_NAME}}\media\ .\installer\media\ /E /XF .gitignore
-          zip -r "${env:FILE_NAME}.zip" package/*
+          7z x "${env:FILE_NAME}.zip" -o".\package"
           exit 0
       - name: Publish zip
         if: success()
@@ -336,6 +417,12 @@ jobs:
         with:
           name: '${{ env.FILE_NAME }}'
           path: package/*
+      - name: Publish zip 2
+        if: failure()
+        uses: actions/upload-artifact@v3.1.1
+        with:
+          name: '${{ env.FILE_NAME }}-debug-files'
+          path: build/*
       - name: Publish Installer Files
         if: success()
         uses: actions/upload-artifact@v3.1.1
@@ -349,76 +436,77 @@ jobs:
           draft: true
           fail_on_unmatched_files: true
           files: '${{ env.FILE_NAME }}.zip'
-#  windows-package:
-#    name: 'Windows Package'
-#    runs-on: [windows-latest]
-#    needs: [windows-build]
-#    steps:
-#      - name: Init
-#        if: success()
-#        run: |
-#          mkdir ./package
-#          $env:FILE_DATE=(Get-Date -UFormat "%F")
-#          $env:FILE_NAME="${{ env.PLUGIN_NAME }}-${env:FILE_DATE}-${{ github.sha }}-windows"
-#          echo "FILE_NAME=${env:FILE_NAME}" >> ${env:GITHUB_ENV}
-#          $env:FILE_NAME_X86="${{ env.PLUGIN_NAME }}-${{ github.sha }}-windows-x86"
-#          echo "FILE_NAME_X86=${env:FILE_NAME_X86}" >> ${env:GITHUB_ENV}
-#          $env:FILE_NAME_X64="${{ env.PLUGIN_NAME }}-${{ github.sha }}-windows-x64"
-#          echo "FILE_NAME_X64=${env:FILE_NAME_X64}" >> ${env:GITHUB_ENV}
+  windows-package:
+    name: 'Windows Package'
+    runs-on: [windows-latest]
+    needs: [windows-build]
+    if: github.ref == 'refs/heads/ci'
+    steps:
+      - name: Init
+        if: success()
+        run: |
+          mkdir ./package
+          $env:FILE_DATE=(Get-Date -UFormat "%F")
+          $env:FILE_NAME="${{ env.PLUGIN_NAME }}-${env:FILE_DATE}-${{ github.sha }}-windows"
+          echo "FILE_NAME=${env:FILE_NAME}" >> ${env:GITHUB_ENV}
+          $env:FILE_NAME_X86="${{ env.PLUGIN_NAME }}-${{ github.sha }}-windows-x86"
+          echo "FILE_NAME_X86=${env:FILE_NAME_X86}" >> ${env:GITHUB_ENV}
+          $env:FILE_NAME_X64="${{ env.PLUGIN_NAME }}-${{ github.sha }}-windows-x64"
+          echo "FILE_NAME_X64=${env:FILE_NAME_X64}" >> ${env:GITHUB_ENV}
 #      - name: Retrieve x86 build
 #        uses: actions/download-artifact@v3.0.1
 #        with:
 #          name: '${{ env.FILE_NAME_X86 }}'
 #          path: ./package
-#      - name: Retrieve x64 build
-#        uses: actions/download-artifact@v3.0.1
-#        with:
-#          name: '${{ env.FILE_NAME_X64 }}'
-#          path: ./package
-#      - name: Retrieve installer files
-#        uses: actions/download-artifact@v3.0.1
-#        with:
-#          name: 'installer-files'
-#          path: .
-#      - name: Create Code Signing Certificate
-#        if: success() && github.event_name != 'pull_request'
-#        run: |
-#          New-Item -ItemType directory -Path certificate
-#          Set-Content -Path certificate\certificate.txt -Value '${{ secrets.CERTIFICATE }}'
-#          certutil -decode certificate\certificate.txt certificate\certificate.pfx
+      - name: Retrieve x64 build
+        uses: actions/download-artifact@v3.0.1
+        with:
+          name: '${{ env.FILE_NAME_X64 }}'
+          path: ./package
+      - name: Retrieve installer files
+        uses: actions/download-artifact@v3.0.1
+        with:
+          name: 'installer-files'
+          path: .
+      - name: Create Code Signing Certificate
+        if: success() && github.event_name != 'pull_request'
+        run: |
+          New-Item -ItemType directory -Path certificate
+          Set-Content -Path certificate\certificate.txt -Value '${{ secrets.WINDOWS_CERTIFICATE }}'
+          certutil -decode certificate\certificate.txt certificate\certificate.pfx
 #      - name: Code Sign 32
 #        if: success() && github.event_name != 'pull_request'
 #        run: |
-#          & 'C:/Program Files (x86)/Windows Kits/10/bin/10.0.20348.0/x86/signtool.exe' sign /f certificate\certificate.pfx /p '${{ secrets.CERTIFICATE_PASS }}' /t http://timestamp.comodoca.com/authenticode .\package\obs-plugins\32bit\${{ env.PLUGIN_NAME }}.dll
-#      - name: Code Sign 64
-#        if: success() && github.event_name != 'pull_request'
-#        run: |
-#          & 'C:/Program Files (x86)/Windows Kits/10/bin/10.0.20348.0/x64/signtool.exe' sign /f certificate\certificate.pfx /p '${{ secrets.CERTIFICATE_PASS }}' /t http://timestamp.comodoca.com/authenticode .\package\obs-plugins\64bit\${{ env.PLUGIN_NAME }}.dll
-#      - name: Publish zip
-#        if: success()
-#        uses: actions/upload-artifact@v3.1.1
-#        with:
-#          name: '${{ env.FILE_NAME }}'
-#          path: package/*
-#      - name: "Package Installer (Prereqs)"
-#        run: |
-#          curl "-kL" "https://github.com/Xaymar/msvc-redist-helper/releases/download/0.1/msvc-redist-helper-64.exe" "-f" "--retry" "5" "-o" "msvc-redist-helper.exe"
-#          curl "-kL" "https://files.jrsoftware.org/is/6/innosetup-6.0.3.exe" "-f" "--retry" "5" "-o" "inno.exe"
-#          .\inno.exe /VERYSILENT /SP- /SUPPRESSMSGBOXES /NORESTART
-#      - name: "Package Installer (Compile)"
-#        run: |
-#          & 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' /Qp ".\installer.iss"
-#      - name: Code Sign Installer
-#        if: success() && github.event_name != 'pull_request'
-#        run: |
-#          & 'C:/Program Files (x86)/Windows Kits/10/bin/10.0.20348.0/x64/signtool.exe' sign /f certificate\certificate.pfx /p '${{ secrets.CERTIFICATE_PASS }}' /t http://timestamp.comodoca.com/authenticode .\package\${{ env.PLUGIN_NAME }}-installer.exe
-#      - name: Publish installer
-#        if: success()
-#        uses: actions/upload-artifact@v3.1.1
-#        with:
-#          name: '${{ env.FILE_NAME }}-installer'
-#          path: package/*.exe
-#      - name: Remove temp artifacts
-#        uses: geekyeggo/delete-artifact@v2.0.0
-#        with:
-#          name: "${{ env.FILE_NAME_X86 }}\n${{ env.FILE_NAME_X64 }}\ninstaller-files"
+#          & 'C:/Program Files (x86)/Windows Kits/10/bin/10.0.20348.0/x86/signtool.exe' sign /fd certHash /f certificate\certificate.pfx /p '${{ secrets.WINDOWS_CERTIFICATE_PASS }}' /t http://timestamp.comodoca.com/authenticode .\package\obs-plugins\32bit\${{ env.PLUGIN_NAME }}.dll
+      - name: Code Sign 64
+        if: success() && github.event_name != 'pull_request'
+        run: |
+          & 'C:/Program Files (x86)/Windows Kits/10/bin/10.0.20348.0/x64/signtool.exe' sign /fd certHash /f certificate\certificate.pfx /p '${{ secrets.WINDOWS_CERTIFICATE_PASS }}' /t http://timestamp.comodoca.com/authenticode .\package\obs-plugins\64bit\${{ env.PLUGIN_NAME }}.dll
+      - name: Publish zip
+        if: success()
+        uses: actions/upload-artifact@v3.1.1
+        with:
+          name: '${{ env.FILE_NAME }}'
+          path: package/*
+      - name: "Package Installer (Prereqs)"
+        run: |
+          curl "-kL" "https://github.com/Xaymar/msvc-redist-helper/releases/download/0.1/msvc-redist-helper-64.exe" "-f" "--retry" "5" "-o" "msvc-redist-helper.exe"
+          curl "-kL" "https://files.jrsoftware.org/is/6/innosetup-6.0.3.exe" "-f" "--retry" "5" "-o" "inno.exe"
+          .\inno.exe /VERYSILENT /SP- /SUPPRESSMSGBOXES /NORESTART
+      - name: "Package Installer (Compile)"
+        run: |
+          & 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' /Qp ".\installer.iss"
+      - name: Code Sign Installer
+        if: success() && github.event_name != 'pull_request'
+        run: |
+          & 'C:/Program Files (x86)/Windows Kits/10/bin/10.0.20348.0/x64/signtool.exe' sign /fd certHash /f certificate\certificate.pfx /p '${{ secrets.WINDOWS_CERTIFICATE_PASS }}' /t http://timestamp.comodoca.com/authenticode .\package\${{ env.PLUGIN_NAME }}-installer.exe
+      - name: Publish installer
+        if: success()
+        uses: actions/upload-artifact@v3.1.1
+        with:
+          name: '${{ env.FILE_NAME }}-installer'
+          path: package/*.exe
+      - name: Remove temp artifacts
+        uses: geekyeggo/delete-artifact@v2.0.0
+        with:
+          name: "${{ env.FILE_NAME_X64 }}\ninstaller-files"

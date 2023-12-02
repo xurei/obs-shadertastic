@@ -11,7 +11,7 @@
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
 
 ; app Information
-AppId={{1A147075-B444-4D86-8F27-B75B2548BC12}}
+AppId={{70c85575-38c5-4a7d-811e-342d54343c46}}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
@@ -20,13 +20,13 @@ VersionInfoVersion={#MyAppVersion}
 VersionInfoCompany={#MyAppPublisher}
 VersionInfoDescription={#MyAppName} Setup
 ; Compression
-Compression=lzma2/ultra64
+Compression=zip
 SolidCompression=yes
-LZMAAlgorithm=1
 ; Other Information
 DefaultDirName={code:GetDirName}
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
+DisableProgramGroupPage=yes
 OutputDir="package"
 OutputBaseFilename=@PROJECT_NAME@-installer
 DirExistsWarning=no
