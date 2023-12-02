@@ -440,7 +440,6 @@ jobs:
     name: 'Windows Package'
     runs-on: [windows-latest]
     needs: [windows-build]
-    if: github.ref == 'refs/heads/ci'
     steps:
       - name: Init
         if: success()
@@ -491,7 +490,7 @@ jobs:
       - name: "Package Installer (Prereqs)"
         run: |
           curl "-kL" "https://github.com/Xaymar/msvc-redist-helper/releases/download/0.1/msvc-redist-helper-64.exe" "-f" "--retry" "5" "-o" "msvc-redist-helper.exe"
-          curl "-kL" "https://files.jrsoftware.org/is/6/innosetup-6.0.3.exe" "-f" "--retry" "5" "-o" "inno.exe"
+          curl "-kL" "https://files.jrsoftware.org/is/6/innosetup-6.2.2.exe" "-f" "--retry" "5" "-o" "inno.exe"
           .\inno.exe /VERYSILENT /SP- /SUPPRESSMSGBOXES /NORESTART
       - name: "Package Installer (Compile)"
         run: |
@@ -506,6 +505,13 @@ jobs:
         with:
           name: '${{ env.FILE_NAME }}-installer'
           path: package/*.exe
+      - name: Release installer
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          draft: true
+          fail_on_unmatched_files: true
+          files: '${{ github.workspace }}\package\${{ env.PLUGIN_NAME }}-installer.exe'
       - name: Remove temp artifacts
         uses: geekyeggo/delete-artifact@v2.0.0
         with:
