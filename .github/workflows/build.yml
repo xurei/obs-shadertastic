@@ -211,8 +211,6 @@ jobs:
 #          - target: x86
 #            cmake_build: 'Win32'
 #            deps_ext: '32'
-    permissions:
-      contents: write # To allow the creation of a release
     env:
       QT_VERSION: '6.3.1'
       CMAKE_GENERATOR: "Visual Studio 17 2022"
@@ -409,7 +407,6 @@ jobs:
           robocopy .\build\obs-studio\rundir\RelWithDebInfo\data\obs-plugins\${{ env.PLUGIN_NAME }}\ .\package\data\obs-plugins\${{ env.PLUGIN_NAME }}\ /E /XF .gitignore
           copy .\build\obs-studio\plugins\${{ env.PLUGIN_NAME }}\installer.iss .\installer\installer.iss
           robocopy .\plugins\${{ env.PLUGIN_NAME}}\media\ .\installer\media\ /E /XF .gitignore
-          7z x "${env:FILE_NAME}.zip" -o".\package"
           exit 0
       - name: Publish zip
         if: success()
@@ -429,17 +426,12 @@ jobs:
         with:
           name: 'installer-files'
           path: installer/*
-      - name: Release
-        uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          draft: true
-          fail_on_unmatched_files: true
-          files: '${{ env.FILE_NAME }}.zip'
   windows-package:
     name: 'Windows Package'
     runs-on: [windows-latest]
     needs: [windows-build]
+    permissions:
+      contents: write # To allow the creation of a release
     steps:
       - name: Init
         if: success()
@@ -452,6 +444,8 @@ jobs:
           echo "FILE_NAME_X86=${env:FILE_NAME_X86}" >> ${env:GITHUB_ENV}
           $env:FILE_NAME_X64="${{ env.PLUGIN_NAME }}-${{ github.sha }}-windows-x64"
           echo "FILE_NAME_X64=${env:FILE_NAME_X64}" >> ${env:GITHUB_ENV}
+          $env:RELEASE_FILE_NAME_X64="${{ env.PLUGIN_NAME }}-${{ github.ref_name }}-windows-x64"
+          echo "RELEASE_FILE_NAME_X64=${env:RELEASE_FILE_NAME_X64}" >> ${env:GITHUB_ENV}
 #      - name: Retrieve x86 build
 #        uses: actions/download-artifact@v3.0.1
 #        with:
@@ -481,6 +475,10 @@ jobs:
         if: success() && github.event_name != 'pull_request'
         run: |
           & 'C:/Program Files (x86)/Windows Kits/10/bin/10.0.20348.0/x64/signtool.exe' sign /fd certHash /f certificate\certificate.pfx /p '${{ secrets.WINDOWS_CERTIFICATE_PASS }}' /t http://timestamp.comodoca.com/authenticode .\package\obs-plugins\64bit\${{ env.PLUGIN_NAME }}.dll
+      - name: ZIP plugin files
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          7z a "${{ env.RELEASE_FILE_NAME_X64 }}.zip" "package\*"
       - name: Publish zip
         if: success()
         uses: actions/upload-artifact@v3.1.1
@@ -499,11 +497,12 @@ jobs:
         if: success() && github.event_name != 'pull_request'
         run: |
           & 'C:/Program Files (x86)/Windows Kits/10/bin/10.0.20348.0/x64/signtool.exe' sign /fd certHash /f certificate\certificate.pfx /p '${{ secrets.WINDOWS_CERTIFICATE_PASS }}' /t http://timestamp.comodoca.com/authenticode .\package\${{ env.PLUGIN_NAME }}-installer.exe
+          mv ".\package\${{ env.PLUGIN_NAME }}-installer.exe" ".\package\${{ env.RELEASE_FILE_NAME_X64 }}-installer.exe"
       - name: Publish installer
         if: success()
         uses: actions/upload-artifact@v3.1.1
         with:
-          name: '${{ env.FILE_NAME }}-installer'
+          name: '${{ env.RELEASE_FILE_NAME_X64 }}-installer'
           path: package/*.exe
       - name: Release installer
         uses: softprops/action-gh-release@v1
@@ -511,7 +510,9 @@ jobs:
         with:
           draft: true
           fail_on_unmatched_files: true
-          files: '${{ github.workspace }}\package\${{ env.PLUGIN_NAME }}-installer.exe'
+          files: |
+            package/*
+            ${{ env.RELEASE_FILE_NAME_X64 }}.zip
       - name: Remove temp artifacts
         uses: geekyeggo/delete-artifact@v2.0.0
         with:
