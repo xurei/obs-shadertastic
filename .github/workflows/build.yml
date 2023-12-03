@@ -139,59 +139,133 @@ jobs:
 #          name: ${{ env.PLUGIN_NAME }}-macos-${{ matrix.arch }}-${{ steps.setup.outputs.commitHash }}
 #          path: ${{ github.workspace }}/plugin/release/${{ env.PLUGIN_NAME }}-*-macos-${{ matrix.arch }}.pkg
 
-
-
-#  linux-in-tree:
-#    name: 'Linux'
-#    runs-on: ${{ matrix.ubuntu }}
-#    strategy:
-#      fail-fast: false
-#      matrix:
-#        ubuntu:
-#          - 'ubuntu-22.04'
-##          - 'ubuntu-20.04'
-#    steps:
-#      - name: Checkout
-#        uses: actions/checkout@v3.1.0
-#        with:
-#          repository: obsproject/obs-studio
-#          ref: ${{ env.OBS_VERSION }}
-#          submodules: 'recursive'
-#      - name: "Checkout plugin"
-#        uses: actions/checkout@v3.1.0
-#        with:
-#          path: plugins/${{ env.PLUGIN_NAME }}
-#      - name: Add plugin to obs cmake
-#        shell: bash
-#        run: echo "add_subdirectory(${{ env.PLUGIN_NAME }})" >> plugins/CMakeLists.txt
-#      - name: Fetch Git Tags
-#        run: git fetch --prune --tags --unshallow
-#      - name: 'Install dependencies'
-#        run: CI/linux/01_install_dependencies.sh --disable-pipewire
-#      - name: 'Configure'
-#        shell: bash
-#        run: |
-#          mkdir ./build
-#          cmake -S . -B "./build" -G Ninja -DCMAKE_BUILD_TYPE="RelWithDebInfo" -DLINUX_PORTABLE=OFF -DENABLE_AJA=OFF -DENABLE_NEW_MPEGTS_OUTPUT=OFF -DBUILD_CAPTIONS=OFF -DWITH_RTMPS=OFF -DBUILD_BROWSER=OFF -DBUILD_VIRTUALCAM=OFF -DBUILD_VST=OFF -DENABLE_PIPEWIRE=OFF -DENABLE_SCRIPTING=OFF
-#      - name: 'Build'
-#        shell: bash
-#        run: |
-#          cmake --build "./build"
-#      - name: 'Package'
-#        shell: bash
-#        run: |
-#          FILE_DATE=$(date +%Y-%m-%d)
-#          FILE_NAME=${{ env.PLUGIN_NAME }}-$FILE_DATE-${{ github.sha }}-${{ matrix.ubuntu }}.tar.gz
-#          echo "FILE_NAME=${FILE_NAME}" >> $GITHUB_ENV
-#          mkdir -p ./${{ env.PLUGIN_NAME }}/bin/64bit/
-#          mv ./build/plugins/${{ env.PLUGIN_NAME }}/${{ env.PLUGIN_NAME }}.so ./${{ env.PLUGIN_NAME }}/bin/64bit/${{ env.PLUGIN_NAME }}.so
-#          mv ./plugins/${{ env.PLUGIN_NAME }}/data ./${{ env.PLUGIN_NAME }}/data
-#          tar -cvzf "${FILE_NAME}" ${{ env.PLUGIN_NAME }}
-#      - name: 'Publish'
+  linux-in-tree:
+    name: 'Linux'
+    runs-on: ${{ matrix.ubuntu }}
+    if: startsWith(github.ref, 'refs/tags/')
+    strategy:
+      fail-fast: false
+      matrix:
+        ubuntu:
+          - 'ubuntu-22.04'
+    permissions:
+      contents: write # To allow the creation of a release
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3.1.0
+        with:
+          repository: obsproject/obs-studio
+          ref: ${{ env.OBS_VERSION }}
+          submodules: 'recursive'
+      - name: "Checkout plugin"
+        uses: actions/checkout@v3.1.0
+        with:
+          path: plugins/${{ env.PLUGIN_NAME }}
+          submodules: 'recursive'
+      - name: "libzip: Information"
+        shell: bash
+        id: libzip-info
+        run: |
+          cd "${PWD}/plugins/${{ env.PLUGIN_NAME}}/vendor/libzip/"
+          git fetch --all
+          version=$(git describe --tags --long --abbrev=8 HEAD)
+          echo "libzip: ${version}"
+          echo "version=${version}" >> $GITHUB_OUTPUT
+      - name: "libzip: Cache"
+        uses: actions/cache/restore@v3
+        id: libzip-cache
+        with:
+            path: |
+                build/libzip/distrib
+            key: libzip-linux-${{steps.libzip-info.outputs.version}}
+      - name: "libzip: Configure"
+        if: "(steps.libzip-cache.outputs.cache-hit != 'true')"
+        shell: bash
+        run: |
+            cmake -Hplugins/${{ env.PLUGIN_NAME}}/vendor/libzip -Bbuild/libzip/build \
+              -DCMAKE_INSTALL_PREFIX=build/libzip/distrib \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DENABLE_BZIP2=OFF \
+              -DENABLE_LZMA=OFF \
+              -DENABLE_COMMONCRYPTO=OFF \
+              -DENABLE_GNUTLS=OFF \
+              -DENABLE_MBEDTLS=OFF \
+              -DENABLE_OPENSSL=OFF \
+              -DENABLE_WINDOWS_CRYPTO=OFF \
+              -DBUILD_DOC=OFF \
+              -DBUILD_EXAMPLES=OFF \
+              -DBUILD_REGRESS=OFF \
+              -DBUILD_SHARED_LIBS=OFF \
+              -DBUILD_TOOLS=OFF
+      - name: "libzip: Build"
+        if: "(steps.libzip-cache.outputs.cache-hit != 'true')"
+        shell: bash
+        run: |
+            cmake --build build/libzip/build --config Release --target install
+      - name: "libzip: Save Cache"
+        uses: actions/cache/save@v3
+        with:
+            path: |
+                build/libzip/distrib
+            key: libzip-linux-${{steps.libzip-info.outputs.version}}
+      - name: Add plugin to obs cmake
+        shell: bash
+        run: echo "add_subdirectory(${{ env.PLUGIN_NAME }})" >> plugins/CMakeLists.txt
+      - name: Fetch Git Tags
+        run: git fetch --prune --tags --unshallow
+      - name: 'Install dependencies'
+        run: CI/linux/01_install_dependencies.sh --disable-pipewire
+      - name: 'Configure'
+        shell: bash
+        run: |
+          cmake -S . -B "${{ github.workspace }}/build/obs-studio" -G Ninja \
+          -DCMAKE_BUILD_TYPE="RelWithDebInfo" \
+          -DLINUX_PORTABLE=OFF \
+          -DENABLE_AJA=OFF \
+          -DENABLE_NEW_MPEGTS_OUTPUT=OFF \
+          -DBUILD_CAPTIONS=OFF \
+          -DWITH_RTMPS=OFF \
+          -DBUILD_BROWSER=OFF \
+          -DBUILD_VIRTUALCAM=OFF \
+          -DBUILD_VST=OFF \
+          -DENABLE_PIPEWIRE=OFF \
+          -DENABLE_SCRIPTING=OFF \
+          -DLIBZIP_INCLUDE="${{ github.workspace }}/build/libzip/distrib/include" \
+          -DLIBZIP_INCLUDE_CONF="${{ github.workspace }}/build/libzip/distrib/include" \
+          -DLIBZIP_LIBRARY="${{ github.workspace }}/build/libzip/distrib/lib/libzip.a"
+      - name: 'Build'
+        shell: bash
+        run: |
+          cmake --build "./build/obs-studio"
+      - name: 'Package'
+        shell: bash
+        run: |
+          FILE_DATE=$(date +%Y-%m-%d)
+          FILE_NAME=${{ env.PLUGIN_NAME }}-${{ github.ref_name }}-${{ matrix.ubuntu }}.zip
+          echo "FILE_NAME=${FILE_NAME}" >> $GITHUB_ENV
+          mkdir -p ./${{ env.PLUGIN_NAME }}/bin/64bit/
+          mv ./build/obs-studio/plugins/${{ env.PLUGIN_NAME }}/${{ env.PLUGIN_NAME }}.so ./${{ env.PLUGIN_NAME }}/bin/64bit/${{ env.PLUGIN_NAME }}.so
+          mv ./plugins/${{ env.PLUGIN_NAME }}/data ./${{ env.PLUGIN_NAME }}/data
+          zip -r "${FILE_NAME}" ${{ env.PLUGIN_NAME }}
+      - name: 'Publish'
+        uses: actions/upload-artifact@v3.1.1
+        with:
+          name: '${{ env.FILE_NAME }}'
+          path: '*.zip'
+      - name: Release ZIP
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          draft: true
+          fail_on_unmatched_files: true
+          files: |
+            *.zip
+#      - name: Publish zip FAILURE
+#        if: failure()
 #        uses: actions/upload-artifact@v3.1.1
 #        with:
-#          name: '${{ env.FILE_NAME }}'
-#          path: '*.tar.gz'
+#          name: '${{ env.FILE_NAME }}-debug-files'
+#          path: build/*
 
 
 
@@ -245,7 +319,7 @@ jobs:
         with:
             path: |
                 build/zlib/distrib
-            key: zlib-${{steps.zlib-info.outputs.version}}
+            key: zlib-win-${{steps.zlib-info.outputs.version}}
       - name: "zlib: Configure"
         if: "steps.zlib-cache.outputs.cache-hit != 'true'"
         shell: bash
@@ -271,7 +345,7 @@ jobs:
         uses: actions/cache/save@v3
         with:
           path: build/zlib/build
-          key: zlib-${{steps.zlib-info.outputs.version}}
+          key: zlib-win-${{steps.zlib-info.outputs.version}}
       - name: "libzip: Information"
         shell: bash
         id: libzip-info
@@ -288,7 +362,7 @@ jobs:
         with:
             path: |
                 build/libzip/distrib
-            key: libzip-${{steps.zlib-info.outputs.version}}-${{steps.libzip-info.outputs.version}}
+            key: libzip-win-${{steps.zlib-info.outputs.version}}-${{steps.libzip-info.outputs.version}}
       - name: "libzip: Configure"
         if: "(steps.zlib-cache.outputs.cache-hit != 'true') || (steps.libzip-cache.outputs.cache-hit != 'true')"
         shell: bash
@@ -321,7 +395,7 @@ jobs:
         with:
             path: |
                 build/libzip/distrib
-            key: libzip-${{steps.zlib-info.outputs.version}}-${{steps.libzip-info.outputs.version}}
+            key: libzip-win-${{steps.zlib-info.outputs.version}}-${{steps.libzip-info.outputs.version}}
       - name: Add plugin to obs cmake
         shell: cmd
         run: echo add_subdirectory(${{ env.PLUGIN_NAME }}) >> plugins/CMakeLists.txt
@@ -414,12 +488,12 @@ jobs:
         with:
           name: '${{ env.FILE_NAME }}'
           path: package/*
-      - name: Publish zip 2
-        if: failure()
-        uses: actions/upload-artifact@v3.1.1
-        with:
-          name: '${{ env.FILE_NAME }}-debug-files'
-          path: build/*
+#      - name: Publish zip 2
+#        if: failure()
+#        uses: actions/upload-artifact@v3.1.1
+#        with:
+#          name: '${{ env.FILE_NAME }}-debug-files'
+#          path: build/*
       - name: Publish Installer Files
         if: success()
         uses: actions/upload-artifact@v3.1.1
@@ -432,6 +506,7 @@ jobs:
     needs: [windows-build]
     permissions:
       contents: write # To allow the creation of a release
+    if: startsWith(github.ref, 'refs/tags/')
     steps:
       - name: Init
         if: success()

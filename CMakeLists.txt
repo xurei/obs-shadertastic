@@ -77,11 +77,14 @@ elseif(OS_MACOS)
     target_compile_options(${PROJECT_NAME} PRIVATE -Wall)
 elseif(OS_LINUX)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2 -O3 -fopenmp")
-    include_directories(AFTER vendor/libzip/lib)
-    include_directories(AFTER vendor/libzip/build)
+    include_directories(AFTER ${LIBZIP_INCLUDE})
+    include_directories(AFTER ${LIBZIP_INCLUDE_CONF})
     target_link_libraries(${PROJECT_NAME}
-        ${PROJECT_SOURCE_DIR}/vendor/libzip/build/lib/libzip.a
+        ${LIBZIP_LIBRARY}
     )
+    find_package(ZLIB REQUIRED)
+    target_link_libraries(${PROJECT_NAME} ${ZLIB_LIBRARIES})
+    include_directories(${ZLIB_INCLUDE_DIRS})
 endif()
 
 # lines if you want add Qt UI in your plugin
