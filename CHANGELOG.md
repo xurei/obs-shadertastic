@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.0.6] - 2023-12-03
 ### Fixed
 - Fixed crash and/or inability to switch the Scene Collection when there is a circular reference of sources
 - Fixed parameter source with transparency not rendering correctly

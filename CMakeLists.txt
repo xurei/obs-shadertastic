@@ -8,9 +8,9 @@ endif()
 
 if(DEV_MODE EQUAL 1)
   add_compile_definitions(DEV_MODE)
-  project(shadertastic-dev VERSION 0.0.5)
+  project(shadertastic-dev VERSION 0.0.6)
 else()
-  project(shadertastic VERSION 0.0.5)
+  project(shadertastic VERSION 0.0.6)
 endif()
 set(PROJECT_FULL_NAME "Shadertastic")
 
