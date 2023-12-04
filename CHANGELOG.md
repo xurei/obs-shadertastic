@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Fixed
+- Fixed crash and/or inability to switch the Scene Collection when there is a circular reference of sources
+
 ## [0.0.5] - 2023-10-26
 ### Added
 - Added Parameter type `color`

@@ -34,8 +34,7 @@ static bool effect_parameter_source_add(void *data, obs_source_t *source) {
 class effect_parameter_source : public effect_parameter {
     private:
         gs_texrender_t *source_texrender = NULL;
-        obs_source_t *source = NULL;
-
+        obs_weak_source_t *source = NULL;
 
     public:
         effect_parameter_source(gs_eparam_t *shader_param) : effect_parameter(sizeof(float), shader_param) {
@@ -44,7 +43,7 @@ class effect_parameter_source : public effect_parameter {
 
         virtual ~effect_parameter_source() {
             if (this->source != NULL) {
-                obs_source_release(this->source);
+                obs_weak_source_release(this->source);
                 this->source = NULL;
             }
             if (this->source_texrender != NULL) {
@@ -87,42 +86,72 @@ class effect_parameter_source : public effect_parameter {
         virtual void set_data_from_settings(obs_data_t *settings, const char *full_param_name) {
             if (this->source != NULL) {
                 this->hide();
-                obs_source_release(this->source);
+                #ifdef DEV_MODE
+                    obs_source_t *ref_source2 = obs_weak_source_get_source(this->source);
+                    debug("Release source %s", obs_source_get_name(ref_source2));
+                    obs_source_release(ref_source2);
+                #endif
+                obs_weak_source_release(this->source);
                 this->source = NULL;
             }
 
-            this->source = obs_get_source_by_name(obs_data_get_string(settings, full_param_name));
+            obs_source_t *ref_source = obs_get_source_by_name(obs_data_get_string(settings, full_param_name));
+            if (ref_source != NULL) {
+                this->source = obs_source_get_weak_source(ref_source);
+                obs_source_release(ref_source);
+            }
+
             if (this->source != NULL) {
+                debug("Acquired source %s", obs_data_get_string(settings, full_param_name));
                 this->show();
+            }
+            else {
+                debug("Cannot Acquire source %s", obs_data_get_string(settings, full_param_name));
             }
         }
 
         virtual void try_gs_set_val() {
             if (this->source != NULL) {
                 gs_texrender_reset(this->source_texrender);
-                uint32_t cx = obs_source_get_width(this->source);
-                uint32_t cy = obs_source_get_height(this->source);
-                if (gs_texrender_begin(this->source_texrender, cx, cy)) {
-                    gs_ortho(0.0f, (float)cx, 0.0f, (float)cy, -100.0f, 100.0f); // This line took me A WHOLE WEEK to figure out
-                    obs_source_video_render(this->source);
-                    gs_texrender_end(this->source_texrender);
-                    gs_texture_t *texture = gs_texrender_get_texture(this->source_texrender);
-                    try_gs_effect_set_texture(shader_param, texture);
+                obs_source_t *ref_source = obs_weak_source_get_source(this->source);
+                if (ref_source != NULL) {
+                    uint32_t cx = obs_source_get_width(ref_source);
+                    uint32_t cy = obs_source_get_height(ref_source);
+                    if (gs_texrender_begin(this->source_texrender, cx, cy)) {
+                        gs_ortho(0.0f, (float)cx, 0.0f, (float)cy, -100.0f, 100.0f); // This line took me A WHOLE WEEK to figure out
+                        obs_source_video_render(ref_source);
+                        gs_texrender_end(this->source_texrender);
+                        gs_texture_t *texture = gs_texrender_get_texture(this->source_texrender);
+                        try_gs_effect_set_texture(shader_param, texture);
+                    }
+                    obs_source_release(ref_source);
                 }
             }
         }
 
         virtual void show() {
-            if (this->source != NULL) {
-                debug("Inc showing %s", obs_source_get_name(this->source));
-                obs_source_inc_showing(this->source);
+            if (this->source == NULL) {
+                return;
             }
+            obs_source_t *ref_source = obs_weak_source_get_source(this->source);
+            if (ref_source == NULL) {
+                return;
+            }
+            debug("Inc showing %s", obs_source_get_name(ref_source));
+            obs_source_inc_showing(ref_source);
+            obs_source_release(ref_source);
         }
 
         virtual void hide() {
-            if (this->source != NULL) {
-                debug("Dec showing %s", obs_source_get_name(this->source));
-                obs_source_dec_showing(this->source);
+            if (this->source == NULL) {
+                return;
             }
+            obs_source_t *ref_source = obs_weak_source_get_source(this->source);
+            if (ref_source == NULL) {
+                return;
+            }
+            debug("Dec showing %s", obs_source_get_name(ref_source));
+            obs_source_dec_showing(ref_source);
+            obs_source_release(ref_source);
         }
 };
