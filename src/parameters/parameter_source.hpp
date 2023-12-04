@@ -15,6 +15,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
+struct vec4 clear_color;
 
 static bool effect_parameter_source_add(void *data, obs_source_t *source) {
     std::list<std::string> *sources_list = (std::list<std::string>*)(data);
@@ -39,6 +40,7 @@ class effect_parameter_source : public effect_parameter {
     public:
         effect_parameter_source(gs_eparam_t *shader_param) : effect_parameter(sizeof(float), shader_param) {
             this->source_texrender = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
+            vec4_zero(&clear_color);
         }
 
         virtual ~effect_parameter_source() {
@@ -118,6 +120,7 @@ class effect_parameter_source : public effect_parameter {
                     uint32_t cx = obs_source_get_width(ref_source);
                     uint32_t cy = obs_source_get_height(ref_source);
                     if (gs_texrender_begin(this->source_texrender, cx, cy)) {
+                        gs_clear(GS_CLEAR_COLOR, &clear_color, 0.0f, 0);
                         gs_ortho(0.0f, (float)cx, 0.0f, (float)cy, -100.0f, 100.0f); // This line took me A WHOLE WEEK to figure out
                         obs_source_video_render(ref_source);
                         gs_texrender_end(this->source_texrender);

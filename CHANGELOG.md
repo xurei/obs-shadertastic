@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 ### Fixed
 - Fixed crash and/or inability to switch the Scene Collection when there is a circular reference of sources
+- Fixed parameter source with transparency not rendering correctly
 
 ## [0.0.5] - 2023-10-26
 ### Added
