@@ -32,7 +32,7 @@ static bool effect_parameter_audiolevel_add(void *data, obs_source_t *source) {
 
 class effect_parameter_audiolevel : public effect_parameter {
     private:
-        obs_source_t *source = NULL;
+        obs_weak_source_t *source = NULL;
         obs_volmeter_t *obs_volmeter;
         float smoothing = 0.5;
 
@@ -48,9 +48,10 @@ class effect_parameter_audiolevel : public effect_parameter {
 
         virtual ~effect_parameter_audiolevel() {
             if (this->source != NULL) {
-                obs_source_release(this->source);
+                obs_weak_source_release(this->source);
                 this->source = NULL;
             }
+            obs_volmeter_detach_source(obs_volmeter);
             obs_volmeter_remove_callback(this->obs_volmeter, effect_parameter_audiolevel::callback, this);
             obs_volmeter_destroy(this->obs_volmeter);
         }
@@ -90,14 +91,16 @@ class effect_parameter_audiolevel : public effect_parameter {
                 obs_volmeter_detach_source(obs_volmeter);
 
                 // TODO release earlier ?
-                obs_source_release(this->source);
+                obs_weak_source_release(this->source);
                 this->source = NULL;
             }
 
-            this->source = obs_get_source_by_name(obs_data_get_string(settings, full_param_name));
-            obs_volmeter_attach_source(obs_volmeter, this->source);
-            if (this->source != NULL) {
+            obs_source_t *ref_source = obs_get_source_by_name(obs_data_get_string(settings, full_param_name));
+            if (ref_source != NULL) {
+                obs_volmeter_attach_source(obs_volmeter, ref_source);
+                this->source = obs_source_get_weak_source(ref_source);
                 this->show();
+                obs_source_release(ref_source);
             }
 
             this->smoothing = (float)obs_data_get_double(settings, (std::string(full_param_name) + "__smoothing").c_str());
