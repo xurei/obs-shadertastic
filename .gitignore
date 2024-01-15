@@ -2,6 +2,9 @@
 .idea/
 *.iml
 
+# Generated files
+src/version.h
+
 # Built files
 build/
 build-prod/
