@@ -91,6 +91,7 @@
 #include "parameters/parameter_unknown.hpp"
 #include "parameters/parameter_image.hpp"
 #include "parameters/parameter_source.hpp"
+#include "parameters/parameter_text.hpp"
 #include "parameters/parameter_factory.hpp"
 #include "effect.hpp"
 #include "shadertastic.hpp"

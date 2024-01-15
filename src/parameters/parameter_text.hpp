@@ -1,5 +1,5 @@
 /******************************************************************************
-    Copyright (C) 2023 by xurei <xureilab@gmail.com>
+    Copyright (C) 2024 by xurei <xureilab@gmail.com>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -15,41 +15,43 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
-class effect_parameter_bool : public effect_parameter {
-    private:
-        bool default_value;
-
+class effect_parameter_text : public effect_parameter {
     public:
-        // Note: the shaders need a 4-byte data for booleans, this is NOT a mistake to use sizeof(int).
-        effect_parameter_bool(gs_eparam_t *shader_param) : effect_parameter(sizeof(int), shader_param) {
+        std::string value;
+
+        explicit effect_parameter_text(gs_eparam_t *shader_param) : effect_parameter(sizeof(int), shader_param) {
         }
 
         virtual effect_param_datatype type() {
-            return PARAM_DATATYPE_BOOL;
+            return PARAM_DATATYPE_UNKNOWN;
         }
 
         virtual void set_defaults(obs_data_t *metadata) {
-            obs_data_set_default_bool(metadata, "default", false);
-
-            default_value = obs_data_get_bool(metadata, "default");
+            const char *value_c_str = obs_data_get_string(metadata, "value");
+            value = std::string(value_c_str);
         }
 
         virtual void set_default(obs_data_t *settings, const char *full_param_name) {
-            obs_data_set_default_bool(settings, full_param_name, default_value);
+            UNUSED_PARAMETER(settings);
+            UNUSED_PARAMETER(full_param_name);
         }
 
         virtual void render_property_ui(const char *full_param_name, obs_properties_t *props) {
-            auto prop = obs_properties_add_bool(props, full_param_name, label.c_str());
-            if (!description.empty()) {
-                obs_property_set_long_description(prop, obs_module_text(description.c_str()));
-            }
+            obs_properties_add_text(
+                props,
+                full_param_name,
+                value.c_str(),
+                OBS_TEXT_INFO
+            );
         }
 
         virtual void set_data_from_settings(obs_data_t *settings, const char *full_param_name) {
-            *((int*)this->data) = obs_data_get_bool(settings, full_param_name) ? 1 : 0;
+            UNUSED_PARAMETER(settings);
+            UNUSED_PARAMETER(full_param_name);
+            *((int*)this->data) = 0;
         }
 
         virtual void set_data_from_default() {
-            *((int*)this->data) = default_value ? 1 : 0;
+            *((int*)this->data) = 0;
         }
 };

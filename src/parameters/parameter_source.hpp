@@ -78,6 +78,9 @@ class effect_parameter_source : public effect_parameter {
             for (const std::string &str: sources_list) {
                 obs_property_list_add_string(p, str.c_str(), str.c_str());
             }
+            if (!description.empty()) {
+                obs_property_set_long_description(p, obs_module_text(description.c_str()));
+            }
         }
 
         virtual void set_data_from_default() {

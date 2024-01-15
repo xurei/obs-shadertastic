@@ -50,11 +50,15 @@ class effect_parameter_int : public effect_parameter {
         }
 
         virtual void render_property_ui(const char *full_param_name, obs_properties_t *props) {
+            obs_property_t *prop;
             if (is_slider) {
-                obs_properties_add_int_slider(props, full_param_name, label.c_str(), param_min, param_max, param_step);
+                prop = obs_properties_add_int_slider(props, full_param_name, label.c_str(), param_min, param_max, param_step);
             }
             else {
-                obs_properties_add_int(props, full_param_name, label.c_str(), param_min, param_max, param_step);
+                prop = obs_properties_add_int(props, full_param_name, label.c_str(), param_min, param_max, param_step);
+            }
+            if (!description.empty()) {
+                obs_property_set_long_description(prop, obs_module_text(description.c_str()));
             }
         }
 

@@ -29,9 +29,17 @@ add_library(${PROJECT_NAME} MODULE)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/version.h.in ${CMAKE_CURRENT_SOURCE_DIR}/src/version.h)
 
+file(GLOB sources_HPP
+    "src/shader/*.hpp"
+    "src/util/*.hpp"
+    "src/parameters/*.hpp"
+    "src/*.hpp"
+)
+
 target_sources(${PROJECT_NAME} PRIVATE
     src/shadertastic.cpp
     src/version.h
+    ${sources_HPP}
 )
 
 if(BUILD_OUT_OF_TREE)

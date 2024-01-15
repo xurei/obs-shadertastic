@@ -8,4 +8,5 @@ enum effect_param_datatype {
     PARAM_DATATYPE_INT,
     PARAM_DATATYPE_LIST_INT,
     PARAM_DATATYPE_SOURCE,
+    PARAM_DATATYPE_TEXT,
 };

@@ -67,6 +67,9 @@ class effect_parameter_list_int : public effect_parameter {
             for (size_t i=0; i < values.size(); ++i) {
                 obs_property_list_add_int(list_ui, values[i].label.c_str(), values[i].value);
             }
+            if (!description.empty()) {
+                obs_property_set_long_description(list_ui, obs_module_text(description.c_str()));
+            }
         }
 
         virtual void set_data_from_settings(obs_data_t *settings, const char *full_param_name) {

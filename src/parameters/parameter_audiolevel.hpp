@@ -37,7 +37,7 @@ class effect_parameter_audiolevel : public effect_parameter {
         float smoothing = 0.5;
 
     public:
-        effect_parameter_audiolevel(gs_eparam_t *shader_param):
+        explicit effect_parameter_audiolevel(gs_eparam_t *shader_param):
             effect_parameter(sizeof(float), shader_param),
             obs_volmeter(obs_volmeter_create(OBS_FADER_LOG))
         {
@@ -76,7 +76,10 @@ class effect_parameter_audiolevel : public effect_parameter {
             for (const std::string &str: sources_list) {
                 obs_property_list_add_string(p, str.c_str(), str.c_str());
             }
-            obs_properties_add_float_slider(props, (std::string(full_param_name) + "__smoothing").c_str(), "∟ Smoothing", 0.0, 0.99, 0.01);
+            auto prop = obs_properties_add_float_slider(props, (std::string(full_param_name) + "__smoothing").c_str(), "∟ Smoothing", 0.0, 0.99, 0.01);
+            if (!description.empty()) {
+                obs_property_set_long_description(prop, obs_module_text(description.c_str()));
+            }
         }
 
         virtual void set_data_from_default() {

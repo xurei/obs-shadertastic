@@ -64,6 +64,10 @@ class effect_parameter_factory {
                         out = new effect_parameter_color_alpha(shader_param);
                         break;
                     }
+                    case PARAM_DATATYPE_TEXT: {
+                        out = new effect_parameter_text(shader_param);
+                        break;
+                    }
                     case PARAM_DATATYPE_UNKNOWN: default: {
                         out = new effect_parameter_unknown(shader_param);
                         break;
@@ -100,6 +104,9 @@ class effect_parameter_factory {
             }
             else if (strcmp(datatype_str, "color") == 0) {
                 return PARAM_DATATYPE_COLOR_ALPHA;
+            }
+            else if (strcmp(datatype_str, "text") == 0) {
+                return PARAM_DATATYPE_TEXT;
             }
             else {
                 return PARAM_DATATYPE_UNKNOWN;

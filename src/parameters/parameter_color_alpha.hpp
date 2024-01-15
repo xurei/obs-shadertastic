@@ -60,7 +60,10 @@ class effect_parameter_color_alpha : public effect_parameter {
         }
 
         virtual void render_property_ui(const char *full_param_name, obs_properties_t *props) {
-            obs_properties_add_color_alpha(props, full_param_name, label.c_str());
+            auto prop = obs_properties_add_color_alpha(props, full_param_name, label.c_str());
+            if (!description.empty()) {
+                obs_property_set_long_description(prop, obs_module_text(description.c_str()));
+            }
         }
 
         virtual void set_data_from_settings(obs_data_t *settings, const char *full_param_name) {

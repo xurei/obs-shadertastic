@@ -58,7 +58,10 @@ class effect_parameter_image : public effect_parameter {
         }
 
         virtual void render_property_ui(const char *full_param_name, obs_properties_t *props) {
-            obs_properties_add_path(props, full_param_name, label.c_str(), OBS_PATH_FILE, "Image (*.jpg *.jpeg *.png)", NULL);
+            auto prop = obs_properties_add_path(props, full_param_name, label.c_str(), OBS_PATH_FILE, "Image (*.jpg *.jpeg *.png)", NULL);
+            if (!description.empty()) {
+                obs_property_set_long_description(prop, obs_module_text(description.c_str()));
+            }
         }
 
         virtual void set_data_from_default() {

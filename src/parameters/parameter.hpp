@@ -25,6 +25,7 @@ class effect_parameter {
         gs_eparam_t *shader_param;
         std::string name;
         std::string label;
+        std::string description;
         size_t data_size;
 
     public:
@@ -43,6 +44,13 @@ class effect_parameter {
         void load_common_fields(obs_data_t *metadata) {
             name = std::string(obs_data_get_string(metadata, "name"));
             label = std::string(obs_data_get_string(metadata, "label"));
+            const char *description_c_str = obs_data_get_string(metadata, "description");
+            if (description_c_str != NULL) {
+                description = std::string(description_c_str);
+            }
+            else {
+                description = std::string("");
+            }
         }
 
         virtual void set_defaults(obs_data_t *metadata) = 0;
