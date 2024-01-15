@@ -4,6 +4,22 @@
   "input_time": false,
   "parameters": [
     {
+      "name": "displace_mode",
+      "label": "Displace mode",
+      "type": "list_int",
+      "values": [
+        {"label": "Single (default)", "value": 0},
+        {"label": "Displace + Overlay", "value": 1}
+      ],
+      "default": 0
+    },
+    {
+      "name": "displace_mode_text",
+      "label": "",
+      "type": "text",
+      "value": "In 'Single' mode, the whole source is used as a displacement map.\nIn 'Displace + Overlay' mode, the left half of the source is used as a displacement map and the right half is used as an overlay."
+    },
+    {
       "name": "color_space",
       "label": "Color Space",
       "type": "list_int",
@@ -12,6 +28,12 @@
         {"label": "YUV", "value": 1}
       ],
       "default": 1
+    },
+    {
+      "name": "color_space_text",
+      "label": "",
+      "type": "text",
+      "value": "In RGB color space, #808080 is the zero (i.e. no displacement) value. The R and G component define the amount of displacement of a pixel in X and Y, respectively.\nIn YUV color space, any grey color is a zero displacement color. The U and V components define the amount of displacement of a pixel in X and Y, respectively."
     },
     {
       "name": "sampler_mode",

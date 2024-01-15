@@ -3,6 +3,7 @@ uniform float displacement_strength_x;
 uniform float displacement_strength_y;
 uniform int color_space;
 uniform int sampler_mode;
+uniform int displace_mode;
 //----------------------------------------------------------------------------------------------------------------------
 
 // These are required objects for the shader to work.
@@ -75,8 +76,7 @@ float2 applyBorders(float2 uv) {
     );
 }
 
-float4 EffectLinear(float2 uv)
-{
+float4 EffectLinearSingle(float2 uv) {
     float2 displacement_strength = float2(displacement_strength_x, displacement_strength_y);
     if (color_space == 0) { // RGB
         float4 mask = displacement_map.Sample(textureSampler, uv);
@@ -96,6 +96,45 @@ float4 EffectLinear(float2 uv)
     else {
         // Should not happen
         return image.Sample(textureSampler, uv);
+    }
+}
+
+float4 EffectLinearDual(float2 uv) {
+    float2 displacement_strength = float2(displacement_strength_x, displacement_strength_y);
+    float2 uv_mask = float2(uv[0]*0.5, uv[1]);
+    float4 px;
+    float4 mask = displacement_map.Sample(textureSampler, uv_mask);
+    mask.xyz *= mask[3];
+    if (color_space == 0) { // RGB
+        float2 uv2 = uv - displacement_strength*mask[3]*float2((mask.x - 0.5)/0.5, (mask.y - 0.5)/0.5);
+        uv2 = applyBorders(uv2);
+        px = image.Sample(textureSampler, uv2);
+    }
+    else if (color_space == 1) { // YUV
+        float3 mask_yuv = rgbToYuv(mask.rgb);
+        float2 uv2 = uv - displacement_strength*mask[3]*float2(mask_yuv.y, mask_yuv.z);
+        uv2 = applyBorders(uv2);
+        px = image.Sample(textureSampler, uv2);
+    }
+    else {
+        // Should not happen
+        return image.Sample(textureSampler, uv);
+    }
+
+    float4 overlay_px = displacement_map.Sample(textureSampler, uv_mask + float2(0.5, 0.0));
+    return float4(lerp(
+        px.rgb,
+        overlay_px.rgb,
+        overlay_px[3]
+    ), px[3]);
+}
+
+float4 EffectLinear(float2 uv) {
+    if (displace_mode == 0) {
+        return EffectLinearSingle(uv);
+    }
+    else /*if (displace_mode == 1)*/ {
+        return EffectLinearDual(uv);
     }
 }
 //----------------------------------------------------------------------------------------------------------------------
