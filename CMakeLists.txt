@@ -8,7 +8,7 @@ endif()
 
 if(DEV_MODE EQUAL 1)
   add_compile_definitions(DEV_MODE)
-  project(shadertastic-dev VERSION 0.0.8)
+  project(shadertastic VERSION 0.0.8)
 else()
   project(shadertastic VERSION 0.0.8)
 endif()
@@ -26,6 +26,11 @@ set(LIBZIP_INCLUDE "" CACHE PATH "Path zo libzip's includes.")
 set(LIBZIP_INCLUDE_CONF "" CACHE PATH "Path zo libzip's includes (config file).")
 
 add_library(${PROJECT_NAME} MODULE)
+
+# Face detection stuff
+find_package(OpenCV REQUIRED COMPONENTS core highgui imgproc )
+find_package(OpenVINO REQUIRED COMPONENTS Runtime)
+add_subdirectory(ovmediapipe)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/version.h.in ${CMAKE_CURRENT_SOURCE_DIR}/src/version.h)
 

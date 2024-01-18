@@ -101,7 +101,7 @@ OBS_DECLARE_MODULE()
 OBS_MODULE_AUTHOR("xurei")
 OBS_MODULE_USE_DEFAULT_LOCALE(
     #ifdef DEV_MODE
-      "shadertastic-dev"
+      "shadertastic"
     #else
       "shadertastic"
     #endif
