@@ -80,6 +80,10 @@ struct shadertastic_filter : public shadertastic_common {
     bool reset_time_on_show = false;
     double time = 0.0;
 
+    // Face detection state
+    bool face_detection_enabled;
+    face_detection_state face_detection;
+
     void release() {
         for (auto& [key, effect] : *this->effects) {
             effect.release();

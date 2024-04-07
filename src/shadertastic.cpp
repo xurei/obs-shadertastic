@@ -58,6 +58,7 @@
 #define try_gs_effect_set_texture_srgb(param, val) if (param) { gs_effect_set_texture_srgb(param, val); }
 #define try_gs_effect_set_int(param, val) if (param) { gs_effect_set_int(param, val); }
 #define try_gs_effect_set_float(param, val) if (param) { gs_effect_set_float(param, val); }
+#define try_gs_effect_set_vec2(param, val) if (param) { gs_effect_set_vec2(param, val); }
 #define try_gs_effect_set_bool(param, val) if (param) { gs_effect_set_bool(param, val); }
 
 #define do_log(level, format, ...) \
@@ -94,7 +95,10 @@
 #include "parameters/parameter_text.hpp"
 #include "parameters/parameter_factory.hpp"
 #include "effect.hpp"
+
+#include "face_detection_state.h"
 #include "shadertastic.hpp"
+#include "face_detection.hpp"
 //----------------------------------------------------------------------------------------------------------------------
 
 OBS_DECLARE_MODULE()

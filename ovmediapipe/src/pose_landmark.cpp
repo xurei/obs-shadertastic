@@ -6,7 +6,7 @@
 #include <openvino/openvino.hpp>
 #include "ovmediapipe/pose_landmark.h"
 #include "ovmediapipe/landmark_refinement_indices.h"
-#include "one_euro_filter.h"
+#include "filtering/one_euro_filter.h"
 
 //#include <ittutils.h>
 #define ITT_SCOPED_TASK(TASKNAME) {}

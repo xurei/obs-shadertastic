@@ -30,7 +30,14 @@ add_library(${PROJECT_NAME} MODULE)
 # Face detection stuff
 find_package(OpenCV REQUIRED COMPONENTS core highgui imgproc )
 find_package(OpenVINO REQUIRED COMPONENTS Runtime)
-add_subdirectory(ovmediapipe)
+target_include_directories (${PROJECT_NAME} PRIVATE ovmediapipe/include)
+# add_dependency(${PROJECT_NAME} OpenCV)
+# file(GLOB ovmediapipe_H
+#     "ovmediapipe/include/ovmediapipe/*.h"
+# )
+# target_sources(${PROJECT_NAME} PRIVATE
+#     ${ovmediapipe_H}
+# )
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/version.h.in ${CMAKE_CURRENT_SOURCE_DIR}/src/version.h)
 
@@ -40,11 +47,16 @@ file(GLOB sources_HPP
     "src/parameters/*.hpp"
     "src/*.hpp"
 )
+file(GLOB ovmediapipe_CPP
+    "ovmediapipe/src/*"
+    "ovmediapipe/src/filtering/*"
+)
 
 target_sources(${PROJECT_NAME} PRIVATE
     src/shadertastic.cpp
     src/version.h
     ${sources_HPP}
+    ${ovmediapipe_CPP}
 )
 
 if(BUILD_OUT_OF_TREE)
@@ -108,7 +120,16 @@ target_link_libraries(${PROJECT_NAME}
     OBS::${OBS_FRONTEND_API_NAME}
     Qt::Widgets
     OBS::libobs
+    ${OpenCV_LIBRARIES} openvino::runtime
 )
+
+### THESE LINES MIGHT BREAK THE WIN32 BUILD. TO BE TESTED AND CONFIRMED OK
+if(WIN32)
+    # Enable Multicore Builds and disable FH4 (to not depend on VCRUNTIME140_1.DLL when building with VS2019)
+    if (MSVC)
+        add_definitions(/MP /d2FH4- /std:c++latest)
+    endif()
+endif()
 
 if(BUILD_OUT_OF_TREE)
     if(NOT LIB_OUT_DIR)
