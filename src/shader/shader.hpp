@@ -37,7 +37,9 @@ class effect_shader {
     gs_eparam_t *param_fd_leye_2 = NULL;
     gs_eparam_t *param_fd_reye_1 = NULL;
     gs_eparam_t *param_fd_reye_2 = NULL;
-    gs_eparam_t *param_fd_face = NULL;
+    gs_eparam_t *param_fd_face_1 = NULL;
+    gs_eparam_t *param_fd_face_2 = NULL;
+    gs_eparam_t *param_fd_points_tex = NULL;
 
     void load(const char *shader_path) {
         debug("SHADER PATH: %s", shader_path);
@@ -95,7 +97,9 @@ class effect_shader {
                 param_fd_leye_2 = gs_effect_get_param_by_name(effect, "fd_leye_2");
                 param_fd_reye_1 = gs_effect_get_param_by_name(effect, "fd_reye_1");
                 param_fd_reye_2 = gs_effect_get_param_by_name(effect, "fd_reye_2");
-                param_fd_face = gs_effect_get_param_by_name(effect, "fd_face");
+                param_fd_face_1 = gs_effect_get_param_by_name(effect, "fd_face_1");
+                param_fd_face_2 = gs_effect_get_param_by_name(effect, "fd_face_2");
+                param_fd_points_tex = gs_effect_get_param_by_name(effect, "fd_points_tex");
                 //param_fd_points = gs_effect_get_param_by_name(effect, "fd_points");
             }
         }

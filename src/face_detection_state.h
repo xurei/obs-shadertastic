@@ -4,6 +4,7 @@
 
 struct face_detection_state {
     gs_texrender_t *facedetection_texrender;
+    gs_texture_t *fd_points_texture;
     gs_stagesurf_t *staging_texture = NULL;
     std::shared_ptr <ovmediapipe::FaceMesh> facemesh;
     std::vector<std::string> ov_available_devices;

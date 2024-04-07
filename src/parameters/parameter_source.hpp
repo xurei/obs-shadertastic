@@ -15,8 +15,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
-struct vec4 clear_color;
-
 static bool effect_parameter_source_add(void *data, obs_source_t *source) {
     std::list<std::string> *sources_list = (std::list<std::string>*)(data);
 
@@ -36,11 +34,11 @@ class effect_parameter_source : public effect_parameter {
     private:
         gs_texrender_t *source_texrender = NULL;
         obs_weak_source_t *source = NULL;
+        struct vec4 clear_color{0,0,0,0};
 
     public:
         effect_parameter_source(gs_eparam_t *shader_param) : effect_parameter(sizeof(float), shader_param) {
             this->source_texrender = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
-            vec4_zero(&clear_color);
         }
 
         virtual ~effect_parameter_source() {

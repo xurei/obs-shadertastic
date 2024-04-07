@@ -50,6 +50,7 @@ static const std::list<ModelDetails> supported_face_landmark_models = {
         "../openvino-models/mediapipe_face_landmark/with_attention/FP16/face_landmark_with_attention_192x192.xml"
     }
 };
+//----------------------------------------------------------------------------------------------------------------------
 
 vec3* convertVectorToArray(const std::vector<cv::Point3f>& points) {
     // Calculate the total size needed for the array
@@ -67,6 +68,17 @@ vec3* convertVectorToArray(const std::vector<cv::Point3f>& points) {
 
     return resultArray;
 }
+//----------------------------------------------------------------------------------------------------------------------
+
+void face_detection_copy_points(ovmediapipe::FaceLandmarksResults *facelandmark_results, float *points) {
+    for (int i=0; i<468; ++i) {
+        points[i*2+0] = facelandmark_results->facial_surface[i].x;
+        points[i*2+1] = facelandmark_results->facial_surface[i].y;
+        //debug("%f %f", points[i*2+0], points[i*2+1]);
+        //points[i*3+2] = facelandmark_results->facial_surface[i].z;
+    }
+}
+//----------------------------------------------------------------------------------------------------------------------
 
 face_detection_bounding_box face_detection_get_bounding_box(ovmediapipe::FaceLandmarksResults *facelandmark_results, const unsigned short int *indices, int nb_indices) {
     // Initialize min and max points
@@ -85,13 +97,13 @@ face_detection_bounding_box face_detection_get_bounding_box(ovmediapipe::FaceLan
     }
 
     // Finding the bounding box
-    face_detection_bounding_box out;
-    out.x1 = minPoint.x;
-    out.y1 = minPoint.y;
-    out.x2 = maxPoint.x;
-    out.y2 = maxPoint.y;
+    face_detection_bounding_box out{
+        minPoint.x, minPoint.y,
+        maxPoint.x, maxPoint.y
+    };
     return out;
 }
+//----------------------------------------------------------------------------------------------------------------------
 
 static void face_detection_update(face_detection_state *s) {
     //obs_data_t *settings = load_settings();
@@ -122,6 +134,7 @@ static void face_detection_update(face_detection_state *s) {
         do_log(LOG_ERROR, "Could not find one of these required models: %s, %s", model_data_path.c_str(), landmark_data_path.c_str());
     }
 }
+//----------------------------------------------------------------------------------------------------------------------
 
 void face_detection_init(face_detection_state *s) {
     // TODO ça se fait pour chaque filtre, sans partage de resources, c'est débile... A améliorer avant release
@@ -129,8 +142,11 @@ void face_detection_init(face_detection_state *s) {
     obs_enter_graphics();
     s->facedetection_texrender = gs_texrender_create(GS_BGRA, GS_ZS_NONE);
     s->staging_texture = gs_stagesurface_create(FACEDETECTION_WIDTH, FACEDETECTION_HEIGHT, GS_BGRA);
+
+    s->fd_points_texture = gs_texture_create(468, 1, GS_RG32F, 1, nullptr, GS_DYNAMIC);
+
     obs_leave_graphics();
-    debug("STAGING TEXTURE = %p", s->staging_texture);
+    //debug("STAGING TEXTURE = %p", s->staging_texture);
     for (const auto& device : core.get_available_devices()) {
         //don't allow GNA to be a supported device for this plugin.
         if (device == "GNA")
@@ -148,15 +164,7 @@ void face_detection_init(face_detection_state *s) {
     /** Configure networks **/
     face_detection_update(s);
 }
-
-void face_detection_destroy(face_detection_state *s) {
-    obs_enter_graphics();
-    gs_texrender_destroy(s->facedetection_texrender);
-    if (s->staging_texture) {
-        gs_stagesurface_destroy(s->staging_texture);
-    }
-    obs_leave_graphics();
-}
+//----------------------------------------------------------------------------------------------------------------------
 
 void face_detection_render(face_detection_state *s, obs_source_t *target_source, effect_shader *main_shader) {
     const enum gs_color_space preferred_spaces[] = {
@@ -176,9 +184,7 @@ void face_detection_render(face_detection_state *s, obs_source_t *target_source,
                        GS_BLEND_INVSRCALPHA, GS_BLEND_ONE,
                        GS_BLEND_INVSRCALPHA);
 
-        struct vec4 clear_color;
-
-        vec4_zero(&clear_color);
+        struct vec4 clear_color{0,0,0,0};
         gs_clear(GS_CLEAR_COLOR, &clear_color, 0.0f, 0);
         gs_ortho(0.0f, (float)cx, 0.0f, (float)cy, -100.0f, 100.0f);
 
@@ -265,75 +271,44 @@ void face_detection_render(face_detection_state *s, obs_source_t *target_source,
                     auto bbox = face_detection_get_bounding_box(&s->facelandmark_results, left_iris_refinement_indices, left_iris_refined_region_num_points);
                     try_gs_effect_set_vec2(main_shader->param_fd_leye_1, &bbox.point1);
                     try_gs_effect_set_vec2(main_shader->param_fd_leye_2, &bbox.point2);
-                    debug("Left Eye: %f %f %f %f", bbox.x1, bbox.y1, bbox.x2-bbox.x1, bbox.y2-bbox.y1);
+                    //debug("Left Eye: %f %f %f %f", bbox.x1, bbox.y1, bbox.x2-bbox.x1, bbox.y2-bbox.y1);
                 }
                 {
                     auto bbox = face_detection_get_bounding_box(&s->facelandmark_results, right_iris_refinement_indices, right_iris_refined_region_num_points);
                     try_gs_effect_set_vec2(main_shader->param_fd_reye_1, &bbox.point1);
                     try_gs_effect_set_vec2(main_shader->param_fd_reye_2, &bbox.point2);
-
-//                    try_gs_effect_set_float(main_shader->param_fd_reye_x1, bbox.x1);
-//                    try_gs_effect_set_float(main_shader->param_fd_reye_y1, bbox.y1);
-//                    try_gs_effect_set_float(main_shader->param_fd_reye_x2, bbox.x2);
-//                    try_gs_effect_set_float(main_shader->param_fd_reye_y2, bbox.y2);
-                    debug("Right Eye: %f %f %f %f", bbox.x1, bbox.y1, bbox.x2-bbox.x1, bbox.y2-bbox.y1);
+                    //debug("Right Eye: %f %f %f %f", bbox.x1, bbox.y1, bbox.x2-bbox.x1, bbox.y2-bbox.y1);
                 }
-//                {
-//                    auto bbox = face_detection_get_bounding_box(&s->facelandmark_results, not_lips_eyes_indices, 310);
-//                    try_gs_effect_set_float(main_shader->param_fd_reye_x1, bbox.x1);
-//                    try_gs_effect_set_float(main_shader->param_fd_reye_y1, bbox.y1);
-//                    try_gs_effect_set_float(main_shader->param_fd_reye_x2, bbox.x2);
-//                    try_gs_effect_set_float(main_shader->param_fd_reye_y2, bbox.y2);
-//                    debug("Right Eye: %f %f %f %f", bbox.x1, bbox.y1, bbox.x2-bbox.x1, bbox.y2-bbox.y1);
-//                }
+                {
+                    auto bbox = face_detection_get_bounding_box(&s->facelandmark_results, not_lips_eyes_indices, 310);
+                    try_gs_effect_set_vec2(main_shader->param_fd_face_1, &bbox.point1);
+                    try_gs_effect_set_vec2(main_shader->param_fd_face_2, &bbox.point2);
+                    //debug("Face: %f %f %f %f", bbox.x1, bbox.y1, bbox.x2-bbox.x1, bbox.y2-bbox.y1);
+                }
+                float points[468*2];
+                face_detection_copy_points(&s->facelandmark_results, points);
 
-                //vec3 *varray = convertVectorToArray(s->facelandmark_results.refined_landmarks);
+                float *texpoints;
+                uint32_t linesize2 = 0;
+	            obs_enter_graphics(); {
+                    gs_texture_map(s->fd_points_texture, (uint8_t **)(&texpoints), &linesize2);
 
-//void try_gs_effect_set_vec2_array(gs_eparam_t *param, const struct vec2 *val, uint32_t array_size)
-                //try_gs_effect_set_val(main_shader->param_fd_points, varray, s->facelandmark_results.refined_landmarks.size() * sizeof(vec3));
-                //delete varray;
-//                {
-//                    auto k = facelandmark_results.refined_landmarks[right_iris_refinement_indices[0]];
-//                    int x = (int)(k.x * (float)imageBGR.cols);
-//                    int y = (int)(k.y * (float)imageBGR.rows);
-//                    debug("Right Eye: %i %i", x, y);
-//                    try_gs_effect_set_float(main_shader->param_fd_reye_x, k.x);
-//                    try_gs_effect_set_float(main_shader->param_fd_reye_y, k.y);
-//                }
+//                    for (int i=0; i<468*2; ++i) {
+////                        texpoints[i] = (uint16_t)(((float)0xffff) * points[i]);
+////                        texpoints[468+i] = (uint16_t)(((float)0xffff) * points[i]);
+//                        texpoints[i] = points[i];
+//                        //texpoints[468+i] = points[i];
+//                    }
+                    memcpy(texpoints, points, 468*2 * sizeof(float));
 
-//                try_gs_effect_set_float(selected_effect->main_shader->param_fd_x, ((float)x)/facedetection_width);
-//                try_gs_effect_set_float(selected_effect->main_shader->param_fd_y, ((float)y)/facedetection_height);
-//                try_gs_effect_set_float(selected_effect->main_shader->param_fd_w, ((float)w)/facedetection_width);
-//                try_gs_effect_set_float(selected_effect->main_shader->param_fd_h, ((float)h)/facedetection_height);
-//
-//                try_gs_effect_set_float(selected_effect->main_shader->param_fd_leye_x, ((float)p[5])/facedetection_width);
-//                try_gs_effect_set_float(selected_effect->main_shader->param_fd_leye_y, ((float)p[6])/facedetection_height);
-//
-//                try_gs_effect_set_float(selected_effect->main_shader->param_fd_reye_x, ((float)p[7])/facedetection_width);
-//                try_gs_effect_set_float(selected_effect->main_shader->param_fd_reye_y, ((float)p[8])/facedetection_height);
+                    gs_texture_unmap(s->fd_points_texture);
+	            }
+	            obs_leave_graphics();
+                try_gs_effect_set_texture(main_shader->param_fd_points_tex, s->fd_points_texture)
 
-//                for (unsigned short left_iris_refinement_indice : left_iris_refinement_indices)
-//                {
-//                    auto k = facelandmark_results.refined_landmarks[left_iris_refinement_indice];
-//                    int x = (int)(k.x * (float)imageBGR.cols);
-//                    int y = (int)(k.y * (float)imageBGR.rows);
-//
-//                    //printf("keypoint = %d,%d\n", x, y);
-//
-//                    auto point = cv::Point(x, y);
-//                    cv::circle(imageBGR, point, 2, cv::Scalar(255, 255, 255), -1);
-//                }
-//
-//                for (unsigned short right_iris_refinement_indice : right_iris_refinement_indices)
-//                {
-//                    auto k = facelandmark_results.refined_landmarks[right_iris_refinement_indice];
-//                    int x = (int)(k.x * (float)imageBGR.cols);
-//                    int y = (int)(k.y * (float)imageBGR.rows);
-//
-//                    //printf("keypoint = %d,%d\n", x, y);
-//
-//                    auto point = cv::Point(x, y);
-//                    cv::circle(imageBGR, point, 2, cv::Scalar(255, 255, 255), -1);
+//                uint16_t data
+//                for (int i=0; i<468; ++i) {
+//                    points
 //                }
             }
         }
@@ -345,3 +320,15 @@ void face_detection_render(face_detection_state *s, obs_source_t *target_source,
         debug("cpt");
     }
 }
+//----------------------------------------------------------------------------------------------------------------------
+
+void face_detection_destroy(face_detection_state *s) {
+    obs_enter_graphics();
+    gs_texrender_destroy(s->facedetection_texrender);
+    gs_texture_destroy(s->fd_points_texture);
+    if (s->staging_texture) {
+        gs_stagesurface_destroy(s->staging_texture);
+    }
+    obs_leave_graphics();
+}
+//----------------------------------------------------------------------------------------------------------------------
