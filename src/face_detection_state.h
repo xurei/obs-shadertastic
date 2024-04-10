@@ -8,7 +8,8 @@ struct face_detection_state {
     gs_stagesurf_t *staging_texture = NULL;
     std::shared_ptr <ovmediapipe::FaceMesh> facemesh;
     std::vector<std::string> ov_available_devices;
-    ovmediapipe::FaceLandmarksResults facelandmark_results;
+    ovmediapipe::FaceLandmarksResults facelandmark_results[10];
+    size_t facelandmark_results_counter = 0;
 
 //
 //    // Use the media-io converter to both scale and convert the colorspace
