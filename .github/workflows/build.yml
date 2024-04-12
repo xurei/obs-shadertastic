@@ -2,7 +2,7 @@ name: build obs plugin
 
 on:
   push:
-    branches: [ main, ci, dev, zip-support ]
+    branches: [ main, ci, dev, face-detection-ovmediapipe ]
     tags: [ '*' ]
   #pull_request:
   #  branches: [ main ]
