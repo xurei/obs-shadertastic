@@ -22,22 +22,20 @@ set(MACOS_INSTALLER_UUID "14c0a640-0656-4528-8243-4a2ab2595dd5")
 
 # libzip
 set(LIBZIP_LIBRARY "" CACHE FILEPATH "Path to libzip library.")
-set(LIBZIP_INCLUDE "" CACHE PATH "Path zo libzip's includes.")
-set(LIBZIP_INCLUDE_CONF "" CACHE PATH "Path zo libzip's includes (config file).")
+set(LIBZIP_INCLUDE "" CACHE PATH "Path to libzip's includes.")
+set(LIBZIP_INCLUDE_CONF "" CACHE PATH "Path to libzip's includes (config file).")
 
 add_library(${PROJECT_NAME} MODULE)
 
 # Face detection stuff
-find_package(OpenCV REQUIRED COMPONENTS core highgui imgproc )
+# Change the paths to your provided OpenCV and OpenVINO libraries
+#set(OpenCV_DIR "/path/to/your/OpenCV/installation")
+set(OpenVINO_DIR "/usr/include/openvino/runtime")
+
+find_package(OpenCV REQUIRED COMPONENTS core highgui imgproc)
 find_package(OpenVINO REQUIRED COMPONENTS Runtime)
-target_include_directories (${PROJECT_NAME} PRIVATE ovmediapipe/include)
-# add_dependency(${PROJECT_NAME} OpenCV)
-# file(GLOB ovmediapipe_H
-#     "ovmediapipe/include/ovmediapipe/*.h"
-# )
-# target_sources(${PROJECT_NAME} PRIVATE
-#     ${ovmediapipe_H}
-# )
+
+target_include_directories(${PROJECT_NAME} PRIVATE ovmediapipe/include)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/version.h.in ${CMAKE_CURRENT_SOURCE_DIR}/src/version.h)
 
@@ -84,11 +82,11 @@ if(OS_WINDOWS)
     include_directories(AFTER ${LIBZIP_INCLUDE})
     include_directories(AFTER ${LIBZIP_INCLUDE_CONF})
     target_link_libraries(${PROJECT_NAME}
-        ${LIBZIP_LIBRARY}
+         PRIVATE ${LIBZIP_LIBRARY}
     )
     set(ZLIB_USE_STATIC_LIBS ON)
     find_package(ZLIB REQUIRED)
-    target_link_libraries(${PROJECT_NAME} ${ZLIB_LIBRARIES})
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${ZLIB_LIBRARIES})
     include_directories(${ZLIB_INCLUDE_DIRS})
 
     target_sources(${PROJECT_NAME} PRIVATE
@@ -105,11 +103,17 @@ elseif(OS_LINUX)
     include_directories(AFTER ${LIBZIP_INCLUDE})
     include_directories(AFTER ${LIBZIP_INCLUDE_CONF})
     target_link_libraries(${PROJECT_NAME}
-        ${LIBZIP_LIBRARY}
+        PRIVATE ${LIBZIP_LIBRARY}
     )
     find_package(ZLIB REQUIRED)
-    target_link_libraries(${PROJECT_NAME} ${ZLIB_LIBRARIES})
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${ZLIB_LIBRARIES})
     include_directories(${ZLIB_INCLUDE_DIRS})
+
+    # Add paths to the provided OpenCV and OpenVINO libraries
+    target_link_libraries(${PROJECT_NAME}
+        PRIVATE ${OpenCV_LIBRARIES}
+        PRIVATE openvino::runtime
+    )
 endif()
 
 # lines if you want add Qt UI in your plugin
@@ -117,10 +121,9 @@ find_qt(COMPONENTS Core Widgets Gui)
 set_target_properties(${PROJECT_NAME} PROPERTIES AUTOMOC ON AUTOUIC ON AUTORCC ON)
 
 target_link_libraries(${PROJECT_NAME}
-    OBS::${OBS_FRONTEND_API_NAME}
-    Qt::Widgets
-    OBS::libobs
-    ${OpenCV_LIBRARIES} openvino::runtime
+    PRIVATE OBS::${OBS_FRONTEND_API_NAME}
+    PRIVATE Qt::Widgets
+    PRIVATE OBS::libobs
 )
 
 ### THESE LINES MIGHT BREAK THE WIN32 BUILD. TO BE TESTED AND CONFIRMED OK
