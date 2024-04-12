@@ -20,3 +20,4 @@ https://github.com/sponsors/xurei
 
 # Special mentions
 - Face detection powered by OpenVINO™, inspired from https://github.com/intel/openvino-plugins-for-obs-studio
+- ChatGPT, without which nothing would have been possible (especially the CMake part).

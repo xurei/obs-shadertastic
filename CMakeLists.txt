@@ -20,21 +20,32 @@ set(CMAKE_COMPILE_WARNING_AS_ERROR ON)
 set(MACOS_PACKAGE_UUID "90e83546-fa37-453a-9adb-b51149c78df1")
 set(MACOS_INSTALLER_UUID "14c0a640-0656-4528-8243-4a2ab2595dd5")
 
+# Base command to generate the so file
+add_library(${PROJECT_NAME} MODULE)
+
 # libzip
 set(LIBZIP_LIBRARY "" CACHE FILEPATH "Path to libzip library.")
 set(LIBZIP_INCLUDE "" CACHE PATH "Path to libzip's includes.")
 set(LIBZIP_INCLUDE_CONF "" CACHE PATH "Path to libzip's includes (config file).")
 
-add_library(${PROJECT_NAME} MODULE)
+# OpenVINO
+set(OPENVINO_INCLUDE "" CACHE PATH "Path to OpenVINO's includes.")
+set(OPENVINO_LIBRARY "" CACHE PATH "Path to OpenVINO's library.")
+include_directories(AFTER ${OPENVINO_INCLUDE})
+add_library(openvino::runtime SHARED IMPORTED)
+set_target_properties(openvino::runtime PROPERTIES
+    IMPORTED_LOCATION "${OPENVINO_LIBRARY}"
+)
+file(COPY ${OPENVINO_LIBRARY} DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/lib" FOLLOW_SYMLINK_CHAIN)
+file(COPY "/usr/lib/libopenvino_ir_frontend.so.2330" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/lib" FOLLOW_SYMLINK_CHAIN)
+file(COPY "/usr/lib/openvino-2023.3.0/" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/lib" FOLLOW_SYMLINK_CHAIN)
+file(COPY "/usr/lib/x86_64-linux-gnu/libopencv_imgproc.so.4.5d" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/lib" FOLLOW_SYMLINK_CHAIN)
+file(COPY "/usr/lib/x86_64-linux-gnu/libopencv_core.so.4.5d" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/lib" FOLLOW_SYMLINK_CHAIN)
+# file(COPY ${OPENVINO_LIBRARY} DESTINATION "${CMAKE_CURRENT_BINARY_DIR}" FOLLOW_SYMLINK_CHAIN)
 
 # Face detection stuff
-# Change the paths to your provided OpenCV and OpenVINO libraries
-#set(OpenCV_DIR "/path/to/your/OpenCV/installation")
-set(OpenVINO_DIR "/usr/include/openvino/runtime")
-
 find_package(OpenCV REQUIRED COMPONENTS core highgui imgproc)
-find_package(OpenVINO REQUIRED COMPONENTS Runtime)
-
+# find_package(OpenVINO REQUIRED COMPONENTS Runtime)
 target_include_directories(${PROJECT_NAME} PRIVATE ovmediapipe/include)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/version.h.in ${CMAKE_CURRENT_SOURCE_DIR}/src/version.h)
@@ -109,11 +120,21 @@ elseif(OS_LINUX)
     target_link_libraries(${PROJECT_NAME} PRIVATE ${ZLIB_LIBRARIES})
     include_directories(${ZLIB_INCLUDE_DIRS})
 
-    # Add paths to the provided OpenCV and OpenVINO libraries
+    # Link the OpenVINO runtime library
     target_link_libraries(${PROJECT_NAME}
         PRIVATE ${OpenCV_LIBRARIES}
         PRIVATE openvino::runtime
     )
+
+    # Allow external libs to be loaded from the build directory with RPATH
+    # Set the rpath to the directory containing the executable or shared object file
+    #set(CMAKE_SKIP_BUILD_RPATH  FALSE)
+    #set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+    #set(CMAKE_INSTALL_RPATH "$ORIGIN/lib")
+    #set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+    set_target_properties(${PROJECT_NAME} PROPERTIES INSTALL_RPATH "$ORIGIN/lib")
+    set_target_properties(${PROJECT_NAME} PROPERTIES SKIP_RPATH FALSE)
+    set_target_properties(${PROJECT_NAME} PROPERTIES BUILD_WITH_INSTALL_RPATH TRUE)
 endif()
 
 # lines if you want add Qt UI in your plugin
