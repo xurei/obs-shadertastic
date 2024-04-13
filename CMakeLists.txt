@@ -28,26 +28,6 @@ set(LIBZIP_LIBRARY "" CACHE FILEPATH "Path to libzip library.")
 set(LIBZIP_INCLUDE "" CACHE PATH "Path to libzip's includes.")
 set(LIBZIP_INCLUDE_CONF "" CACHE PATH "Path to libzip's includes (config file).")
 
-# OpenVINO
-set(OPENVINO_INCLUDE "" CACHE PATH "Path to OpenVINO's includes.")
-set(OPENVINO_LIBRARY "" CACHE PATH "Path to OpenVINO's library.")
-include_directories(AFTER ${OPENVINO_INCLUDE})
-add_library(openvino::runtime SHARED IMPORTED)
-set_target_properties(openvino::runtime PROPERTIES
-    IMPORTED_LOCATION "${OPENVINO_LIBRARY}"
-)
-file(COPY ${OPENVINO_LIBRARY} DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/lib" FOLLOW_SYMLINK_CHAIN)
-file(COPY "/usr/lib/libopenvino_ir_frontend.so.2330" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/lib" FOLLOW_SYMLINK_CHAIN)
-file(COPY "/usr/lib/openvino-2023.3.0/" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/lib" FOLLOW_SYMLINK_CHAIN)
-file(COPY "/usr/lib/x86_64-linux-gnu/libopencv_imgproc.so.4.5d" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/lib" FOLLOW_SYMLINK_CHAIN)
-file(COPY "/usr/lib/x86_64-linux-gnu/libopencv_core.so.4.5d" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/lib" FOLLOW_SYMLINK_CHAIN)
-# file(COPY ${OPENVINO_LIBRARY} DESTINATION "${CMAKE_CURRENT_BINARY_DIR}" FOLLOW_SYMLINK_CHAIN)
-
-# Face detection stuff
-find_package(OpenCV REQUIRED COMPONENTS core highgui imgproc)
-# find_package(OpenVINO REQUIRED COMPONENTS Runtime)
-target_include_directories(${PROJECT_NAME} PRIVATE ovmediapipe/include)
-
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/version.h.in ${CMAKE_CURRENT_SOURCE_DIR}/src/version.h)
 
 file(GLOB sources_HPP
@@ -75,6 +55,26 @@ if(BUILD_OUT_OF_TREE)
     set(OBS_FRONTEND_API_NAME "obs-frontend-api")
 else()
     set(OBS_FRONTEND_API_NAME "frontend-api")
+endif()
+
+# OpenVINO & OpenCV dependencies
+find_package(OpenCV REQUIRED COMPONENTS core highgui imgproc)
+find_package(OpenVINO REQUIRED COMPONENTS Runtime)
+target_include_directories(${PROJECT_NAME} PRIVATE ovmediapipe/include)
+
+if(OS_WINDOWS)
+    message("Windows build")
+    find_package(OpenCV REQUIRED PATHS C:/Users/theuser/Path/To/MyOpenCVInstallation/build/install/x64/vc16/lib)
+elseif(OS_MACOS)
+    # TODO
+elseif(OS_LINUX)
+    message("Linux build")
+    message("${OPENVINO_LIBRARY}")
+    file(COPY ${OPENVINO_LIBRARY} DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/lib" FOLLOW_SYMLINK_CHAIN)
+    file(COPY "/usr/lib/libopenvino_ir_frontend.so.2330" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/lib" FOLLOW_SYMLINK_CHAIN)
+    file(COPY "/usr/lib/openvino-2023.3.0/" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/lib" FOLLOW_SYMLINK_CHAIN)
+    file(COPY "/usr/lib/x86_64-linux-gnu/libopencv_imgproc.so.4.5d" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/lib" FOLLOW_SYMLINK_CHAIN)
+    file(COPY "/usr/lib/x86_64-linux-gnu/libopencv_core.so.4.5d" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/lib" FOLLOW_SYMLINK_CHAIN)
 endif()
 
 if(OS_WINDOWS)
