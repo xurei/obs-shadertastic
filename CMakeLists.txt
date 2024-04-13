@@ -64,7 +64,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE ovmediapipe/include)
 
 if(OS_WINDOWS)
     message("Windows build")
-    find_package(OpenCV REQUIRED PATHS C:/Users/theuser/Path/To/MyOpenCVInstallation/build/install/x64/vc16/lib)
+    find_package(OpenCV REQUIRED PATHS C:/ProgramData/Chocolatey/Path/To/MyOpenCVInstallation/build/install/x64/vc16/lib)
 elseif(OS_MACOS)
     # TODO
 elseif(OS_LINUX)

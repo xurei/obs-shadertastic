@@ -162,6 +162,11 @@ jobs:
         with:
           path: plugins/${{ env.PLUGIN_NAME }}
           submodules: 'recursive'
+      - name: "Install OpenCV and OpenVINO"
+        shell: bash
+        run: |
+          apt update 
+          apt install -y libopencv-dev openvino-2023.3.0
       - name: "libzip: Information"
         shell: bash
         id: libzip-info
@@ -293,6 +298,10 @@ jobs:
     steps:
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v1.1.3
+      - name: Install OpenCV though Chocolatey
+        uses: crazy-max/ghaction-chocolatey@v3
+        with:
+          args: install opencv --version=4.7.0
       - name: Checkout obs
         uses: actions/checkout@v3.1.0
         with:
@@ -304,10 +313,6 @@ jobs:
         with:
           path: plugins/${{ env.PLUGIN_NAME}}
           submodules: 'recursive'
-      - name: Install OpenCV though Chocolatey
-        uses: crazy-max/ghaction-chocolatey@v3
-        with:
-          args: install opencv --version=4.7.0
       - name: "zlib: Information"
         shell: bash
         id: zlib-info
