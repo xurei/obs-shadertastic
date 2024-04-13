@@ -304,6 +304,10 @@ jobs:
         with:
           path: plugins/${{ env.PLUGIN_NAME}}
           submodules: 'recursive'
+      - name: Install OpenCV though Chocolatey
+        uses: crazy-max/ghaction-chocolatey@v3
+        with:
+          args: install opencv --version=4.7.0
       - name: "zlib: Information"
         shell: bash
         id: zlib-info
