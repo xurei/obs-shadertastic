@@ -592,3 +592,4 @@ jobs:
         uses: geekyeggo/delete-artifact@v2.0.0
         with:
           name: "${{ env.FILE_NAME_X64 }}\ninstaller-files"
+
