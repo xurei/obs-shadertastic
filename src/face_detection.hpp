@@ -115,7 +115,7 @@ void face_detection_init(face_detection_state *s) {
         Ort::ThreadingOptions ortThreadingOptions;
         ortThreadingOptions.SetGlobalInterOpNumThreads(
             std::min(
-                2, // No more than 2 threads
+                2, // No more than this many threads
                 std::max(1, (int) std::thread::hardware_concurrency() / 4) // A quarter of the threads that can concurrently run on the CPU
             )
         );

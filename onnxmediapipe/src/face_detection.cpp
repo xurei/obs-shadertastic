@@ -35,7 +35,7 @@ namespace onnxmediapipe
 //            sessionOptions.SetIntraOpNumThreads(2);
 //            sessionOptions.DisableMemPattern();
             sessionOptions.DisablePerSessionThreads();
-            sessionOptions.SetExecutionMode(ExecutionMode::ORT_PARALLEL);
+            sessionOptions.SetExecutionMode(ExecutionMode::ORT_SEQUENTIAL);
             char *model_data_path = obs_module_file("face_detection_models/face_detection_full_range.onnx");
             //const char *model_data_path = obs_module_file("face_detection_models/blazeface.onnx");
 
