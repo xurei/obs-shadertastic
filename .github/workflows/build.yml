@@ -2,7 +2,7 @@ name: build obs plugin
 
 on:
   push:
-    branches: [ main, ci, dev, face-detection-mediapipe ]
+    branches: [ main, ci, dev, face_detection_final ]
     tags: [ '*' ]
   #pull_request:
   #  branches: [ main ]
@@ -237,7 +237,7 @@ jobs:
           -DLIBZIP_INCLUDE="${{ github.workspace }}/build/libzip/distrib/include" \
           -DLIBZIP_INCLUDE_CONF="${{ github.workspace }}/build/libzip/distrib/include" \
           -DLIBZIP_LIBRARY="${{ github.workspace }}/build/libzip/distrib/lib/libzip.a" \
-          -DSHADERTASTIC_COMMIT=${{GITHUB_SHA}}
+          -DSHADERTASTIC_COMMIT=${GITHUB_SHA}
       - name: 'Build'
         shell: bash
         run: |
@@ -477,7 +477,7 @@ jobs:
           -DLIBZIP_INCLUDE="${{ github.workspace }}/build/libzip/distrib/include" \
           -DLIBZIP_INCLUDE_CONF="${{ github.workspace }}/build/libzip/distrib/include" \
           -DLIBZIP_LIBRARY="${{ github.workspace }}/build/libzip/distrib/lib/zip.lib" \
-          -DSHADERTASTIC_COMMIT=${{GITHUB_SHA}}
+          -DSHADERTASTIC_COMMIT=${GITHUB_SHA}
 
       - name: 'Build'
         run: msbuild /m /p:Configuration=Release .\build\obs-studio\obs-studio.sln
