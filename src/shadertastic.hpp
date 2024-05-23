@@ -69,7 +69,7 @@ struct shadertastic_filter : public shadertastic_common {
     int interm_texrender_buffer = 0;
     gs_texture_t *transparent_texture;
     float rand_seed;
-    int width, height;
+    uint32_t width, height;
     bool should_reload = false;
 
     // Filter previous state (enabled/disabled)
@@ -79,6 +79,9 @@ struct shadertastic_filter : public shadertastic_common {
     double speed = 1.0;
     bool reset_time_on_show = false;
     double time = 0.0;
+
+    // Face detection state
+    face_detection_state face_detection;
 
     void release() {
         for (auto& [key, effect] : *this->effects) {
@@ -97,10 +100,6 @@ const char *shadertastic_transition_get_name(void *type_data)
     #else
         return obs_module_text("TransitionName");
     #endif
-}
-const char *shadertastic_transition_filter_get_name(void *type_data) {
-    UNUSED_PARAMETER(type_data);
-    return "ShadertasticDev";
 }
 const char *shadertastic_filter_get_name(void *type_data) {
     UNUSED_PARAMETER(type_data);

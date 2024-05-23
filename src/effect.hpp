@@ -24,6 +24,7 @@ struct shadertastic_effect_t {
     int nb_steps;
     bool is_fallback = false;
     bool input_time = false;
+    bool input_facedetection = false;
     params_list effect_params;
     effect_shader *main_shader = NULL;
 
@@ -66,6 +67,7 @@ struct shadertastic_effect_t {
 
             obs_data_set_default_bool(metadata, "input_time", false);
             input_time = obs_data_get_bool(metadata, "input_time");
+            input_facedetection = obs_data_get_bool(metadata, "input_facedetection");
 
             obs_data_array_t *parameters = obs_data_get_array(metadata, "parameters");
             if (parameters == NULL) {

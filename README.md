@@ -17,3 +17,7 @@ Create amazing transitions and filters using shaders, with user-friendly configu
 # Donations
 https://ko-fi.com/xurei  
 https://github.com/sponsors/xurei
+
+# Special mentions
+- Face detection powered by ONNX™, inspired from https://github.com/intel/openvino-plugins-for-obs-studio
+- ChatGPT, without which nothing would have been possible (especially the CMake part).

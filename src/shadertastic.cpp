@@ -50,14 +50,12 @@
 #include <util/platform.h>
 #include "version.h"
 
-#define LOG_OFFSET_DB 6.0f
-#define LOG_RANGE_DB 96.0f
-
 #define try_gs_effect_set_val(param, data, data_size) if (param) { gs_effect_set_val(param, data, data_size); }
 #define try_gs_effect_set_texture(param, val) if (param) { gs_effect_set_texture(param, val); }
 #define try_gs_effect_set_texture_srgb(param, val) if (param) { gs_effect_set_texture_srgb(param, val); }
 #define try_gs_effect_set_int(param, val) if (param) { gs_effect_set_int(param, val); }
 #define try_gs_effect_set_float(param, val) if (param) { gs_effect_set_float(param, val); }
+#define try_gs_effect_set_vec2(param, val) if (param) { gs_effect_set_vec2(param, val); }
 #define try_gs_effect_set_bool(param, val) if (param) { gs_effect_set_bool(param, val); }
 
 #define do_log(level, format, ...) \
@@ -94,14 +92,17 @@
 #include "parameters/parameter_text.hpp"
 #include "parameters/parameter_factory.hpp"
 #include "effect.hpp"
+
+#include "face_detection_state.h"
 #include "shadertastic.hpp"
+#include "face_detection.hpp"
 //----------------------------------------------------------------------------------------------------------------------
 
 OBS_DECLARE_MODULE()
 OBS_MODULE_AUTHOR("xurei")
 OBS_MODULE_USE_DEFAULT_LOCALE(
     #ifdef DEV_MODE
-      "shadertastic-dev"
+      "shadertastic"
     #else
       "shadertastic"
     #endif
@@ -333,6 +334,13 @@ static void show_settings_dialog() {
     QLabel *aboutLabel = new QLabel("Version " PROJECT_VERSION " by <a href=\"http://about.xurei.io/\">xurei</a>");
     aboutLabel->setOpenExternalLinks(true);
     layout->addWidget(aboutLabel);
+    formLayout->addRow(layout);
+
+    // Build ref
+    layout = new QHBoxLayout();
+    layout->addStretch();
+    QLabel *buildLabel = new QLabel("Build: " PROJECT_VERSION_COMMIT "");
+    layout->addWidget(buildLabel);
     formLayout->addRow(layout);
 
     mainLayout->addLayout(formLayout);

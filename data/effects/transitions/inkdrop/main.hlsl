@@ -10,9 +10,6 @@ uniform float rand_seed;       // Seed for random functions
 uniform int current_step;      // index of current step (for multistep effects)
 uniform int nb_steps;          // number of steps (for multisteps effects)
 */
-
-// Specific parameters of the shader. They must be defined in the meta.json file next to this one.
-uniform float random_amount;
 //----------------------------------------------------------------------------------------------------------------------
 
 // These are required objects for the shader to work.
@@ -54,9 +51,11 @@ float noise(float2 p){
     float2 u = float2(fract(p[0]), fract(p[1]));
     u = u*u*(3.0-2.0*u);
 
-    float res = mix(
-        mix(rand(ip+rand_seed),rand(ip+rand_seed+float2(1.0,0.0)),u.x),
-        mix(rand(ip+rand_seed+float2(0.0,1.0)),rand(ip+rand_seed+float2(1.0,1.0)),u.x),u.y);
+    float res = lerp(
+        lerp(rand(ip+rand_seed),rand(ip+rand_seed+float2(1.0,0.0)),u.x),
+        lerp(rand(ip+rand_seed+float2(0.0,1.0)),rand(ip+rand_seed+float2(1.0,1.0)),u.x),
+        u.y
+    );
     return res*res;
 }
 

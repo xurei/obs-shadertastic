@@ -28,6 +28,19 @@ class effect_shader {
     gs_eparam_t *param_current_step = NULL;
     gs_eparam_t *param_nb_steps = NULL;
 
+//    gs_eparam_t *param_fd_x = NULL;
+//    gs_eparam_t *param_fd_y = NULL;
+//    gs_eparam_t *param_fd_w = NULL;
+//    gs_eparam_t *param_fd_h = NULL;
+
+    gs_eparam_t *param_fd_leye_1 = NULL;
+    gs_eparam_t *param_fd_leye_2 = NULL;
+    gs_eparam_t *param_fd_reye_1 = NULL;
+    gs_eparam_t *param_fd_reye_2 = NULL;
+    gs_eparam_t *param_fd_face_1 = NULL;
+    gs_eparam_t *param_fd_face_2 = NULL;
+    gs_eparam_t *param_fd_points_tex = NULL;
+
     void load(const char *shader_path) {
         debug("SHADER PATH: %s", shader_path);
         char *error_string = NULL;
@@ -75,6 +88,19 @@ class effect_shader {
                 param_rand_seed = gs_effect_get_param_by_name(effect, "rand_seed");
                 param_current_step = gs_effect_get_param_by_name(effect, "current_step");
                 param_nb_steps = gs_effect_get_param_by_name(effect, "nb_steps");
+
+//                param_fd_x = gs_effect_get_param_by_name(effect, "fd_x");
+//                param_fd_y = gs_effect_get_param_by_name(effect, "fd_y");
+//                param_fd_w = gs_effect_get_param_by_name(effect, "fd_w");
+//                param_fd_h = gs_effect_get_param_by_name(effect, "fd_h");
+                param_fd_leye_1 = gs_effect_get_param_by_name(effect, "fd_leye_1");
+                param_fd_leye_2 = gs_effect_get_param_by_name(effect, "fd_leye_2");
+                param_fd_reye_1 = gs_effect_get_param_by_name(effect, "fd_reye_1");
+                param_fd_reye_2 = gs_effect_get_param_by_name(effect, "fd_reye_2");
+                param_fd_face_1 = gs_effect_get_param_by_name(effect, "fd_face_1");
+                param_fd_face_2 = gs_effect_get_param_by_name(effect, "fd_face_2");
+                param_fd_points_tex = gs_effect_get_param_by_name(effect, "fd_points_tex");
+                //param_fd_points = gs_effect_get_param_by_name(effect, "fd_points");
             }
         }
     }

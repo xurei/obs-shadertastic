@@ -435,7 +435,7 @@ static void stbiw__write_pixel(stbi__write_context *s, int rgb_dir, int comp, in
          if (!write_alpha) {
             // composite against pink background
             for (k = 0; k < 3; ++k)
-               px[k] = bg[k] + ((d[k] - bg[k]) * d[3]) / 255;
+               px[k] = bg[k] + (unsigned char)(((d[k] - bg[k]) * d[3]) / 255);
             stbiw__write3(s, px[1 - rgb_dir], px[1], px[1 + rgb_dir]);
             break;
          }
@@ -676,8 +676,8 @@ static void stbiw__write_hdr_scanline(stbi__write_context *s, int width, int nco
    float linear[3];
    int x;
 
-   scanlineheader[2] = (width&0xff00)>>8;
-   scanlineheader[3] = (width&0x00ff);
+   scanlineheader[2] = (unsigned char)((width&0xff00)>>8);
+   scanlineheader[3] = (unsigned char)(width&0x00ff);
 
    /* skip RLE for images too small or large */
    if (width < 8 || width >= 32768) {
@@ -1107,21 +1107,21 @@ static void stbiw__encode_png_line(unsigned char *pixels, int stride_bytes, int 
    // first loop isn't optimized since it's just one pixel
    for (i = 0; i < n; ++i) {
       switch (type) {
-         case 1: line_buffer[i] = z[i]; break;
-         case 2: line_buffer[i] = z[i] - z[i-signed_stride]; break;
-         case 3: line_buffer[i] = z[i] - (z[i-signed_stride]>>1); break;
+         case 1: line_buffer[i] = (signed char) (z[i]); break;
+         case 2: line_buffer[i] = (signed char) (z[i] - z[i-signed_stride]); break;
+         case 3: line_buffer[i] = (signed char) (z[i] - (z[i-signed_stride]>>1)); break;
          case 4: line_buffer[i] = (signed char) (z[i] - stbiw__paeth(0,z[i-signed_stride],0)); break;
-         case 5: line_buffer[i] = z[i]; break;
-         case 6: line_buffer[i] = z[i]; break;
+         case 5: line_buffer[i] = (signed char) (z[i]); break;
+         case 6: line_buffer[i] = (signed char) (z[i]); break;
       }
    }
    switch (type) {
-      case 1: for (i=n; i < width*n; ++i) line_buffer[i] = z[i] - z[i-n]; break;
-      case 2: for (i=n; i < width*n; ++i) line_buffer[i] = z[i] - z[i-signed_stride]; break;
-      case 3: for (i=n; i < width*n; ++i) line_buffer[i] = z[i] - ((z[i-n] + z[i-signed_stride])>>1); break;
-      case 4: for (i=n; i < width*n; ++i) line_buffer[i] = z[i] - stbiw__paeth(z[i-n], z[i-signed_stride], z[i-signed_stride-n]); break;
-      case 5: for (i=n; i < width*n; ++i) line_buffer[i] = z[i] - (z[i-n]>>1); break;
-      case 6: for (i=n; i < width*n; ++i) line_buffer[i] = z[i] - stbiw__paeth(z[i-n], 0,0); break;
+      case 1: for (i=n; i < width*n; ++i) line_buffer[i] = (signed char) (z[i] - z[i-n]); break;
+      case 2: for (i=n; i < width*n; ++i) line_buffer[i] = (signed char) (z[i] - z[i-signed_stride]); break;
+      case 3: for (i=n; i < width*n; ++i) line_buffer[i] = (signed char) (z[i] - ((z[i-n] + z[i-signed_stride])>>1)); break;
+      case 4: for (i=n; i < width*n; ++i) line_buffer[i] = (signed char) (z[i] - stbiw__paeth(z[i-n], z[i-signed_stride], z[i-signed_stride-n])); break;
+      case 5: for (i=n; i < width*n; ++i) line_buffer[i] = (signed char) (z[i] - (z[i-n]>>1)); break;
+      case 6: for (i=n; i < width*n; ++i) line_buffer[i] = (signed char) (z[i] - stbiw__paeth(z[i-n], 0,0)); break;
    }
 }
 
@@ -1255,7 +1255,7 @@ static void stbiw__jpg_writeBits(stbi__write_context *s, int *bitBufP, int *bitC
    bitCnt += bs[1];
    bitBuf |= bs[0] << (24 - bitCnt);
    while(bitCnt >= 8) {
-      unsigned char c = (bitBuf >> 16) & 255;
+      unsigned char c = (unsigned char) ((bitBuf >> 16) & 255);
       stbiw__putc(s, c);
       if(c == 255) {
          stbiw__putc(s, 0);
@@ -1322,7 +1322,7 @@ static void stbiw__jpg_calcBits(int val, unsigned short bits[2]) {
    while(tmp1 >>= 1) {
       ++bits[1];
    }
-   bits[0] = val & ((1<<bits[1])-1);
+   bits[0] = (unsigned short) (val & ((1<<bits[1])-1));
 }
 
 static int stbiw__jpg_processDU(stbi__write_context *s, int *bitBuf, int *bitCnt, float *CDU, int du_stride, float *fdtbl, int DC, const unsigned short HTDC[256][2], const unsigned short HTAC[256][2]) {

@@ -2,7 +2,7 @@ name: build obs plugin
 
 on:
   push:
-    branches: [ main, ci, dev, zip-support ]
+    branches: [ main, ci, dev, face-detection-mediapipe ]
     tags: [ '*' ]
   #pull_request:
   #  branches: [ main ]
@@ -30,13 +30,13 @@ jobs:
 #        shell: zsh {0}
 #    steps:
 #      - name: Checkout
-#        uses: actions/checkout@v3.1.0
+#        uses: actions/checkout@v4.1.4
 #        with:
 #          path: plugin
 #          submodules: recursive
 #
 #      - name: Checkout obs-studio
-#        uses: actions/checkout@v3
+#        uses: actions/checkout@v4.1.4
 #        with:
 #          repository: 'obsproject/obs-studio'
 #          path: obs-studio
@@ -142,7 +142,7 @@ jobs:
   linux-in-tree:
     name: 'Linux'
     runs-on: ${{ matrix.ubuntu }}
-    if: startsWith(github.ref, 'refs/tags/')
+    #if: startsWith(github.ref, 'refs/tags/')
     strategy:
       fail-fast: false
       matrix:
@@ -152,13 +152,13 @@ jobs:
       contents: write # To allow the creation of a release
     steps:
       - name: Checkout
-        uses: actions/checkout@v3.1.0
+        uses: actions/checkout@v4.1.4
         with:
           repository: obsproject/obs-studio
           ref: ${{ env.OBS_VERSION }}
           submodules: 'recursive'
       - name: "Checkout plugin"
-        uses: actions/checkout@v3.1.0
+        uses: actions/checkout@v4.1.4
         with:
           path: plugins/${{ env.PLUGIN_NAME }}
           submodules: 'recursive'
@@ -220,19 +220,24 @@ jobs:
         run: |
           cmake -S . -B "${{ github.workspace }}/build/obs-studio" -G Ninja \
           -DCMAKE_BUILD_TYPE="RelWithDebInfo" \
-          -DLINUX_PORTABLE=OFF \
-          -DENABLE_AJA=OFF \
-          -DENABLE_NEW_MPEGTS_OUTPUT=OFF \
-          -DBUILD_CAPTIONS=OFF \
-          -DWITH_RTMPS=OFF \
           -DBUILD_BROWSER=OFF \
+          -DBUILD_CAPTIONS=OFF \
           -DBUILD_VIRTUALCAM=OFF \
           -DBUILD_VST=OFF \
+          -DENABLE_AJA=OFF \
+          -DENABLE_BROWSER=OFF \
+          -DENABLE_JACK=OFF \
+          -DENABLE_NEW_MPEGTS_OUTPUT=OFF \
           -DENABLE_PIPEWIRE=OFF \
           -DENABLE_SCRIPTING=OFF \
+          -DENABLE_VLC=OFF \
+          -DENABLE_WAYLAND=OFF \
+          -DLINUX_PORTABLE=OFF \
+          -DWITH_RTMPS=OFF \
           -DLIBZIP_INCLUDE="${{ github.workspace }}/build/libzip/distrib/include" \
           -DLIBZIP_INCLUDE_CONF="${{ github.workspace }}/build/libzip/distrib/include" \
-          -DLIBZIP_LIBRARY="${{ github.workspace }}/build/libzip/distrib/lib/libzip.a"
+          -DLIBZIP_LIBRARY="${{ github.workspace }}/build/libzip/distrib/lib/libzip.a" \
+          -DSHADERTASTIC_COMMIT=${{GITHUB_SHA}}
       - name: 'Build'
         shell: bash
         run: |
@@ -245,6 +250,7 @@ jobs:
           echo "FILE_NAME=${FILE_NAME}" >> $GITHUB_ENV
           mkdir -p ./${{ env.PLUGIN_NAME }}/bin/64bit/
           mv ./build/obs-studio/plugins/${{ env.PLUGIN_NAME }}/${{ env.PLUGIN_NAME }}.so ./${{ env.PLUGIN_NAME }}/bin/64bit/${{ env.PLUGIN_NAME }}.so
+          mv ./build/obs-studio/plugins/${{ env.PLUGIN_NAME }}/lib ./${{ env.PLUGIN_NAME }}/bin/64bit/
           mv ./plugins/${{ env.PLUGIN_NAME }}/data ./${{ env.PLUGIN_NAME }}/data
           zip -r "${FILE_NAME}" ${{ env.PLUGIN_NAME }}
       - name: 'Publish'
@@ -260,13 +266,12 @@ jobs:
           fail_on_unmatched_files: true
           files: |
             *.zip
-#      - name: Publish zip FAILURE
+#      - name: 'Build failed - all files'
 #        if: failure()
 #        uses: actions/upload-artifact@v3.1.1
 #        with:
 #          name: '${{ env.FILE_NAME }}-debug-files'
 #          path: build/*
-
 
 
   windows-build:
@@ -291,16 +296,16 @@ jobs:
       CMAKE_SYSTEM_VERSION: "10.0.18363.657"
       WINDOWS_DEPS_VERSION: '2022-08-02'
     steps:
-      - name: Add msbuild to PATH
+      - name: 'Add msbuild to PATH'
         uses: microsoft/setup-msbuild@v1.1.3
-      - name: Checkout obs
-        uses: actions/checkout@v3.1.0
+      - name: 'Checkout obs'
+        uses: actions/checkout@v4.1.4
         with:
           repository: obsproject/obs-studio
           ref: ${{ env.OBS_VERSION }}
           submodules: 'recursive'
-      - name: Checkout plugin
-        uses: actions/checkout@v3.1.0
+      - name: 'Checkout plugin'
+        uses: actions/checkout@v4.1.4
         with:
           path: plugins/${{ env.PLUGIN_NAME}}
           submodules: 'recursive'
@@ -396,10 +401,10 @@ jobs:
             path: |
                 build/libzip/distrib
             key: libzip-win-${{steps.zlib-info.outputs.version}}-${{steps.libzip-info.outputs.version}}
-      - name: Add plugin to obs cmake
+      - name: 'Add plugin to obs cmake'
         shell: cmd
         run: echo add_subdirectory(${{ env.PLUGIN_NAME }}) >> plugins/CMakeLists.txt
-      - name: Remove un-needed plugins for this build
+      - name: 'Remove un-needed plugins for this build'
         shell: pwsh
         run: |
           Set-Content -Path "plugins\CMakeLists.txt" -Value (get-content -Path "plugins\CMakeLists.txt" | Select-String -Pattern 'add_subdirectory\(aja\)' -NotMatch)
@@ -428,7 +433,7 @@ jobs:
           Set-Content -Path "UI\frontend-plugins\CMakeLists.txt" -Value (get-content -Path "UI\frontend-plugins\CMakeLists.txt" | Select-String -Pattern 'add_subdirectory\(frontend-tools\)' -NotMatch)
           Set-Content -Path "UI\frontend-plugins\CMakeLists.txt" -Value (get-content -Path "UI\frontend-plugins\CMakeLists.txt" | Select-String -Pattern 'add_subdirectory\(decklink-captions\)' -NotMatch)
           type UI\frontend-plugins\CMakeLists.txt
-      - name: Fetch Git Tags
+      - name: 'Fetch Git Tags'
         run: git fetch --prune --tags --unshallow
       - name: 'Install prerequisite: QT'
         run: |
@@ -438,7 +443,7 @@ jobs:
         run: |
           curl -kLO https://github.com/obsproject/obs-deps/releases/download/${{ env.WINDOWS_DEPS_VERSION }}/windows-deps-${{ env.WINDOWS_DEPS_VERSION }}-${{ matrix.target }}.zip -f --retry 5 -C -
           7z x windows-deps-${{ env.WINDOWS_DEPS_VERSION }}-${{ matrix.target }}.zip -o"${{ github.workspace }}/cmbuild/deps"
-      - name: Configure
+      - name: 'Configure'
         shell: bash
         run: |
           mkdir ./package
@@ -449,46 +454,50 @@ jobs:
           -DCMAKE_PREFIX_PATH:PATH="${{ github.workspace }}/cmbuild/deps" \
           -A"${{ matrix.cmake_build }}" \
           -DCMAKE_SYSTEM_VERSION="${{ env.CMAKE_SYSTEM_VERSION }}" \
-          -DBUILD_BROWSER=false \
-          -DBUILD_VST=false \
-          -DBUILD_VIRTUALCAM=false \
-          -DBUILD_CAPTIONS=false \
-          -DCOMPILE_D3D12_HOOK=false \
-          -DENABLE_SCRIPTING=false \
-          -DDepsPath="${{ github.workspace }}/cmbuild/deps" \
           -DDepsPath${{ matrix.deps_ext }}="${{ github.workspace }}/cmbuild/deps" \
-          -DQTDIR="${{ github.workspace }}/cmbuild/deps/qt6" \
-          -DCOPIED_DEPENDENCIES=FALSE \
-          -DCOPY_DEPENDENCIES=TRUE \
+          -DDepsPath="${{ github.workspace }}/cmbuild/deps" \
+          -DBUILD_BROWSER=false \
+          -DBUILD_CAPTIONS=false \
+          -DBUILD_VIRTUALCAM=false \
+          -DBUILD_VST=false \
+          -DCOMPILE_D3D12_HOOK=false \
+          -DCOPIED_DEPENDENCIES=false \
+          -DCOPY_DEPENDENCIES=true \
+          -DDISABLE_PLUGINS=false \
+          -DENABLE_AJA=OFF \
+          -DENABLE_BROWSER=false \
+          -DENABLE_NEW_MPEGTS_OUTPUT=false \
           -DENABLE_PLUGINS=TRUE \
-          -DDISABLE_PLUGINS=FALSE \
-          -DENABLE_BROWSER=FALSE \
-          -DENABLE_WEBSOCKET=FALSE \
+          -DENABLE_SCRIPTING=false \
+          -DENABLE_VLC=false \
+          -DENABLE_WEBSOCKET=false \
+          -DQTDIR="${{ github.workspace }}/cmbuild/deps/qt6" \
           -DZLIB_INCLUDE="${{ github.workspace }}/build/zlib/distrib/include" \
           -DZLIB_LIBRARY="${{ github.workspace }}/build/zlib/distrib/lib/zlibstatic.lib" \
           -DLIBZIP_INCLUDE="${{ github.workspace }}/build/libzip/distrib/include" \
           -DLIBZIP_INCLUDE_CONF="${{ github.workspace }}/build/libzip/distrib/include" \
-          -DLIBZIP_LIBRARY="${{ github.workspace }}/build/libzip/distrib/lib/zip.lib"
+          -DLIBZIP_LIBRARY="${{ github.workspace }}/build/libzip/distrib/lib/zip.lib" \
+          -DSHADERTASTIC_COMMIT=${{GITHUB_SHA}}
 
       - name: 'Build'
-        run: msbuild /m /p:Configuration=RelWithDebInfo .\build\obs-studio\obs-studio.sln
-      - name: Package
+        run: msbuild /m /p:Configuration=Release .\build\obs-studio\obs-studio.sln
+      - name: 'Package'
         if: success()
         run: |
           $env:FILE_NAME="${{ env.PLUGIN_NAME }}-${{ github.sha }}-windows-${{ matrix.target }}"
           echo "FILE_NAME=${env:FILE_NAME}" >> ${env:GITHUB_ENV}
-          robocopy .\build\obs-studio\rundir\RelWithDebInfo\obs-plugins\${{ matrix.deps_ext }}bit\ .\package\obs-plugins\${{ matrix.deps_ext }}bit ${{ env.PLUGIN_NAME }}.* /E /XF .gitignore
-          robocopy .\build\obs-studio\rundir\RelWithDebInfo\data\obs-plugins\${{ env.PLUGIN_NAME }}\ .\package\data\obs-plugins\${{ env.PLUGIN_NAME }}\ /E /XF .gitignore
+          robocopy .\build\obs-studio\rundir\Release\obs-plugins\${{ matrix.deps_ext }}bit\ .\package\obs-plugins\${{ matrix.deps_ext }}bit ${{ env.PLUGIN_NAME }}.* /E /XF .gitignore
+          robocopy .\build\obs-studio\rundir\Release\data\obs-plugins\${{ env.PLUGIN_NAME }}\ .\package\data\obs-plugins\${{ env.PLUGIN_NAME }}\ /E /XF .gitignore
           copy .\build\obs-studio\plugins\${{ env.PLUGIN_NAME }}\installer.iss .\installer\installer.iss
           robocopy .\plugins\${{ env.PLUGIN_NAME}}\media\ .\installer\media\ /E /XF .gitignore
           exit 0
-      - name: Publish zip
+      - name: 'Publish zip'
         if: success()
         uses: actions/upload-artifact@v3.1.1
         with:
           name: '${{ env.FILE_NAME }}'
           path: package/*
-#      - name: Publish zip 2
+#      - name: 'Build failed - all files'
 #        if: failure()
 #        uses: actions/upload-artifact@v3.1.1
 #        with:
@@ -592,4 +601,3 @@ jobs:
         uses: geekyeggo/delete-artifact@v2.0.0
         with:
           name: "${{ env.FILE_NAME_X64 }}\ninstaller-files"
-

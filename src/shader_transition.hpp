@@ -19,7 +19,7 @@ static void *shadertastic_transition_create(obs_data_t *settings, obs_source_t *
     struct shadertastic_transition *s = static_cast<shadertastic_transition*>(bzalloc(sizeof(struct shadertastic_transition)));
     s->source = source;
     s->effects = new shadertastic_effects_map_t();
-    s->rand_seed = (float)rand() / RAND_MAX;
+    s->rand_seed = (float)((double)rand() / (double)RAND_MAX);
 
     debug("TRANSITION %s Settings : %s", obs_source_get_name(source), obs_data_get_json(settings));
 
@@ -283,7 +283,8 @@ obs_properties_t *shadertastic_transition_properties(void *data) {
 
     // auto reload settings (for development)
     if (shadertastic_settings.dev_mode_enabled) {
-        obs_property_t *auto_reload = obs_properties_add_bool(props, "auto_reload", obs_module_text("AutoReload"));
+        //obs_property_t *auto_reload =
+        obs_properties_add_bool(props, "auto_reload", obs_module_text("AutoReload"));
     }
 
     // audio fade settings
@@ -301,8 +302,6 @@ obs_properties_t *shadertastic_transition_properties(void *data) {
         obs_property_list_add_string(p, effect_label, effect_name.c_str());
     }
     obs_property_set_modified_callback2(p, shadertastic_transition_properties_change_effect_callback, data);
-
-    obs_property_t *bla = obs_properties_get(props, "effect");
 
     for (auto& [effect_name, effect] : *(s->effects)) {
         const char *effect_label = effect.label.c_str();
@@ -325,7 +324,7 @@ obs_properties_t *shadertastic_transition_properties(void *data) {
 //----------------------------------------------------------------------------------------------------------------------
 
 void shadertastic_transition_defaults(void *data, obs_data_t *settings) {
-    struct shadertastic_transition *s = static_cast<shadertastic_transition*>(data);
+    UNUSED_PARAMETER(data);
     obs_data_set_default_double(settings, "transition_point", 50.0);
     obs_data_set_default_bool(settings, "auto_reload", false);
 }
@@ -333,11 +332,8 @@ void shadertastic_transition_defaults(void *data, obs_data_t *settings) {
 
 void shadertastic_transition_start(void *data) {
     struct shadertastic_transition *s = static_cast<shadertastic_transition*>(data);
-    s->rand_seed = (float)rand() / RAND_MAX;
+    s->rand_seed = (float)((double)rand() / (double)RAND_MAX);
     //debug("rand_seed = %f", s->rand_seed);
-
-    uint32_t cx = obs_source_get_width(s->source);
-    uint32_t cy = obs_source_get_height(s->source);
 
     if (!s->transition_started) {
         s->transition_started = true;

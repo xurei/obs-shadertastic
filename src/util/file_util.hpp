@@ -30,33 +30,33 @@ char *load_file_zipped_or_local(std::string path) {
         std::string zip_path = fs_path.parent_path().string();
         debug("FS PATH: %s", zip_path.c_str());
         if (!ends_with(zip_path, ".shadertastic")) {
-            return NULL;
+            return nullptr;
         }
 
         int zip_err_code;
         std::string zip_entry = fs_path.filename().string();
         debug("zip_entry: %s", zip_entry.c_str());
-        struct zip_stat file_stat;
+        struct zip_stat file_stat{};
         zip_t *zip_archive = zip_open(zip_path.c_str(), ZIP_RDONLY, &zip_err_code);
 
-        if (zip_archive == NULL) {
+        if (zip_archive == nullptr) {
             zip_error_t error;
             zip_error_init_with_code(&error, zip_err_code);
             do_log(LOG_ERROR, "Cannot open shadertastic archive '%s': %s\n", zip_path.c_str(), zip_error_strerror(&error));
             zip_error_fini(&error);
-            return NULL;
+            return nullptr;
         }
 
         if (zip_stat(zip_archive, zip_entry.c_str(), 0, &file_stat) != 0) {
             do_log(LOG_ERROR, "Cannot open shadertastic file in archive '%s': unable to stat entry file %s : %s\n", zip_path.c_str(), zip_entry.c_str(), zip_error_strerror(zip_get_error(zip_archive)));
-            return NULL;
+            return nullptr;
         }
 
         zip_file_t *zipped_file = zip_fopen(zip_archive, zip_entry.c_str(), 0);
 
-        if (zipped_file == NULL) {
+        if (zipped_file == nullptr) {
             do_log(LOG_ERROR, "Cannot open shadertastic file in archive '%s': unable to open entry file %s\n", zip_path.c_str(), zip_entry.c_str());
-            return NULL;
+            return nullptr;
         }
 
         char *file_content = static_cast<char *>(bzalloc(file_stat.size + 1));
@@ -68,7 +68,7 @@ char *load_file_zipped_or_local(std::string path) {
     }
 }
 
-std::vector<std::string> list_files(const char* folderPath, std::string extension) {
+std::vector<std::string> list_files(const char* folderPath, std::string &extension) {
     std::vector<std::string> files;
 
     try {
@@ -116,9 +116,9 @@ std::vector<std::string> list_directories(const char* folderPath) {
         }
     #else
         DIR* dir = opendir(folderPath);
-        if (dir != NULL) {
+        if (dir != nullptr) {
             dirent* entry;
-            while ((entry = readdir(dir)) != NULL) {
+            while ((entry = readdir(dir)) != nullptr) {
                 if (entry->d_type == DT_DIR && strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
                     files.push_back(entry->d_name);
                 }

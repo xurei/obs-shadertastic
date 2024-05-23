@@ -28,14 +28,14 @@ class effect_parameter_color_alpha : public effect_parameter {
             // Check if the input string is in the correct format
             if (rgba.size() != 9 || rgba[0] != '#' || rgba.find_first_not_of("0123456789ABCDEFabcdef", 1) != std::string::npos) {
                 do_log(LOG_ERROR, "Invalid color string '%s'. Accepted formats are #RRGGBB and #AARRGGBB", rgba.c_str());
-                return 0xFF000000; // Return the defaut color
+                return (int)0xFF000000; // Return the defaut color
             }
 
             // Extract the hexadecimal values for R, G, B, and A
-            int a = std::strtol(rgba.substr(1, 2).c_str(), nullptr, 16);
-            int r = std::strtol(rgba.substr(3, 2).c_str(), nullptr, 16);
-            int g = std::strtol(rgba.substr(5, 2).c_str(), nullptr, 16);
-            int b = std::strtol(rgba.substr(7, 2).c_str(), nullptr, 16);
+            int a = (int) std::strtol(rgba.substr(1, 2).c_str(), nullptr, 16);
+            int r = (int) std::strtol(rgba.substr(3, 2).c_str(), nullptr, 16);
+            int g = (int) std::strtol(rgba.substr(5, 2).c_str(), nullptr, 16);
+            int b = (int) std::strtol(rgba.substr(7, 2).c_str(), nullptr, 16);
 
             // Combine the values into a single integer
             int result = (a << 24) | (b << 16) | (g << 8) | r;
@@ -69,11 +69,11 @@ class effect_parameter_color_alpha : public effect_parameter {
         virtual void set_data_from_settings(obs_data_t *settings, const char *full_param_name) {
             //*((int*)this->data) = (int)obs_data_get_int(settings, full_param_name);
             //debug("%s = %d", full_param_name, *((int*)this->data));
-            vec4_from_rgba((vec4*) this->data, (int)obs_data_get_int(settings, full_param_name));
+            vec4_from_rgba((vec4*) this->data, (uint32_t)obs_data_get_int(settings, full_param_name));
         }
 
         virtual void set_data_from_default() {
-            vec4_from_rgba((vec4*) this->data, default_value);
+            vec4_from_rgba((vec4*) this->data, (uint32_t)default_value);
             //*((int*)this->data) = (int)default_value;
         }
 };

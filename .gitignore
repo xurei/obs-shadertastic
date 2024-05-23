@@ -6,6 +6,7 @@
 src/version.h
 
 # Built files
+cmake-build-*/
 build/
 build-prod/
 /src/version.h

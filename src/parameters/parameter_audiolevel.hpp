@@ -129,7 +129,7 @@ class effect_parameter_audiolevel : public effect_parameter {
                 clamped_peak = 0.0;
             }
 
-            float val = prev_val < clamped_peak ? clamped_peak : prev_val * param->smoothing + clamped_peak * (1.0 - param->smoothing);
+            float val = prev_val < clamped_peak ? clamped_peak : (float)(prev_val * param->smoothing + clamped_peak * (1.0 - param->smoothing));
 
             *((float*)param->data) = (float) val;
             //debug("AUDIO LEVEL CALLBACK %f", *((float*)param->data));

@@ -19,7 +19,7 @@ static void *shadertastic_filter_create(obs_data_t *settings, obs_source_t *sour
     struct shadertastic_filter *s = static_cast<shadertastic_filter*>(bzalloc(sizeof(struct shadertastic_filter)));
     s->source = source;
     s->effects = new shadertastic_effects_map_t();
-    s->rand_seed = (float)rand() / RAND_MAX;
+    s->rand_seed = (float)rand() / (float)RAND_MAX;
 
     debug("FILTER %s Settings : %s", obs_source_get_name(source), obs_data_get_json(settings));
 
@@ -40,7 +40,10 @@ static void *shadertastic_filter_create(obs_data_t *settings, obs_source_t *sour
         load_effects(s, settings, *(shadertastic_settings.effects_path), "filter");
     }
 
+    face_detection_init(&s->face_detection);
+
     obs_source_update(source, settings);
+
     return s;
 }
 //----------------------------------------------------------------------------------------------------------------------
@@ -53,6 +56,7 @@ void shadertastic_filter_destroy(void *data) {
     gs_texrender_destroy(s->interm_texrender[0]);
     gs_texrender_destroy(s->interm_texrender[1]);
     obs_leave_graphics();
+    face_detection_destroy(&s->face_detection);
     s->release();
     bfree(data);
 }
@@ -120,7 +124,7 @@ static void shadertastic_filter_tick(void *data, float seconds) {
     }
     uint64_t frame_interval = obs_get_frame_interval_ns();
     s->time += (double)(
-        s->speed < 0.0001 ? 0.0 : ((frame_interval/1000000000.0) * s->speed)
+        s->speed < 0.0001 ? 0.0 : (((double)frame_interval/1000000000.0) * s->speed)
     );
 }
 //----------------------------------------------------------------------------------------------------------------------
@@ -146,6 +150,9 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
 
     shadertastic_effect_t *selected_effect = s->selected_effect;
     if (selected_effect != NULL && selected_effect->main_shader != NULL) {
+        if (selected_effect->input_facedetection) {
+            face_detection_render(&s->face_detection, target_source, selected_effect->main_shader);
+        }
         gs_texture_t *interm_texture = s->transparent_texture;
         if (obs_source_process_filter_begin_with_color_space(s->source, format, source_space, OBS_ALLOW_DIRECT_RENDERING)) {
             gs_blend_state_push();
@@ -228,7 +235,7 @@ bool shadertastic_filter_reload_button_click(obs_properties_t *props, obs_proper
         s->selected_effect->reload();
     }
     s->should_reload = true;
-    s->rand_seed = (float)rand() / RAND_MAX;
+    s->rand_seed = (float)rand() / (float)RAND_MAX;
     obs_source_update(s->source, NULL);
     return true;
 }
@@ -280,7 +287,8 @@ obs_properties_t *shadertastic_filter_properties(void *data) {
 //----------------------------------------------------------------------------------------------------------------------
 
 void shadertastic_filter_defaults(void *data, obs_data_t *settings) {
-    struct shadertastic_filter *s = static_cast<shadertastic_filter*>(data);
+    UNUSED_PARAMETER(data);
+    //struct shadertastic_filter *s = static_cast<shadertastic_filter*>(data);
     obs_data_set_default_double(settings, "transition_point", 50.0);
 }
 //----------------------------------------------------------------------------------------------------------------------
