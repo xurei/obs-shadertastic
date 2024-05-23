@@ -6,6 +6,7 @@
 #include "onnxmediapipe/face_detection.h"
 #include "onnxmediapipe/face_landmarks.h"
 #include <obs-module.h>
+#include <iostream>
 
 #define do_log(level, format, ...) \
     blog(level, "[shadertastic] " format, ##__VA_ARGS__)
@@ -27,33 +28,39 @@ namespace onnxmediapipe
 
     bool FaceMesh::Run(const cv::Mat& frameRGB, FaceLandmarksResults& results)
     {
-        if (_bNeedsDetection) {
-            objects.clear();
-            _facedetection->Run(frameRGB, objects);
+        try {
+            if (_bNeedsDetection) {
+                objects.clear();
+                _facedetection->Run(frameRGB, objects);
 
-            if (objects.empty()) {
-                return false;
+                if (objects.empty()) {
+                    return false;
+                }
+
+                _tracked_roi = {
+                    objects[0].center.x * (float) frameRGB.cols,
+                    objects[0].center.y * (float) frameRGB.rows,
+                    objects[0].width * (float) frameRGB.cols,
+                    objects[0].height * (float) frameRGB.rows, objects[0].rotation
+                };
             }
 
-            _tracked_roi = {
-                objects[0].center.x * (float) frameRGB.cols,
-                objects[0].center.y * (float) frameRGB.rows,
-                objects[0].width * (float) frameRGB.cols,
-                objects[0].height * (float) frameRGB.rows, objects[0].rotation
-            };
+            _facelandmarks->Run(frameRGB, _tracked_roi, results);
+
+            _tracked_roi = results.roi;
+            _tracked_roi.center_x *= (float)frameRGB.cols;
+            _tracked_roi.center_y *= (float)frameRGB.rows;
+            _tracked_roi.width *= (float)frameRGB.cols;
+            _tracked_roi.height *= (float)frameRGB.rows;
+
+            _bNeedsDetection = (results.face_flag < 0.5f);
+
+            return !_bNeedsDetection;
         }
-
-        _facelandmarks->Run(frameRGB, _tracked_roi, results);
-
-        _tracked_roi = results.roi;
-        _tracked_roi.center_x *= (float)frameRGB.cols;
-        _tracked_roi.center_y *= (float)frameRGB.rows;
-        _tracked_roi.width *= (float)frameRGB.cols;
-        _tracked_roi.height *= (float)frameRGB.rows;
-
-        _bNeedsDetection = (results.face_flag < 0.5f);
-
-        return !_bNeedsDetection;
+        catch (const Ort::Exception& e) {
+            std::cerr << "Caught Ort::Exception: " << e.what() << std::endl;
+            return false;
+        }
     }
 
 } //namespace onnxmediapipe
