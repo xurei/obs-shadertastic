@@ -22,11 +22,10 @@ struct shadertastic_effect_t {
     const std::string name;
     std::string label;
     int nb_steps;
-    bool is_fallback = false;
     bool input_time = false;
     bool input_facedetection = false;
     params_list effect_params;
-    effect_shader *main_shader = NULL;
+    effect_shader *main_shader = nullptr;
 
     shadertastic_effect_t(std::string name_, std::string path_): name(name_), path(path_) {}
 

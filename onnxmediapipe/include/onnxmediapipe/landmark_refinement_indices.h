@@ -9,8 +9,7 @@ const size_t right_eye_refined_region_num_points = 71;
 const size_t left_iris_refined_region_num_points = 5;
 const size_t right_iris_refined_region_num_points = 5;
 
-const unsigned short lips_refinement_indices[lips_refined_region_num_points] =
-{
+const unsigned short lips_refinement_indices[lips_refined_region_num_points] = {
     61, 146, 91, 181, 84, 17, 314, 405, 321, 375, 291, 185, 40, 39, 37, 0,
     267, 269, 270, 409, 78, 95, 88, 178, 87, 14, 317, 402, 318, 324, 308, 191,
     80, 81, 82, 13, 312, 311, 310, 415, 76, 77, 90, 180, 85, 16, 315, 404,
@@ -18,8 +17,7 @@ const unsigned short lips_refinement_indices[lips_refined_region_num_points] =
     86, 15, 316, 403, 319, 325, 292, 183, 42, 41, 38, 12, 268, 271, 272, 407,
 };
 
-const unsigned short left_eye_refinement_indices[left_eye_refined_region_num_points] =
-{
+const unsigned short left_eye_refinement_indices[left_eye_refined_region_num_points] = {
     33, 7, 163, 144, 145, 153, 154, 155, 133, 246, 161, 160, 159, 158, 157, 173,
     130, 25, 110, 24, 23, 22, 26, 112, 243, 247, 30, 29, 27, 28, 56, 190,
     226, 31, 228, 229, 230, 231, 232, 233, 244, 113, 225, 224, 223, 222, 221, 189,
@@ -27,8 +25,7 @@ const unsigned short left_eye_refinement_indices[left_eye_refined_region_num_poi
     70, 63, 105, 66, 107, 55, 193,
 };
 
-const unsigned short right_eye_refinement_indices[right_eye_refined_region_num_points] =
-{
+const unsigned short right_eye_refinement_indices[right_eye_refined_region_num_points] = {
     263, 249, 390, 373, 374, 380, 381, 382, 362, 466, 388, 387, 386, 385, 384, 398,
     359, 255, 339, 254, 253, 252, 256, 341, 463, 467, 260, 259, 257, 258, 286, 414,
     446, 261, 448, 449, 450, 451, 452, 453, 464, 342, 445, 444, 443, 442, 441, 413,
@@ -36,30 +33,25 @@ const unsigned short right_eye_refinement_indices[right_eye_refined_region_num_p
     300, 293, 334, 296, 336, 285, 417,
 };
 
-const unsigned short left_iris_refinement_indices[left_iris_refined_region_num_points] =
-{
+const unsigned short left_iris_refinement_indices[left_iris_refined_region_num_points] = {
     468, 469, 470, 471, 472,
 };
 
-const unsigned short right_iris_refinement_indices[right_iris_refined_region_num_points] =
-{
+const unsigned short right_iris_refinement_indices[right_iris_refined_region_num_points] = {
     473, 474, 475, 476, 477,
 };
 
-const unsigned short left_iris_z_avg_indices[16] =
-{
+const unsigned short left_iris_z_avg_indices[16] = {
     33, 7, 163, 144, 145, 153, 154, 155, 133, 246, 161, 160, 159, 158, 157, 173
 };
 
-const unsigned short right_iris_z_avg_indices[16] =
-{
+const unsigned short right_iris_z_avg_indices[16] = {
     263, 249, 390, 373, 374, 380, 381, 382, 362, 466, 388, 387, 386, 385, 384, 398
 };
 
 
 // A list of indices that are not part of the lips or eye indices lists defined above.
-const unsigned short not_lips_eyes_indices[310] =
-{
+const unsigned short not_lips_eyes_indices[310] = {
     1, 2, 3, 4, 5, 6, 8, 9, 10, 18, 19, 20, 21, 32, 34, 36,
     43, 44, 45, 47, 48, 49, 50, 51, 54, 57, 58, 59, 60, 64, 67, 68,
     69, 71, 75, 79, 83, 92, 93, 94, 97, 98, 99, 100, 101, 102, 103, 104,

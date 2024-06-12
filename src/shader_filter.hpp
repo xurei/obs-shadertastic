@@ -36,11 +36,9 @@ static void *shadertastic_filter_create(obs_data_t *settings, obs_source_t *sour
     bfree(filters_dir_);
 
     load_effects(s, settings, filters_dir, "filter");
-    if (shadertastic_settings.effects_path != NULL) {
+    if (shadertastic_settings.effects_path != nullptr) {
         load_effects(s, settings, *(shadertastic_settings.effects_path), "filter");
     }
-
-    face_detection_init(&s->face_detection);
 
     obs_source_update(source, settings);
 
@@ -88,7 +86,7 @@ void shadertastic_filter_update(void *data, obs_data_t *settings) {
         s->selected_effect = &(selected_effect_it->second);
     }
 
-    if (s->selected_effect != NULL) {
+    if (s->selected_effect != nullptr) {
         //debug("Selected Effect: %s", selected_effect_name);
         for (auto param: s->selected_effect->effect_params) {
             std::string full_param_name = param->get_full_param_name(selected_effect_name);
@@ -114,6 +112,9 @@ static void shadertastic_filter_tick(void *data, float seconds) {
     s->height = obs_source_get_base_height(target);
 
     bool is_enabled = obs_source_enabled(s->source);
+    if (!s->face_detection.created && s->selected_effect && s->selected_effect->input_facedetection) {
+        face_detection_create(&s->face_detection);
+    }
     if (is_enabled != s->was_enabled) {
         s->was_enabled = is_enabled;
         debug("TOGGLE ENABLED %i", is_enabled ? 1 : 0);
@@ -149,8 +150,8 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
     const enum gs_color_format format = gs_get_format_from_space(source_space);
 
     shadertastic_effect_t *selected_effect = s->selected_effect;
-    if (selected_effect != NULL && selected_effect->main_shader != NULL) {
-        if (selected_effect->input_facedetection) {
+    if (selected_effect != nullptr && selected_effect->main_shader != nullptr) {
+        if (selected_effect->input_facedetection && s->face_detection.created) {
             face_detection_render(&s->face_detection, target_source, selected_effect->main_shader);
         }
         gs_texture_t *interm_texture = s->transparent_texture;
@@ -160,8 +161,7 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
                 GS_BLEND_SRCALPHA, GS_BLEND_INVSRCALPHA,
                 GS_BLEND_ONE, GS_BLEND_INVSRCALPHA
             );
-            struct vec4 clear_color;
-            vec4_zero(&clear_color);
+            struct vec4 clear_color{0,0,0,0};
 
             for (int current_step=0; current_step < selected_effect->nb_steps; ++current_step) {
                 bool texrender_ok = true;
@@ -179,7 +179,7 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
                 }
 
                 if (texrender_ok) {
-                    selected_effect->set_params(NULL, NULL, filter_time, cx, cy, s->rand_seed);
+                    selected_effect->set_params(nullptr, nullptr, filter_time, cx, cy, s->rand_seed);
                     selected_effect->set_step_params(current_step, interm_texture);
 
                     obs_source_process_filter_end(s->source, selected_effect->main_shader->effect, cx, cy);
@@ -210,7 +210,7 @@ bool shadertastic_filter_properties_change_effect_callback(void *priv, obs_prope
     UNUSED_PARAMETER(data);
     struct shadertastic_filter *s = static_cast<shadertastic_filter*>(priv);
 
-    if (s->selected_effect != NULL) {
+    if (s->selected_effect != nullptr) {
         obs_property_set_visible(obs_properties_get(props, (s->selected_effect->name + "__params").c_str()), false);
     }
 
@@ -231,12 +231,12 @@ bool shadertastic_filter_reload_button_click(obs_properties_t *props, obs_proper
     UNUSED_PARAMETER(property);
     struct shadertastic_filter *s = static_cast<shadertastic_filter*>(data);
 
-    if (s->selected_effect != NULL) {
+    if (s->selected_effect != nullptr) {
         s->selected_effect->reload();
     }
     s->should_reload = true;
     s->rand_seed = (float)rand() / (float)RAND_MAX;
-    obs_source_update(s->source, NULL);
+    obs_source_update(s->source, nullptr);
     return true;
 }
 
@@ -276,7 +276,7 @@ obs_properties_t *shadertastic_filter_properties(void *data) {
         obs_properties_add_group(props, (effect_name + "__params").c_str(), effect_label, OBS_GROUP_NORMAL, effect_group);
         obs_property_set_visible(obs_properties_get(props, (effect_name + "__params").c_str()), false);
     }
-    if (s->selected_effect != NULL) {
+    if (s->selected_effect != nullptr) {
         obs_property_set_visible(obs_properties_get(props, (s->selected_effect->name + "__params").c_str()), true);
     }
 
@@ -288,8 +288,7 @@ obs_properties_t *shadertastic_filter_properties(void *data) {
 
 void shadertastic_filter_defaults(void *data, obs_data_t *settings) {
     UNUSED_PARAMETER(data);
-    //struct shadertastic_filter *s = static_cast<shadertastic_filter*>(data);
-    obs_data_set_default_double(settings, "transition_point", 50.0);
+    UNUSED_PARAMETER(settings);
 }
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -306,7 +305,7 @@ static enum gs_color_space shadertastic_filter_get_color_space(void *data, size_
 void shadertastic_filter_show(void *data) {
     struct shadertastic_filter *s = static_cast<shadertastic_filter*>(data);
     shadertastic_effect_t *selected_effect = s->selected_effect;
-    if (selected_effect != NULL) {
+    if (selected_effect != nullptr) {
         selected_effect->show();
     }
 }
@@ -315,7 +314,7 @@ void shadertastic_filter_show(void *data) {
 void shadertastic_filter_hide(void *data) {
     struct shadertastic_filter *s = static_cast<shadertastic_filter*>(data);
     shadertastic_effect_t *selected_effect = s->selected_effect;
-    if (selected_effect != NULL) {
+    if (selected_effect != nullptr) {
         selected_effect->hide();
     }
 }

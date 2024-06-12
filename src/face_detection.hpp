@@ -1,5 +1,21 @@
+/******************************************************************************
+    Copyright (C) 2023 by xurei <xureilab@gmail.com>
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+******************************************************************************/
+
 #include <thread>
-#include <immintrin.h> // Include the AVX2 header
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
 #include "onnxmediapipe/landmark_refinement_indices.h"
@@ -36,24 +52,6 @@ face_detection_bounding_box no_bounding_box{
 
 //----------------------------------------------------------------------------------------------------------------------
 
-vec3* convertVectorToArray(const std::vector<cv::Point3f>& points) {
-    // Calculate the total size needed for the array
-    size_t totalSize = points.size();  // 3 floats for each Point3f (x, y, z)
-
-    // Allocate memory for the array
-    vec3* resultArray = new vec3[totalSize];
-
-    // Copy the data from the vector to the array
-    for (size_t i = 0; i < points.size(); ++i) {
-        resultArray[i].x = points[i].x;
-        resultArray[i].y = points[i].y;
-        resultArray[i].z = points[i].z;
-    }
-
-    return resultArray;
-}
-//----------------------------------------------------------------------------------------------------------------------
-
 void face_detection_copy_points(onnxmediapipe::FaceLandmarksResults *facelandmark_results, float *points) {
     for (size_t i=0; i<468; ++i) {
         if (i < facelandmark_results->refined_landmarks.size()) {
@@ -62,8 +60,6 @@ void face_detection_copy_points(onnxmediapipe::FaceLandmarksResults *facelandmar
             points[i*4+2] = facelandmark_results->refined_landmarks[i].z;
         }
         points[i*4+3] = 1.0;
-        //debug("%f %f", points[i*2+0], points[i*2+1]);
-        //points[i*3+2] = facelandmark_results->refined_landmarks[i].z;
     }
 }
 //----------------------------------------------------------------------------------------------------------------------
@@ -107,7 +103,9 @@ static void face_detection_update(face_detection_state *s) {
 }
 //----------------------------------------------------------------------------------------------------------------------
 
-void face_detection_init(face_detection_state *s) {
+void face_detection_create(face_detection_state *s) {
+    s->created = true;
+
     if (!ort_env) {
         const char *instanceName = "shadertastic-onnx-inference";
 
@@ -129,13 +127,15 @@ void face_detection_init(face_detection_state *s) {
     s->facedetection_texrender = gs_texrender_create(GS_BGRA, GS_ZS_NONE);
     s->staging_texture = gs_stagesurface_create(FACEDETECTION_WIDTH, FACEDETECTION_HEIGHT, GS_BGRA);
 
-    s->fd_points_texture = gs_texture_create(468, 2, GS_RGBA32F, 1, nullptr, GS_DYNAMIC);
+    if (!s->fd_points_texture) {
+        s->fd_points_texture = gs_texture_create(468, 2, GS_RGBA32F, 1, nullptr, GS_DYNAMIC);
+    }
 
-    // TODO move this in a global. We don't need to update this texture at every filter
     float *texpoints;
     uint32_t linesize2 = 0;
     gs_texture_map(s->fd_points_texture, (uint8_t **)(&texpoints), &linesize2);
     {
+        // Fill in the second row of the texture with the point from the original model
         int k = 468 * 4;
         texpoints[k++] = 0.499977f; texpoints[k++] = 0.347466f; k++; texpoints[k++] = 1.0f;
         texpoints[k++] = 0.500026f; texpoints[k++] = 0.452513f; k++; texpoints[k++] = 1.0f;
@@ -753,13 +753,6 @@ void face_detection_render(face_detection_state *s, obs_source_t *target_source,
                 obs_enter_graphics();
                 {
                     gs_texture_map(s->fd_points_texture, (uint8_t **) (&texpoints), &linesize2);
-
-//                    for (int i=0; i<468*2; ++i) {
-////                        texpoints[i] = (uint16_t)(((float)0xffff) * points[i]);
-////                        texpoints[468+i] = (uint16_t)(((float)0xffff) * points[i]);
-//                        texpoints[i] = points[i];
-//                        //texpoints[468+i] = points[i];
-//                    }
                     memcpy(texpoints, points, 468 * 4 * sizeof(float));
                     gs_texture_unmap(s->fd_points_texture);
                 }
