@@ -1,4 +1,27 @@
 {
   "label": "Burn",
-  "steps": 1
+  "revision": 2,
+  "steps": 1,
+  "parameters": [
+    {
+      "name": "transition_point",
+      "label": "Transition point",
+      "type": "double",
+      "slider": true,
+      "min": 0.0,
+      "max": 1.0,
+      "step": 0.01,
+      "default": 0.5
+    },
+    {
+      "name": "random_noise",
+      "label": "Random Noise",
+      "type": "double",
+      "slider": true,
+      "min": 0.0,
+      "max": 1.0,
+      "step": 0.01,
+      "default": 0.1
+    }
+  ]
 }

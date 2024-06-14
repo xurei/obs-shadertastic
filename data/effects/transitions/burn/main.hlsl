@@ -1,3 +1,7 @@
+uniform float transition_point;
+uniform float random_noise;
+//----------------------------------------------------------------------------------------------------------------------
+
 sampler_state textureSampler {
     Filter    = Linear;
     AddressU  = Clamp;
@@ -43,11 +47,9 @@ float distFromCenter(float2 uv) {
     return sqrt(uu+vv);
 }
 
-float4 BurnPixels(FragData f_in, float t, float4 px_a, float4 px_b) {
-    float4 px_b_circle = tex_b.Sample(textureSampler, f_in.uv);
-    px_b_circle.rgb = px_b.rgb / (1.0 + distFromCenter(f_in.uv) + 0.1*rand2(f_in.uv));
-
-    px_a.rgb *= (1.0-t)*0.5 + 0.5;
+float4 BurnPixels(float2 uv, float t, float4 px_a, float4 px_b) {
+    float4 px_b_circle = px_b;
+    px_b_circle.rgb = px_b.rgb / (1.0 + distFromCenter(uv) + random_noise*rand2(uv));
 
     float y_a = getY(px_a);
     float y_b = getY(px_b_circle);
@@ -56,25 +58,25 @@ float4 BurnPixels(FragData f_in, float t, float4 px_a, float4 px_b) {
     return rgba;
 }
 
-float4 EffectLinear(FragData f_in)
+float4 EffectLinear(float2 uv)
 {
     float t = pow(time, 1.0/1.5);
-    float4 px_a = tex_a.Sample(textureSampler, f_in.uv);
-    float4 px_b = tex_b.Sample(textureSampler, f_in.uv);
-    return BurnPixels(f_in, t, px_a, px_b);
+    float4 px_a = tex_a.Sample(textureSampler, uv);
+    float4 px_b = tex_b.Sample(textureSampler, uv);
+    return BurnPixels(uv, t, px_a, px_b);
 }
 //----------------------------------------------------------------------------------------------------------------------
 
 float4 PSEffect(FragData f_in) : TARGET
 {
-    float4 rgba = EffectLinear(f_in);
+    float4 rgba = EffectLinear(f_in.uv);
     rgba.rgb = srgb_nonlinear_to_linear(rgba.rgb);
     return rgba;
 }
 
 float4 PSEffectLinear(FragData f_in) : TARGET
 {
-    float4 rgba = EffectLinear(f_in);
+    float4 rgba = EffectLinear(f_in.uv);
     return rgba;
 }
 
