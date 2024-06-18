@@ -10,9 +10,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Changed
 - Set default speed of 0.1 on `input_time` parameters
+- Improved Burn transition
 
 ### Fixed
 - Fixed audio level not going to -100 when the audio source is disabled
+- Fixed Inkdrop transition on Windows
 
 ## [0.0.8] - 2024-01-15
 ### Changed
