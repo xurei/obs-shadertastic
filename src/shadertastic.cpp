@@ -75,6 +75,7 @@
 #endif
 #include "util/string_util.hpp"
 #include "util/file_util.hpp"
+#include "util/time_util.hpp"
 #include "util/compare_nocase.hpp"
 #include "shader/shader.hpp"
 #include "shader/shaders_library.hpp"

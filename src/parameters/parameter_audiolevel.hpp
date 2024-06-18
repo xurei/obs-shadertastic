@@ -23,7 +23,7 @@ static bool effect_parameter_audiolevel_add(void *data, obs_source_t *source) {
 
     if ((flags & OBS_SOURCE_AUDIO) && ((type == OBS_SOURCE_TYPE_INPUT))) {
         const char *name = obs_source_get_name(source);
-        if (name != NULL) {
+        if (name != nullptr) {
             sources_list->push_back(std::string(name));
         }
     }
@@ -32,9 +32,10 @@ static bool effect_parameter_audiolevel_add(void *data, obs_source_t *source) {
 
 class effect_parameter_audiolevel : public effect_parameter {
     private:
-        obs_weak_source_t *source = NULL;
+        obs_weak_source_t *source = nullptr;
         obs_volmeter_t *obs_volmeter;
         float smoothing = 0.5;
+        unsigned long last_callback_update = 0;
 
     public:
         explicit effect_parameter_audiolevel(gs_eparam_t *shader_param):
@@ -43,32 +44,32 @@ class effect_parameter_audiolevel : public effect_parameter {
         {
             obs_volmeter_add_callback(this->obs_volmeter, effect_parameter_audiolevel::callback, this);
             obs_volmeter_set_peak_meter_type(this->obs_volmeter, SAMPLE_PEAK_METER);
-            *((float*)this->data) = 40.0;
+            *((float*)this->data) = -100.0;
         }
 
-        virtual ~effect_parameter_audiolevel() {
-            if (this->source != NULL) {
+        ~effect_parameter_audiolevel() override {
+            if (this->source != nullptr) {
                 obs_weak_source_release(this->source);
-                this->source = NULL;
+                this->source = nullptr;
             }
             obs_volmeter_detach_source(obs_volmeter);
             obs_volmeter_remove_callback(this->obs_volmeter, effect_parameter_audiolevel::callback, this);
             obs_volmeter_destroy(this->obs_volmeter);
         }
 
-        virtual effect_param_datatype type() {
+        effect_param_datatype type() override {
             return PARAM_DATATYPE_AUDIOLEVEL;
         }
 
-        virtual void set_defaults(obs_data_t *metadata) {
+        void set_defaults(obs_data_t *metadata) override {
             UNUSED_PARAMETER(metadata);
         }
 
-        virtual void set_default(obs_data_t *settings, const char *full_param_name) {
+        void set_default(obs_data_t *settings, const char *full_param_name) override {
             obs_data_set_default_double(settings, full_param_name, 0.5);
         }
 
-        virtual void render_property_ui(const char *full_param_name, obs_properties_t *props) {
+        void render_property_ui(const char *full_param_name, obs_properties_t *props) override {
             obs_property_t *p = obs_properties_add_list(props, full_param_name, label.c_str(), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
             std::list<std::string> sources_list;
             obs_enum_sources(effect_parameter_audiolevel_add, &sources_list);
@@ -82,24 +83,24 @@ class effect_parameter_audiolevel : public effect_parameter {
             }
         }
 
-        virtual void set_data_from_default() {
+        void set_data_from_default() override {
             // TODO check that we should not decrement the showing counter here ?
-            this->source = NULL;
+            this->source = nullptr;
         }
 
-        virtual void set_data_from_settings(obs_data_t *settings, const char *full_param_name) {
-            if (this->source != NULL) {
+        void set_data_from_settings(obs_data_t *settings, const char *full_param_name) override {
+            if (this->source != nullptr) {
                 this->hide();
 
                 obs_volmeter_detach_source(obs_volmeter);
 
                 // TODO release earlier ?
                 obs_weak_source_release(this->source);
-                this->source = NULL;
+                this->source = nullptr;
             }
 
             obs_source_t *ref_source = obs_get_source_by_name(obs_data_get_string(settings, full_param_name));
-            if (ref_source != NULL) {
+            if (ref_source != nullptr) {
                 obs_volmeter_attach_source(obs_volmeter, ref_source);
                 this->source = obs_source_get_weak_source(ref_source);
                 this->show();
@@ -107,6 +108,17 @@ class effect_parameter_audiolevel : public effect_parameter {
             }
 
             this->smoothing = (float)obs_data_get_double(settings, (std::string(full_param_name) + "__smoothing").c_str());
+        }
+
+        void try_gs_set_val() override {
+            unsigned long now = get_time_ms();
+
+            // If no callback has been received for more than 200ms, assume no sound
+            if (now - last_callback_update > 200) {
+                *((float*)this->data) = -100.0;
+            }
+
+            try_gs_effect_set_val(shader_param, data, data_size);
         }
 
         static void callback(void *data,
@@ -129,10 +141,13 @@ class effect_parameter_audiolevel : public effect_parameter {
                 clamped_peak = 0.0;
             }
 
+            param->last_callback_update = get_time_ms();
+
+            //debug("AUDIO LEVEL CALLBACK %lu %f", get_time_ms(), clamped_peak);
+
             float val = prev_val < clamped_peak ? clamped_peak : (float)(prev_val * param->smoothing + clamped_peak * (1.0 - param->smoothing));
 
             *((float*)param->data) = (float) val;
-            //debug("AUDIO LEVEL CALLBACK %f", *((float*)param->data));
         }
 };
 

@@ -5,6 +5,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- Experimental: Face Tracking
+
+### Changed
+- Set default speed of 0.1 on `input_time` parameters
+
+### Fixed
+- Fixed audio level not going to -100 when the audio source is disabled
+
 ## [0.0.8] - 2024-01-15
 ### Changed
 - "Displacement Map" filter : Added a `displace_mode` "Single" or "Displace + Overlay"
