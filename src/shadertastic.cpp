@@ -401,7 +401,6 @@ bool obs_module_load(void) {
     shadertastic_filter_info.load = shadertastic_filter_update;
     shadertastic_filter_info.show = shadertastic_filter_show;
     shadertastic_filter_info.hide = shadertastic_filter_hide;
-    shadertastic_filter_info.get_defaults2 = shadertastic_filter_defaults;
     shadertastic_filter_info.video_get_color_space = shadertastic_filter_get_color_space;
     obs_register_source(&shadertastic_filter_info);
 

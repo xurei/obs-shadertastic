@@ -40,6 +40,13 @@ static void *shadertastic_filter_create(obs_data_t *settings, obs_source_t *sour
         load_effects(s, settings, *(shadertastic_settings.effects_path), "filter");
     }
 
+    // Set defaults for each effect
+    for (auto& [effect_name, effect] : *(s->effects)) {
+        if (effect.input_time) {
+            obs_data_set_default_double(settings, get_full_param_name_static(effect_name, std::string("speed")).c_str(), 0.1);
+        }
+    }
+
     obs_source_update(source, settings);
 
     return s;
