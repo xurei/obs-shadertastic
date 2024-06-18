@@ -212,6 +212,7 @@ bool shadertastic_filter_properties_change_effect_callback(void *priv, obs_prope
 
     if (s->selected_effect != nullptr) {
         obs_property_set_visible(obs_properties_get(props, (s->selected_effect->name + "__params").c_str()), false);
+        obs_property_set_visible(obs_properties_get(props, (s->selected_effect->name + "__warning").c_str()), false);
     }
 
     //shadertastic_filter_properties(priv);
@@ -221,6 +222,7 @@ bool shadertastic_filter_properties_change_effect_callback(void *priv, obs_prope
     if (selected_effect != s->effects->end()) {
         debug("CALLBACK : %s -> %s", select_effect_name, selected_effect->second.name.c_str());
         obs_property_set_visible(obs_properties_get(props, (selected_effect->second.name + "__params").c_str()), true);
+        obs_property_set_visible(obs_properties_get(props, (selected_effect->second.name + "__warning").c_str()), true);
     }
 
     return true;
@@ -262,8 +264,20 @@ obs_properties_t *shadertastic_filter_properties(void *data) {
     for (auto& [effect_name, effect] : *(s->effects)) {
         const char *effect_label = effect.label.c_str();
         obs_properties_t *effect_group = obs_properties_create();
+        obs_properties_t *warning_group = nullptr;
         //obs_properties_add_text(effect_group, "", effect_name, OBS_TEXT_INFO);
 
+        if (effect.input_facedetection) {
+            if (!warning_group) {
+                warning_group = obs_properties_create();
+            }
+            obs_properties_add_text(
+                warning_group,
+                (effect_name + "__warning__message").c_str(),
+                "⚗️ This effect uses the Face Detection feature, which is still in an experimental state. Use at your own risk.",
+                OBS_TEXT_INFO
+            );
+        }
         if (effect.input_time) {
             obs_properties_add_float_slider(effect_group, get_full_param_name_static(effect_name, std::string("speed")).c_str(), "Speed", 0.0, 1.0, 0.01);
             obs_properties_add_bool(effect_group, get_full_param_name_static(effect_name, std::string("reset_time_on_show")).c_str(), "Reset time on visibility toggle");
@@ -273,11 +287,18 @@ obs_properties_t *shadertastic_filter_properties(void *data) {
             std::string full_param_name = param->get_full_param_name(effect_name);
             param->render_property_ui(full_param_name.c_str(), effect_group);
         }
+        if (warning_group) {
+            obs_properties_add_group(props, (effect_name + "__warning").c_str(), "⚠ Warning", OBS_GROUP_NORMAL, warning_group);
+            if (s->selected_effect != &effect) {
+                obs_property_set_visible(obs_properties_get(props, (effect_name + "__warning").c_str()), false);
+            }
+        }
         obs_properties_add_group(props, (effect_name + "__params").c_str(), effect_label, OBS_GROUP_NORMAL, effect_group);
         obs_property_set_visible(obs_properties_get(props, (effect_name + "__params").c_str()), false);
     }
     if (s->selected_effect != nullptr) {
         obs_property_set_visible(obs_properties_get(props, (s->selected_effect->name + "__params").c_str()), true);
+        obs_property_set_visible(obs_properties_get(props, (s->selected_effect->name + "__warning").c_str()), true);
     }
 
     about_property(props);

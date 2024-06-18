@@ -1,6 +1,6 @@
 ### Building
 ```bash
-docker build . tf2onnx
+docker build . -t tf2onnx
 ```
 This can take a while to download all dependencies, be patient.
 

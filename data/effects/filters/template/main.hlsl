@@ -7,6 +7,7 @@ uniform float upixel;          // Width of a pixel in the UV space
 uniform float vpixel;          // Height of a pixel in the UV space
 uniform float rand_seed;       // Seed for random functions
 uniform int current_step;      // index of current step (for multistep effects)
+uniform int nb_steps;          // number of steps (for multistep effects)
 */
 
 // Specific parameters of the shader. They must be defined in the meta.json file next to this one.
