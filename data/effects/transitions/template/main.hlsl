@@ -47,7 +47,7 @@ float4 EffectLinear(float2 uv)
 {
     // -----> YOUR CODE GOES HERE <-----
 
-    // Here is an basic example that will progressively show the next scene from right to left :
+    // Here is a basic example that will progressively show the next scene from right to left :
     if (uv[0] < 1-time) {
         return tex_a.Sample(textureSampler, uv);
     }

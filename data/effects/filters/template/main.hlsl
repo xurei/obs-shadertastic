@@ -46,7 +46,7 @@ float4 EffectLinear(float2 uv)
 {
     // -----> YOUR CODE GOES HERE <-----
 
-    // Here is an basic example that will flip the image
+    // Here is a basic example that will flip the image
     uv[0] = 1-uv[0];
     return image.Sample(textureSampler, uv);
 }
