@@ -35,7 +35,7 @@ class effect_parameter_float : public effect_parameter {
             obs_data_set_default_bool(metadata, "slider", false);
             obs_data_set_default_double(metadata, "min", 0.0);
             obs_data_set_default_double(metadata, "max", 100.0);
-            obs_data_set_default_double(metadata, "step", 0.1);
+            obs_data_set_default_double(metadata, "step", 0.01);
             obs_data_set_default_double(metadata, "default", 50.0);
 
             default_value = obs_data_get_double(metadata, "default");

@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 - Set default speed of 0.1 on `input_time` parameters
 - Improved Burn transition
+- Float parameter: changed the default step from 0.1 to 0.01
 
 ### Fixed
 - Fixed audio level not going to -100 when the audio source is disabled
