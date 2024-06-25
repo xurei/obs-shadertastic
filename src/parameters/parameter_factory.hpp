@@ -20,13 +20,13 @@ class effect_parameter_factory {
         effect_parameter *create(const std::string &effect_name, gs_eparam_t *shader_param, obs_data_t *param_metadata) {
             const char *param_name = obs_data_get_string(param_metadata, "name");
             const char *data_type = obs_data_get_string(param_metadata, "type");
-            if (param_name == NULL || strcmp(param_name, "") == 0) {
+            if (param_name == nullptr || strcmp(param_name, "") == 0) {
                 do_log(LOG_WARNING, "Missing name for a parameter in effect %s", effect_name.c_str());
-                return NULL;
+                return nullptr;
             }
-            else if (data_type == NULL || strcmp(data_type, "") == 0) {
+            else if (data_type == nullptr || strcmp(data_type, "") == 0) {
                 do_log(LOG_WARNING, "Missing data type for a parameter %s in effect %s", param_name, effect_name.c_str());
-                return NULL;
+                return nullptr;
             }
             else {
                 effect_param_datatype datatype = effect_parse_datatype(data_type);
@@ -41,7 +41,7 @@ class effect_parameter_factory {
                         break;
                     }
                     case PARAM_DATATYPE_DOUBLE: {
-                        out = new effect_parameter_double(shader_param);
+                        out = new effect_parameter_float(shader_param);
                         break;
                     }
                     case PARAM_DATATYPE_LIST_INT: {

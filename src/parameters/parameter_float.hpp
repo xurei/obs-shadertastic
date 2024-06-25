@@ -15,7 +15,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
-class effect_parameter_double : public effect_parameter {
+class effect_parameter_float : public effect_parameter {
     private:
         double default_value;
         bool is_slider;
@@ -24,7 +24,7 @@ class effect_parameter_double : public effect_parameter {
         double param_step;
 
     public:
-        effect_parameter_double(gs_eparam_t *shader_param) : effect_parameter(sizeof(float), shader_param) {
+        effect_parameter_float(gs_eparam_t *shader_param) : effect_parameter(sizeof(float), shader_param) {
         }
 
         virtual effect_param_datatype type() {

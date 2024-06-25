@@ -25,7 +25,7 @@
     {
       "name": "displacement_strength_x",
       "label": "Strength X",
-      "type": "double",
+      "type": "float",
       "slider": true,
       "min": 0,
       "max": 2.0,
@@ -35,7 +35,7 @@
     {
       "name": "displacement_strength_y",
       "label": "Strength Y",
-      "type": "double",
+      "type": "float",
       "slider": true,
       "min": 0,
       "max": 2.0,

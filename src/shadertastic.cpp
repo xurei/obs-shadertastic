@@ -84,7 +84,7 @@
 #include "parameters/parameter_audiolevel.hpp"
 #include "parameters/parameter_bool.hpp"
 #include "parameters/parameter_color_alpha.hpp"
-#include "parameters/parameter_double.hpp"
+#include "parameters/parameter_float.hpp"
 #include "parameters/parameter_int.hpp"
 #include "parameters/parameter_list_int.hpp"
 #include "parameters/parameter_unknown.hpp"

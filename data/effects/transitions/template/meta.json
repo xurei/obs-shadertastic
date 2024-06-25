@@ -4,7 +4,7 @@
     {
       "name": "random_amount",
       "label": "Randomization amount",
-      "type": "double",
+      "type": "float",
       "slider": true,
       "min": 0,
       "max": 100,

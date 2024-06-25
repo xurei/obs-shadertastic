@@ -11,7 +11,7 @@
     {
       "name": "audio_threshold",
       "label": "Audio Threshold",
-      "type": "double",
+      "type": "float",
       "slider": true,
       "min": -100.0,
       "max": 0.0,
@@ -21,7 +21,7 @@
     {
       "name": "zoom_level",
       "label": "Zoom Level",
-      "type": "double",
+      "type": "float",
       "slider": true,
       "min": 0,
       "max": 0.5,
@@ -31,7 +31,7 @@
     {
       "name": "shake_level",
       "label": "Shake Level",
-      "type": "double",
+      "type": "float",
       "slider": true,
       "min": 0,
       "max": 1.0,
