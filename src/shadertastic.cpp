@@ -49,6 +49,7 @@
 
 #include <util/platform.h>
 #include "version.h"
+#include "logging_functions.hpp"
 
 #define try_gs_effect_set_val(param, data, data_size) if (param) { gs_effect_set_val(param, data, data_size); }
 #define try_gs_effect_set_texture(param, val) if (param) { gs_effect_set_texture(param, val); }
@@ -57,17 +58,6 @@
 #define try_gs_effect_set_float(param, val) if (param) { gs_effect_set_float(param, val); }
 #define try_gs_effect_set_vec2(param, val) if (param) { gs_effect_set_vec2(param, val); }
 #define try_gs_effect_set_bool(param, val) if (param) { gs_effect_set_bool(param, val); }
-
-#define do_log(level, format, ...) \
-    blog(level, "[shadertastic] " format, ##__VA_ARGS__)
-#define info(format, ...) do_log(LOG_INFO, format, ##__VA_ARGS__)
-#define warn(format, ...) do_log(LOG_WARNING, format, ##__VA_ARGS__)
-
-#ifdef DEV_MODE
-    #define debug(format, ...) info("(debug) " #format, ##__VA_ARGS__)
-#else
-    #define debug(format, ...)
-#endif
 
 #ifdef DEV_MODE
 #include "util/enum_util.hpp"
@@ -101,13 +91,7 @@
 
 OBS_DECLARE_MODULE()
 OBS_MODULE_AUTHOR("xurei")
-OBS_MODULE_USE_DEFAULT_LOCALE(
-    #ifdef DEV_MODE
-      "shadertastic"
-    #else
-      "shadertastic"
-    #endif
-, "en-US")
+OBS_MODULE_USE_DEFAULT_LOCALE("shadertastic", "en-US")
 //----------------------------------------------------------------------------------------------------------------------
 
 obs_data_t * load_settings() {

@@ -14,34 +14,6 @@ namespace onnxmediapipe
         return ss.str();
     }
 
-    void hwcToChw(cv::InputArray src, cv::OutputArray dst)
-    {
-//        std::vector<cv::Mat> channels;
-//        cv::split(src, channels);
-//
-//        // Stretch one-channel images to vector
-//        int i = 0;
-//        for (auto &img : channels) {
-//            cv::imwrite("/home/olivier/obs-plugins/obs-shadertastic/plugin/channel_"+std::to_string(i)+".bmp", img);
-//            img = img.reshape(1, 1);
-//            ++i;
-//        }
-//
-//        // Concatenate three vectors to one
-//        cv::hconcat(channels, dst);
-        const int src_h = src.rows();
-        const int src_w = src.cols();
-        const int src_c = src.channels();
-
-        cv::Mat hw_c = src.getMat().reshape(1, src_h * src_w);
-
-        const std::array<int,3> dims = {src_c, src_h, src_w};
-        //dst.create(3, &dims[0], CV_MAKETYPE(src.depth(), 1));
-        cv::Mat dst_1d = dst.getMat().reshape(1, {src_c, src_h, src_w});
-
-        cv::transpose(hw_c, dst_1d);
-    }
-
     // pretty prints a shape dimension vector
     const char * printElementType(const ONNXTensorElementDataType& type) {
       switch(type) {

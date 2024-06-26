@@ -18,3 +18,4 @@ build-prod/
 build.sh
 build_dev.sh
 test.sh
+debug_logs/

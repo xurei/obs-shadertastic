@@ -11,10 +11,6 @@ if (NOT DEFINED SHADERTASTIC_COMMIT)
     set(SHADERTASTIC_COMMIT "localbuild")
 endif()
 
-if(DEV_MODE EQUAL 1)
-  add_compile_definitions(DEV_MODE)
-  project(shadertastic VERSION 0.0.8)
-endif()
 project(shadertastic VERSION 0.0.8)
 set(PROJECT_FULL_NAME "Shadertastic")
 
@@ -29,6 +25,14 @@ set(MACOS_INSTALLER_UUID "14c0a640-0656-4528-8243-4a2ab2595dd5")
 # Base command to generate the so file
 add_library(${PROJECT_NAME} MODULE)
 
+if(DEV_MODE EQUAL 1)
+  add_compile_definitions(DEV_MODE)
+  if(DEV_LOG_PATH)
+      set(DEV_LOG_PATH "" CACHE STRING "Value of DEV_LOG_PATH")
+      target_compile_definitions(${PROJECT_NAME} PRIVATE DEV_LOG_PATH="${DEV_LOG_PATH}")
+  endif()
+endif()
+
 # libzip
 set(LIBZIP_LIBRARY "" CACHE FILEPATH "Path to libzip library.")
 set(LIBZIP_INCLUDE "" CACHE PATH "Path to libzip's includes.")
@@ -36,6 +40,9 @@ set(LIBZIP_INCLUDE_CONF "" CACHE PATH "Path to libzip's includes (config file)."
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/version.h.in ${CMAKE_CURRENT_SOURCE_DIR}/src/version.h)
 
+file(GLOB sources_CPP
+    "src/*.cpp"
+)
 file(GLOB sources_HPP
     "src/shader/*.hpp"
     "src/util/*.hpp"
@@ -49,9 +56,9 @@ file(GLOB onnxmediapipe_CPP
 )
 
 target_sources(${PROJECT_NAME} PRIVATE
-    src/shadertastic.cpp
     src/version.h
-    ${onnxmediapipe_CPP} # TODO Remove this
+    ${sources_CPP}
+    ${onnxmediapipe_CPP}
 )
 
 if(BUILD_OUT_OF_TREE)

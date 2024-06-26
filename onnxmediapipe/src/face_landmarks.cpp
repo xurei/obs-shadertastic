@@ -1,30 +1,35 @@
-// Copyright(C) 2022-2023 Intel Corporation
-// SPDX - License - Identifier: Apache - 2.0
+/******************************************************************************
+    Copyright (C) 2023 by xurei <xureilab@gmail.com>
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+******************************************************************************/
 
 // NOTE : this file has been taken from https://github.com/intel/openvino-plugins-for-obs-studio and modified to use ONNX instead
+
+#include <iostream>
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
 #include <obs-module.h>
 #include "onnxmediapipe/face_landmarks.h"
 #include "onnxmediapipe/landmark_refinement_indices.h"
 
-#define do_log(level, format, ...) \
-    blog(level, "[shadertastic] " format, ##__VA_ARGS__)
-#define info(format, ...) do_log(LOG_INFO, format, ##__VA_ARGS__)
-#define warn(format, ...) do_log(LOG_WARNING, format, ##__VA_ARGS__)
-
-#include "../../src/fdebug.hpp"
-
-#ifdef DEV_MODE
-    #define debug(format, ...) info("(debug) " #format, ##__VA_ARGS__)
-#else
-    #define debug(format, ...)
-#endif
-#include <iostream>
+#include "../../src/logging_functions.hpp"
+#include "../../src/fdebug.h"
 
 #define UNUSED_PARAMETER(param) (void)param
 
-FILE* debugFileA;
+FILE* faceLandmarksDebugFile;
 
 namespace onnxmediapipe
 {
@@ -242,7 +247,7 @@ namespace onnxmediapipe
 
     void FaceLandmarks::Run(const cv::Mat& frameRGB, const RotatedRect& roi, FaceLandmarksResults& results)
     {
-        debugFileA = fdebug_open("/home/olivier/obs-plugins/obs-shadertastic/plugin/face_landmarks.txt");
+        faceLandmarksDebugFile = fdebug_open("face_landmarks.txt");
         //TODO: sanity checks on roi vs. the cv::Mat.
         // preprocess (fill the input tensor)
         preprocess(frameRGB, roi);
@@ -257,7 +262,7 @@ namespace onnxmediapipe
 
         // post-process
         postprocess(frameRGB, roi, results);
-        fdebug_close(debugFileA);
+        fdebug_close(faceLandmarksDebugFile);
     }
 
 
@@ -292,12 +297,9 @@ namespace onnxmediapipe
             /*flags=*/cv::INTER_LINEAR,
             /*borderMode=*/cv::BORDER_REPLICATE);
 
-        //cv::FileStorage file("/home/olivier/obs-plugins/obs-shadertastic/plugin/face_landmarks_debug_input.txt", cv::FileStorage::WRITE);
-
         // Wrap the already-allocated tensor as a cv::Mat of floats
         cv::Mat floated = cv::Mat((int)netInputHeight, (int)netInputWidth, CV_32FC3);
         subFrame.convertTo(floated, CV_32FC3);
-        //file << "matName" << floated;
         float* pTensor = inputTensorValues[0].data();
         cv::Mat converted = cv::Mat((int)netInputHeight, (int)netInputWidth, CV_32FC3);
 
@@ -306,7 +308,6 @@ namespace onnxmediapipe
         cv::split(floated, channels);
         int i = 0;
         for (auto &img : channels) {
-            //cv::imwrite("/home/olivier/obs-plugins/obs-shadertastic/plugin/channel_" + std::to_string(i) + ".bmp", img);
             cv::Mat reshaped = img.reshape(1, 1);
             ++i;
         }
@@ -314,7 +315,6 @@ namespace onnxmediapipe
         // Concatenate three vectors to one
         cv::vconcat(channels, converted);
 
-        //hwcToChw(floated, converted);
         converted /= 255.0f;
         converted = converted.reshape(3, (int)netInputHeight);
         converted.copyTo(cv::Mat((int)netInputHeight, (int)netInputWidth, CV_32FC3, pTensor));
@@ -362,7 +362,7 @@ namespace onnxmediapipe
 
         //apply sigmoid activation to produce face flag result
         results.face_flag = 1.0f / (1.0f + std::exp(-(*face_flag_data)));
-        fdebug(debugFileA, "Face Flag: %f", results.face_flag);
+        fdebug(faceLandmarksDebugFile, "Face Flag: %f", results.face_flag);
 
         for (int i = 0; i < nFacialSurfaceLandmarks; i++)
         {
@@ -370,7 +370,7 @@ namespace onnxmediapipe
             results.facial_surface[i].x = facial_surface_tensor_data[i * 3] / (float)netInputWidth;
             results.facial_surface[i].y = facial_surface_tensor_data[i * 3 + 1] / (float)netInputHeight;
             results.facial_surface[i].z = facial_surface_tensor_data[i * 3 + 2] / (float)netInputWidth;
-            fdebug(debugFileA, "%i %f %f %f", i, results.facial_surface[i].x, results.facial_surface[i].y, results.facial_surface[i].z);
+            fdebug(faceLandmarksDebugFile, "%i %f %f %f", i, results.facial_surface[i].x, results.facial_surface[i].y, results.facial_surface[i].z);
         }
 
         if (_bWithAttention)
@@ -590,13 +590,6 @@ namespace onnxmediapipe
             }
         }
 
-        // if we're not using the 'with attention' model, set the 'refined' points to
-        // our normalized / rotated results.
-        if (!_bWithAttention)
-        {
-            results.refined_landmarks = results.facial_surface;
-        }
-
         //from the refined landmarks, generated the RotatedRect to return.
         {
             float x_min = std::numeric_limits<float>::max();
@@ -644,8 +637,6 @@ namespace onnxmediapipe
                 const float shift_y = 0.f;
                 const float scale_x = 1.5f;
                 const float scale_y = 1.5f;
-                const bool square_long = true;
-                const bool square_short = false;
 
                 if (rotation == 0.f)
                 {
@@ -667,18 +658,9 @@ namespace onnxmediapipe
                     results.roi.center_y = results.roi.center_y + y_shift;
                 }
 
-                if (square_long) {
-                    const float long_side =
-                        std::max(width * image_width, height * image_height);
-                    width = long_side / image_width;
-                    height = long_side / image_height;
-                }
-                else if (square_short) {
-                    const float short_side =
-                        std::min(width * image_width, height * image_height);
-                    width = short_side / image_width;
-                    height = short_side / image_height;
-                }
+                const float long_side = std::max(width * image_width, height * image_height);
+                width = long_side / image_width;
+                height = long_side / image_height;
 
                 results.roi.width = width * scale_x;
                 results.roi.height = height * scale_y;

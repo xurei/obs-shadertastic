@@ -1,5 +1,19 @@
-// Copyright(C) 2022-2023 Intel Corporation
-// SPDX - License - Identifier: Apache - 2.0
+/******************************************************************************
+    Copyright (C) 2023 by xurei <xureilab@gmail.com>
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+******************************************************************************/
 
 // NOTE : this file has been taken from https://github.com/intel/openvino-plugins-for-obs-studio and modified to use ONNX instead
 
@@ -9,20 +23,11 @@
 #include <cstdint>
 #include <opencv2/imgcodecs.hpp>
 
-#define do_log(level, format, ...) \
-    blog(level, "[shadertastic] " format, ##__VA_ARGS__)
-#define info(format, ...) do_log(LOG_INFO, format, ##__VA_ARGS__)
-#define warn(format, ...) do_log(LOG_WARNING, format, ##__VA_ARGS__)
+#include "../../src/logging_functions.hpp"
 
-#include "../../src/fdebug.hpp"
+#include "../../src/fdebug.h"
 
-#ifdef DEV_MODE
-    #define debug(format, ...) info("(debug) " #format, ##__VA_ARGS__)
-#else
-    #define debug(format, ...)
-#endif
-
-FILE* debugFile;
+FILE* faceDetectionDebugFile;
 
 namespace onnxmediapipe
 {
@@ -159,7 +164,7 @@ namespace onnxmediapipe
         if (!ortSession) {
             return;
         }
-        debugFile = fdebug_open("/home/olivier/obs-plugins/obs-shadertastic/plugin/face_detection.txt");
+        faceDetectionDebugFile = fdebug_open("face_detection.txt");
 
         std::array<float, 16> transform_matrix;  // NOLINT(*-pro-type-member-init)
         preprocess(frameRGB, transform_matrix);
@@ -173,7 +178,7 @@ namespace onnxmediapipe
             outputNames.data(), outputTensors.data(), outputCount);
 
         postprocess(frameRGB, transform_matrix, results);
-        fdebug_close(debugFile);
+        fdebug_close(faceDetectionDebugFile);
     }
 
     void FaceDetection::preprocess(const cv::Mat& img, std::array<float, 16>& transform_matrix)
@@ -243,16 +248,6 @@ namespace onnxmediapipe
         scaledDown.convertTo(transformed, CV_32FC3);
         transformed /= 127.5f;
         transformed -= 1.0f;
-
-        //debug stuff
-        //cv::FileStorage file("/home/olivier/obs-plugins/obs-shadertastic/plugin/debug_input.txt", cv::FileStorage::WRITE);
-        //file << "matName" << transformed;
-
-        //cv::imwrite("/home/olivier/obs-plugins/obs-shadertastic/plugin/test2.bmp", scaledDown);
-        //cv::imwrite("/home/olivier/obs-plugins/obs-shadertastic/plugin/test.bmp", transformed);
-
-        // Close the file and release all the memory buffers
-//        file.release();
     }
 
     // Function to resize an image while preserving aspect ratio and adding black bands
@@ -289,12 +284,10 @@ namespace onnxmediapipe
     {
 //        debug("DecodeBoxes");
         int box_coord_offset = 0;
-        bool reverse_output_order = true;
         const float x_scale = (float)netWidth;
         const float y_scale = (float)netHeight;
         const float h_scale = (float)netWidth;
         const float w_scale = (float)netHeight;
-        const bool apply_exponential_on_box_size = false;
 
         const size_t num_keypoints = 6;
         const int keypoint_coord_offset = 4;
@@ -303,32 +296,18 @@ namespace onnxmediapipe
         for (size_t i = 0; i < num_boxes_; ++i) {
 //            debug("DecodeBoxes %lu", i);
             const int box_offset = (int)(i * num_coords_ + box_coord_offset);
-            float y_center = raw_boxes[box_offset];
-            float x_center = raw_boxes[box_offset + 1];
-            float h = raw_boxes[box_offset + 2];
-            float w = raw_boxes[box_offset + 3];
 //            debug("DecodeBoxes %lu b", i);
 
-            if (reverse_output_order) {
-                x_center = raw_boxes[box_offset];
-                y_center = raw_boxes[box_offset + 1];
-                w = raw_boxes[box_offset + 2];
-                h = raw_boxes[box_offset + 3];
-            }
+            float x_center = raw_boxes[box_offset];
+            float y_center = raw_boxes[box_offset + 1];
+            float w = raw_boxes[box_offset + 2];
+            float h = raw_boxes[box_offset + 3];
 
-            x_center =
-                x_center / x_scale * anchors[i].w + anchors[i].x_center;
-            y_center =
-                y_center / y_scale * anchors[i].h + anchors[i].y_center;
+            x_center = x_center / x_scale * anchors[i].w + anchors[i].x_center;
+            y_center = y_center / y_scale * anchors[i].h + anchors[i].y_center;
 
-            if (apply_exponential_on_box_size) {
-                h = std::exp(h / h_scale) * anchors[i].h;
-                w = std::exp(w / w_scale) * anchors[i].w;
-            }
-            else {
-                h = h / h_scale * anchors[i].h;
-                w = w / w_scale * anchors[i].w;
-            }
+            h = h / h_scale * anchors[i].h;
+            w = w / w_scale * anchors[i].w;
 
 //            debug("DecodeBoxes %lu d", i);
 
@@ -350,12 +329,8 @@ namespace onnxmediapipe
 //                debug("DecodeBoxes %lu %lu", i, k);
                 const int offset = (int)(i * num_coords_ + keypoint_coord_offset + k * num_values_per_keypoint);
 
-                float keypoint_y = raw_boxes[offset];
-                float keypoint_x = raw_boxes[offset + 1];
-                if (reverse_output_order) {
-                    keypoint_x = raw_boxes[offset];
-                    keypoint_y = raw_boxes[offset + 1];
-                }
+                float keypoint_x = raw_boxes[offset];
+                float keypoint_y = raw_boxes[offset + 1];
 
                 (*boxes)[offset    ] = keypoint_x / x_scale * anchors[i].w + anchors[i].x_center;
                 (*boxes)[offset + 1] = keypoint_y / y_scale * anchors[i].h + anchors[i].y_center;
@@ -363,14 +338,14 @@ namespace onnxmediapipe
         }
     }
 
-    static DetectedObject ConvertToDetection(float box_ymin, float box_xmin, float box_ymax, float box_xmax, float score, int class_id, bool flip_vertically)
+    static DetectedObject ConvertToDetection(float box_ymin, float box_xmin, float box_ymax, float box_xmax, float score, int class_id)
     {
         DetectedObject detection;
         detection.confidence = score;
         detection.labelID = class_id;
 
         detection.x = box_xmin;
-        detection.y = flip_vertically ? 1.f - box_ymax : box_ymin;
+        detection.y = box_ymin;
         detection.width = box_xmax - box_xmin;
         detection.height = box_ymax - box_ymin;
         return detection;
@@ -384,13 +359,13 @@ namespace onnxmediapipe
     static void NMS(std::vector<DetectedObject>& detections)
     {
         float min_suppression_threshold = 0.3f;
-        fdebug(debugFile, "NMS %lu", detections.size());
+        fdebug(faceDetectionDebugFile, "NMS %lu", detections.size());
 
         std::vector<std::pair<int, float>> indexed_scores;
         indexed_scores.reserve(detections.size());
 
         for (size_t index = 0; index < detections.size(); ++index) {
-            fdebug(debugFile, "%lu confidence: %f", index, detections[index].confidence);
+            fdebug(faceDetectionDebugFile, "%lu confidence: %f", index, detections[index].confidence);
             indexed_scores.push_back(std::make_pair((int)index, detections[index].confidence));
         }
         std::sort(indexed_scores.begin(), indexed_scores.end(), SortBySecond);
@@ -473,9 +448,7 @@ namespace onnxmediapipe
     static void ConvertToDetections(
         const float* detection_boxes, const float* detection_scores, const int* detection_classes,
         std::vector<DetectedObject>& output_detections, size_t num_boxes_, size_t num_coords_) {
-        fdebug(debugFile, "ConvertToDetections %lu %lu", num_boxes_, num_coords_);
-        const int max_results = -1;
-        const bool flip_vertically = false;
+        fdebug(faceDetectionDebugFile, "ConvertToDetections %lu %lu", num_boxes_, num_coords_);
         const float min_score_thresh = 0.4f;
 
         std::vector<int> box_indices_ = { 0, 1, 2, 3 };
@@ -485,12 +458,8 @@ namespace onnxmediapipe
         int num_values_per_keypoint = 2;
 
         for (size_t i = 0; i < num_boxes_; ++i) {
-            if (max_results > 0 && output_detections.size() == max_results) {
-                break;
-            }
-
             if (detection_scores[i] < min_score_thresh) {
-                //fdebug(debugFile, "score is too low for index %lu: %f", i, detection_scores[i]);
+                //fdebug(faceDetectionDebugFile, "score is too low for index %lu: %f", i, detection_scores[i]);
                 continue;
             }
 
@@ -500,7 +469,8 @@ namespace onnxmediapipe
                 /*box_xmin=*/detection_boxes[box_offset + box_indices_[1]],
                 /*box_ymax=*/detection_boxes[box_offset + box_indices_[2]],
                 /*box_xmax=*/detection_boxes[box_offset + box_indices_[3]],
-                detection_scores[i], detection_classes[i], flip_vertically);
+                detection_scores[i], detection_classes[i]
+            );
 
             if (detection.width < 0 || detection.height < 0 || std::isnan(detection.width) ||
                 std::isnan(detection.height)) {
@@ -511,20 +481,16 @@ namespace onnxmediapipe
             }
 
             // Add keypoints.
-            if (num_keypoints > 0) {
-                for (int kp_id = 0; kp_id < num_keypoints *
-                    num_values_per_keypoint;
-                    kp_id += num_values_per_keypoint) {
-                    const size_t keypoint_index = box_offset + keypoint_coord_offset + kp_id;
+            for (int kp_id = 0; kp_id < num_keypoints *
+                num_values_per_keypoint;
+                kp_id += num_values_per_keypoint) {
+                const size_t keypoint_index = box_offset + keypoint_coord_offset + kp_id;
 
-                    cv::Point2f keypoint;
-                    keypoint.x = detection_boxes[keypoint_index + 0];
-                    keypoint.y = flip_vertically
-                        ? 1.f - detection_boxes[keypoint_index + 1]
-                        : detection_boxes[keypoint_index + 1];
+                cv::Point2f keypoint;
+                keypoint.x = detection_boxes[keypoint_index + 0];
+                keypoint.y = detection_boxes[keypoint_index + 1];
 
-                    detection.keypoints.emplace_back(keypoint);
-                }
+                detection.keypoints.emplace_back(keypoint);
             }
 
             output_detections.emplace_back(detection);
@@ -535,7 +501,7 @@ namespace onnxmediapipe
     {
         results.clear();
 
-        fdebug(debugFile, "postprocess");
+        fdebug(faceDetectionDebugFile, "postprocess");
 
         const float* raw_boxes = outputTensorValues[REGRESSORS].data();
         const float* raw_scores = outputTensorValues[CLASSIFICATORS].data();
@@ -580,20 +546,20 @@ namespace onnxmediapipe
             detection_scores[i] = score;
             detection_classes[i] = 0;
 
-//            fdebug(debugFile, "score_idxB %lu: %f -> %f %f %f %f %f", i, raw_scores[i], score,
+//            fdebug(faceDetectionDebugFile, "score_idxB %lu: %f -> %f %f %f %f %f", i, raw_scores[i], score,
 //                  raw_boxes[i*num_coords_+0],
 //                  raw_boxes[i*num_coords_+1],
 //                  raw_boxes[i*num_coords_+2],
 //                  raw_boxes[i*num_coords_+3]
 //            );
-            //fdebug(debugFile, "score_idxB %lu: %f %f %f %f %f", i, score, raw_boxes[i][0], anchors[i].y_center, anchors[i].w, anchors[i].h);
+            //fdebug(faceDetectionDebugFile, "score_idxB %lu: %f %f %f %f %f", i, score, raw_boxes[i][0], anchors[i].y_center, anchors[i].w, anchors[i].h);
         }
 
         ConvertToDetections(boxes.data(), detection_scores.data(),
             detection_classes.data(), results, num_boxes_, num_coords_);
 
         NMS(results);
-        fdebug(debugFile, "results: %lu", results.size());
+        fdebug(faceDetectionDebugFile, "results: %lu", results.size());
         DetectedObject bestDetectedObject;
 
         for (size_t i = 0; i < results.size(); i++)
@@ -690,8 +656,6 @@ namespace onnxmediapipe
             const float shift_y = 0.f;
             const float scale_x = face_bbox_scale;
             const float scale_y = face_bbox_scale;
-            const bool square_long = true;
-            const bool square_short = 0;
 
             if (rotation == 0.f)
             {
@@ -711,18 +675,9 @@ namespace onnxmediapipe
                 det.center = { det.center.x + x_shift,  det.center.y + y_shift };
             }
 
-            if (square_long) {
-                const float long_side =
-                    std::max(width * image_width, height * image_height);
-                width = long_side / image_width;
-                height = long_side / image_height;
-            }
-            else if (square_short) {
-                const float short_side =
-                    std::min(width * image_width, height * image_height);
-                width = short_side / image_width;
-                height = short_side / image_height;
-            }
+            const float long_side = std::max(width * image_width, height * image_height);
+            width = long_side / image_width;
+            height = long_side / image_height;
 
             det.width = width * scale_x;
             det.height = height * scale_y;
@@ -730,7 +685,7 @@ namespace onnxmediapipe
             det.x = det.center.x - (det.width / 2.f);
             det.y = det.center.y - (det.height / 2.f);
 
-            fdebug(debugFile, "result %lu: %f %f %f %f (confidence %i %)", i, det.x, det.y, det.width, det.height, (int)(det.confidence*100.0f));
+            fdebug(faceDetectionDebugFile, "result %lu: %f %f %f %f (confidence %i %)", i, det.x, det.y, det.width, det.height, (int)(det.confidence*100.0f));
         }
 
     }
