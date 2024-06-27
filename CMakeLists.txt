@@ -42,6 +42,8 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/version.h.in ${CMAKE_CURRENT_SOUR
 
 file(GLOB sources_CPP
     "src/*.cpp"
+    "src/shader/*.cpp"
+    "src/util/*.cpp"
 )
 file(GLOB sources_HPP
     "src/shader/*.hpp"

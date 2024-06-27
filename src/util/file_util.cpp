@@ -15,8 +15,28 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
+#include <dirent.h>
 #include <filesystem>
+#include <iostream>
+#include <obs-module.h>
+#include <util/platform.h>
+#include <vector>
+#include <zip.h>
+#include "file_util.h"
+#include "../logging_functions.hpp"
 namespace fs = std::filesystem;
+
+std::string normalize_path(const std::string &input) {
+    std::string result(input);
+    #if defined(_WIN32)
+        size_t pos = 0;
+        while ((pos = result.find('/', pos)) != std::string::npos) {
+            result.replace(pos, 1, "\\");
+            pos += 1; // Move past the replaced character
+        }
+    #endif
+    return result;
+}
 
 char *load_file_zipped_or_local(std::string path) {
     path = normalize_path(path);
@@ -42,20 +62,20 @@ char *load_file_zipped_or_local(std::string path) {
         if (zip_archive == nullptr) {
             zip_error_t error;
             zip_error_init_with_code(&error, zip_err_code);
-            do_log(LOG_ERROR, "Cannot open shadertastic archive '%s': %s\n", zip_path.c_str(), zip_error_strerror(&error));
+            log_error("Cannot open shadertastic archive '%s': %s\n", zip_path.c_str(), zip_error_strerror(&error));
             zip_error_fini(&error);
             return nullptr;
         }
 
         if (zip_stat(zip_archive, zip_entry.c_str(), 0, &file_stat) != 0) {
-            do_log(LOG_ERROR, "Cannot open shadertastic file in archive '%s': unable to stat entry file %s : %s\n", zip_path.c_str(), zip_entry.c_str(), zip_error_strerror(zip_get_error(zip_archive)));
+            log_error("Cannot open shadertastic file in archive '%s': unable to stat entry file %s : %s\n", zip_path.c_str(), zip_entry.c_str(), zip_error_strerror(zip_get_error(zip_archive)));
             return nullptr;
         }
 
         zip_file_t *zipped_file = zip_fopen(zip_archive, zip_entry.c_str(), 0);
 
         if (zipped_file == nullptr) {
-            do_log(LOG_ERROR, "Cannot open shadertastic file in archive '%s': unable to open entry file %s\n", zip_path.c_str(), zip_entry.c_str());
+            log_error("Cannot open shadertastic file in archive '%s': unable to open entry file %s\n", zip_path.c_str(), zip_entry.c_str());
             return nullptr;
         }
 

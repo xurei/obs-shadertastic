@@ -27,7 +27,7 @@ class effect_parameter_color_alpha : public effect_parameter {
 
             // Check if the input string is in the correct format
             if (rgba.size() != 9 || rgba[0] != '#' || rgba.find_first_not_of("0123456789ABCDEFabcdef", 1) != std::string::npos) {
-                do_log(LOG_ERROR, "Invalid color string '%s'. Accepted formats are #RRGGBB and #AARRGGBB", rgba.c_str());
+                log_error("Invalid color string '%s'. Accepted formats are #RRGGBB and #AARRGGBB", rgba.c_str());
                 return (int)0xFF000000; // Return the defaut color
             }
 
