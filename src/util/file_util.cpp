@@ -69,6 +69,7 @@ char *load_file_zipped_or_local(std::string path) {
 
         if (zip_stat(zip_archive, zip_entry.c_str(), 0, &file_stat) != 0) {
             log_error("Cannot open shadertastic file in archive '%s': unable to stat entry file %s : %s\n", zip_path.c_str(), zip_entry.c_str(), zip_error_strerror(zip_get_error(zip_archive)));
+            zip_close(zip_archive);
             return nullptr;
         }
 
@@ -76,6 +77,7 @@ char *load_file_zipped_or_local(std::string path) {
 
         if (zipped_file == nullptr) {
             log_error("Cannot open shadertastic file in archive '%s': unable to open entry file %s\n", zip_path.c_str(), zip_entry.c_str());
+            zip_close(zip_archive);
             return nullptr;
         }
 
@@ -84,6 +86,7 @@ char *load_file_zipped_or_local(std::string path) {
 
         zip_fread(zipped_file, file_content, file_stat.size);
         zip_fclose(zipped_file);
+        zip_close(zip_archive);
         return file_content;
     }
 }
