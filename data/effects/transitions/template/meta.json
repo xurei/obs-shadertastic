@@ -1,5 +1,7 @@
 {
   "label": "TEMPLATE",
+  "revision": 1,
+  "steps": 1,
   "parameters": [
     {
       "name": "random_amount",
