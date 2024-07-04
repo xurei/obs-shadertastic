@@ -21,7 +21,6 @@
 #include <iostream>
 #include <filesystem>
 #include <util/platform.h>
-#include <dirent.h>
 #include <zip.h>
 #include "string_util.h"
 namespace fs = std::filesystem;

@@ -15,7 +15,12 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
+#if defined(_WIN32)
+#include <windows.h>
+#else
 #include <dirent.h>
+#endif
+
 #include <filesystem>
 #include <iostream>
 #include <obs-module.h>

@@ -15,23 +15,13 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
-#include <iostream>
 #include <string>
 #include <vector>
-#include <cctype>
 #include <list>
 #include <map>
-#include <zip.h>
-
-#if defined(_WIN32)
-#include <windows.h>
-#else
-#include <dirent.h>
-#endif
 
 #include <obs-module.h>
 #include <obs-frontend-api.h>
-#include <graphics/vec4.h>
 #include <QAction>
 #include <QApplication>
 #include <QCheckBox>
@@ -43,7 +33,6 @@
 #include <QLineEdit>
 #include <QPushButton>
 #include <QSpacerItem>
-#include <QHBoxLayout>
 #include <QVBoxLayout>
 #define QT_UTF8(str) QString::fromUtf8(str, -1)
 
