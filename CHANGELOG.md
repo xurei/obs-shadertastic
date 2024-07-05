@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - Experimental: Face Tracking
 - Rainbow cycle effect in bundled filters
+- Effect selection: added "(Choose an effect)" by default
 
 ### Changed
 - Set default speed of 0.1 on `input_time` parameters

@@ -262,6 +262,7 @@ obs_properties_t *shadertastic_filter_properties(void *data) {
 
     // Shader mode
     p = obs_properties_add_list(props, "effect", "Effect", OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
+    obs_property_list_add_string(p, "(Choose an effect)", "");
     for (auto& [effect_name, effect] : *(s->effects)) {
         const char *effect_label = effect.label.c_str();
         obs_property_list_add_string(p, effect_label, effect_name.c_str());
