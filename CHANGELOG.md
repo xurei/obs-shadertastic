@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Improved Burn transition
 - Float parameter: changed the default step from 0.1 to 0.01
 
+### Removed
+- Removed template effects from the built-in effects
+
 ### Fixed
 - Fixed audio level not going to -100 when the audio source is disabled
 - Fixed Inkdrop transition on Windows
