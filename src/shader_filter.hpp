@@ -138,7 +138,7 @@ static void shadertastic_filter_tick(void *data, float seconds) {
 //----------------------------------------------------------------------------------------------------------------------
 
 void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
-    //debug("--------");
+    //debug("-----------------------------------------");
     UNUSED_PARAMETER(effect);
     struct shadertastic_filter *s = static_cast<shadertastic_filter*>(data);
     float filter_time = (float)s->time;

@@ -673,12 +673,12 @@ void face_detection_render(face_detection_state *s, obs_source_t *target_source,
 //            }
 
             if (s->facelandmark_results_counter <= NB_ITERATIONS || !bDisplayResults) {
-                try_gs_effect_set_vec2(main_shader->param_fd_leye_1, &no_bounding_box.point1);
-                try_gs_effect_set_vec2(main_shader->param_fd_leye_2, &no_bounding_box.point2);
-                try_gs_effect_set_vec2(main_shader->param_fd_reye_1, &no_bounding_box.point1);
-                try_gs_effect_set_vec2(main_shader->param_fd_reye_2, &no_bounding_box.point2);
-                try_gs_effect_set_vec2(main_shader->param_fd_face_1, &no_bounding_box.point1);
-                try_gs_effect_set_vec2(main_shader->param_fd_face_2, &no_bounding_box.point2);
+                try_gs_effect_set_vec2("fd_leye_1", main_shader->param_fd_leye_1, &no_bounding_box.point1);
+                try_gs_effect_set_vec2("fd_leye_2", main_shader->param_fd_leye_2, &no_bounding_box.point2);
+                try_gs_effect_set_vec2("fd_reye_1", main_shader->param_fd_reye_1, &no_bounding_box.point1);
+                try_gs_effect_set_vec2("fd_reye_2", main_shader->param_fd_reye_2, &no_bounding_box.point2);
+                try_gs_effect_set_vec2("fd_face_1", main_shader->param_fd_face_1, &no_bounding_box.point1);
+                try_gs_effect_set_vec2("fd_face_2", main_shader->param_fd_face_2, &no_bounding_box.point2);
 
                 if (!facemesh->objects.empty())
                 {
@@ -692,8 +692,8 @@ void face_detection_render(face_detection_state *s, obs_source_t *target_source,
 
                     debug("bounding box: %f %f, %f %f", bbox.x1, bbox.y1, bbox.x2, bbox.y2);
 
-                    try_gs_effect_set_vec2(main_shader->param_fd_face_1, &bbox.point1);
-                    try_gs_effect_set_vec2(main_shader->param_fd_face_2, &bbox.point2);
+                    try_gs_effect_set_vec2("fd_face_1", main_shader->param_fd_face_1, &bbox.point1);
+                    try_gs_effect_set_vec2("fd_face_2", main_shader->param_fd_face_2, &bbox.point2);
                 }
             }
             else {
@@ -729,20 +729,20 @@ void face_detection_render(face_detection_state *s, obs_source_t *target_source,
 
                 {
                     auto bbox = face_detection_get_bounding_box(&average_results, left_iris_refinement_indices, left_iris_refined_region_num_points);
-                    try_gs_effect_set_vec2(main_shader->param_fd_leye_1, &bbox.point1);
-                    try_gs_effect_set_vec2(main_shader->param_fd_leye_2, &bbox.point2);
+                    try_gs_effect_set_vec2("fd_leye_1", main_shader->param_fd_leye_1, &bbox.point1);
+                    try_gs_effect_set_vec2("fd_leye_2", main_shader->param_fd_leye_2, &bbox.point2);
                     //debug("Left Eye: %f %f %f %f", bbox.x1, bbox.y1, bbox.x2-bbox.x1, bbox.y2-bbox.y1);
                 }
                 {
                     auto bbox = face_detection_get_bounding_box(&average_results, right_iris_refinement_indices, right_iris_refined_region_num_points);
-                    try_gs_effect_set_vec2(main_shader->param_fd_reye_1, &bbox.point1);
-                    try_gs_effect_set_vec2(main_shader->param_fd_reye_2, &bbox.point2);
+                    try_gs_effect_set_vec2("fd_reye_1", main_shader->param_fd_reye_1, &bbox.point1);
+                    try_gs_effect_set_vec2("fd_reye_2", main_shader->param_fd_reye_2, &bbox.point2);
                     //debug("Right Eye: %f %f %f %f", bbox.x1, bbox.y1, bbox.x2-bbox.x1, bbox.y2-bbox.y1);
                 }
                 {
                     auto bbox = face_detection_get_bounding_box(&average_results, not_lips_eyes_indices, 310);
-                    try_gs_effect_set_vec2(main_shader->param_fd_face_1, &bbox.point1);
-                    try_gs_effect_set_vec2(main_shader->param_fd_face_2, &bbox.point2);
+                    try_gs_effect_set_vec2("fd_face_1", main_shader->param_fd_face_1, &bbox.point1);
+                    try_gs_effect_set_vec2("fd_face_2", main_shader->param_fd_face_2, &bbox.point2);
                     //debug("Face: %f %f %f %f", bbox.x1, bbox.y1, bbox.x2-bbox.x1, bbox.y2-bbox.y1);
                 }
                 float points[468 * 4];
@@ -757,7 +757,7 @@ void face_detection_render(face_detection_state *s, obs_source_t *target_source,
                     gs_texture_unmap(s->fd_points_texture);
                 }
                 obs_leave_graphics();
-                try_gs_effect_set_texture(main_shader->param_fd_points_tex, s->fd_points_texture);
+                try_gs_effect_set_texture("fd_points_tex", main_shader->param_fd_points_tex, s->fd_points_texture);
             }
         }
         else {

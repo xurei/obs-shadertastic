@@ -3,6 +3,22 @@ class shaders_library_t {
         std::map<std::string, effect_shader *> shaders;
         effect_shader fallback_shader;
 
+        effect_shader * load_shader_file(const std::string &path) {
+            std::string shader_path = this->get_shader_path(path);
+            debug("shaders_library.load_shader_file %s", shader_path.c_str());
+            effect_shader *new_shader = new effect_shader();
+            new_shader->load(shader_path.c_str());
+            if (new_shader->effect == nullptr) {
+                delete new_shader;
+                auto emplaced = shaders.emplace(path, &fallback_shader);
+                return emplaced.first->second;
+            }
+            else {
+                auto emplaced = shaders.emplace(path, new_shader);
+                return emplaced.first->second;
+            }
+        }
+
     public:
         void load() {
             char *fallback_shader_path = obs_module_file("effects/fallback_effect.hlsl");
@@ -11,28 +27,18 @@ class shaders_library_t {
             bfree(fallback_shader_path);
         }
 
-        effect_shader * get(std::string path) {
+        effect_shader * get(const std::string &path) {
             debug("shaders_library.get %s", path.c_str());
             auto it = shaders.find(path);
             if (it == shaders.end()) {
-                std::string shader_path = this->get_shader_path(path);
-                debug("shaders_library.get 2 %s", shader_path.c_str());
-                effect_shader *new_shader = new effect_shader();
-                new_shader->load(shader_path.c_str());
-                if (new_shader->effect == NULL) {
-                    shaders.emplace(path, &fallback_shader);
-                }
-                else {
-                    shaders.emplace(path, new_shader);
-                }
-                return this->get(path);
+                return this->load_shader_file(path);
             }
             else {
                 return it->second;
             }
         }
 
-        std::string get_shader_path(std::string path) {
+        std::string get_shader_path(const std::string &path) {
             return (path + "/main.hlsl");
         }
 
@@ -46,16 +52,15 @@ class shaders_library_t {
             fallback_shader.release();
         }
 
-        void reload(std::string path) {
-            std::string shader_path = this->get_shader_path(path);
-            effect_shader *shader = this->get(path);
-            if (shader == &fallback_shader) {
-                shaders.erase(path);
-                shader = this->get(path);
+        void reload(const std::string &path) {
+            debug("Reloading Shader '%s'...", path.c_str());
+            effect_shader *shader_to_delete = this->get(path);
+            shaders.erase(path);
+            this->load_shader_file(path);
+            if (shader_to_delete != nullptr && shader_to_delete != &fallback_shader) {
+                delete shader_to_delete;
             }
-            if (shader != NULL && shader != &fallback_shader) {
-                shader->load(shader_path.c_str());
-            }
+            debug("Reloading Shader '%s' DONE", path.c_str());
         }
 };
 

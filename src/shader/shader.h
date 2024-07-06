@@ -28,11 +28,6 @@ class effect_shader {
     gs_eparam_t *param_current_step = nullptr;
     gs_eparam_t *param_nb_steps = nullptr;
 
-//    gs_eparam_t *param_fd_x = nullptr;
-//    gs_eparam_t *param_fd_y = nullptr;
-//    gs_eparam_t *param_fd_w = nullptr;
-//    gs_eparam_t *param_fd_h = nullptr;
-
     gs_eparam_t *param_fd_leye_1 = nullptr;
     gs_eparam_t *param_fd_leye_2 = nullptr;
     gs_eparam_t *param_fd_reye_1 = nullptr;

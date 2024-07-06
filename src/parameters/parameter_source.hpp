@@ -126,7 +126,7 @@ class effect_parameter_source : public effect_parameter {
                         obs_source_video_render(ref_source);
                         gs_texrender_end(this->source_texrender);
                         gs_texture_t *texture = gs_texrender_get_texture(this->source_texrender);
-                        try_gs_effect_set_texture(shader_param, texture);
+                        try_gs_effect_set_texture(name.c_str(), shader_param, texture);
                     }
                     obs_source_release(ref_source);
                 }

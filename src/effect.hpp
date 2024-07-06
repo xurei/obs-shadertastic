@@ -37,7 +37,7 @@ struct shadertastic_effect_t {
 
         char *meta_json = load_file_zipped_or_local(metadata_path.c_str());
 
-        if (meta_json == NULL) {
+        if (meta_json == nullptr) {
             // Something went wrong -> set default configuration
             warn("Unable to open file for effect %s.", name.c_str());
             label = name;
@@ -47,7 +47,7 @@ struct shadertastic_effect_t {
 
         obs_data_t *metadata = obs_data_create_from_json(meta_json);
         bfree(meta_json);
-        if (metadata == NULL) {
+        if (metadata == nullptr) {
             // Something went wrong -> set default configuration
             warn("Unable to parse metadata for effect %s. Check the JSON syntax", name.c_str());
             label = name;
@@ -55,7 +55,7 @@ struct shadertastic_effect_t {
         }
         else {
             const char *effect_label = obs_data_get_string(metadata, "label");
-            if (effect_label == NULL) {
+            if (effect_label == nullptr) {
                 label = name;
             }
             else {
@@ -69,7 +69,7 @@ struct shadertastic_effect_t {
             input_facedetection = obs_data_get_bool(metadata, "input_facedetection");
 
             obs_data_array_t *parameters = obs_data_get_array(metadata, "parameters");
-            if (parameters == NULL) {
+            if (parameters == nullptr) {
                 warn("No parameters specified for effect %s", name.c_str());
                 parameters = obs_data_array_create();
             }
@@ -84,10 +84,10 @@ struct shadertastic_effect_t {
                 gs_eparam_t *shader_param = gs_effect_get_param_by_name(main_shader->effect, param_name);
                 effect_parameter *effect_param = parameter_factory.create(name, shader_param, param_metadata);
 
-                if (effect_param != NULL) {
+                if (effect_param != nullptr) {
                     std::string param_name_str = std::string(param_name);
                     effect_parameter *previous_param = previous_effect_params.get(param_name_str);
-                    if (previous_param != NULL) {
+                    if (previous_param != nullptr) {
                         if (previous_param->get_data_size() == effect_param->get_data_size()) {
                             debug("Recycling data for %s (size: %i)", param_name_str.c_str(), (int)effect_param->get_data_size());
                             memcpy(effect_param->get_data(), previous_param->get_data(), effect_param->get_data_size());
@@ -126,22 +126,22 @@ struct shadertastic_effect_t {
     void set_params(gs_texture_t *a, gs_texture_t *b, float t, uint32_t cx, uint32_t cy, float rand_seed) {
         /* texture setters look reversed, but they aren't */
         if (gs_get_color_space() == GS_CS_SRGB) {
-            /* users want nonlinear fade */
-            try_gs_effect_set_texture(main_shader->param_tex_a, a);
-            try_gs_effect_set_texture(main_shader->param_tex_b, b);
+            /* users want nonlinear effect */
+            try_gs_effect_set_texture("tex_a", main_shader->param_tex_a, a);
+            try_gs_effect_set_texture("tex_b", main_shader->param_tex_b, b);
         }
         else {
-            /* nonlinear fade is too wrong, so use linear fade */
-            try_gs_effect_set_texture_srgb(main_shader->param_tex_a, a);
-            try_gs_effect_set_texture_srgb(main_shader->param_tex_b, b);
+            /* nonlinear effect is too wrong, so use linear effect */
+            try_gs_effect_set_texture_srgb("tex_a", main_shader->param_tex_a, a);
+            try_gs_effect_set_texture_srgb("tex_b", main_shader->param_tex_b, b);
         }
         //debug("input textures set");
 
-        try_gs_effect_set_float(main_shader->param_time, t);
-        try_gs_effect_set_float(main_shader->param_upixel, (float)(1.0/cx));
-        try_gs_effect_set_float(main_shader->param_vpixel, (float)(1.0/cy));
-        try_gs_effect_set_float(main_shader->param_rand_seed, rand_seed);
-        try_gs_effect_set_int(main_shader->param_nb_steps, nb_steps);
+        try_gs_effect_set_float("time", main_shader->param_time, t);
+        try_gs_effect_set_float("upixel", main_shader->param_upixel, (float)(1.0/cx));
+        try_gs_effect_set_float("vpixel", main_shader->param_vpixel, (float)(1.0/cy));
+        try_gs_effect_set_float("rand_seed", main_shader->param_rand_seed, rand_seed);
+        try_gs_effect_set_int("nb_steps", main_shader->param_nb_steps, nb_steps);
         //debug("common params set");
 
         for (auto param: effect_params) {
@@ -153,13 +153,13 @@ struct shadertastic_effect_t {
     void set_step_params(int current_step, gs_texture_t *interm) {
         if (gs_get_color_space() == GS_CS_SRGB) {
             /* users want nonlinear fade */
-            try_gs_effect_set_texture(main_shader->param_tex_interm, interm);
+            try_gs_effect_set_texture("tex_interm", main_shader->param_tex_interm, interm);
         }
         else {
             /* nonlinear fade is too wrong, so use linear fade */
-            try_gs_effect_set_texture_srgb(main_shader->param_tex_interm, interm);
+            try_gs_effect_set_texture_srgb("tex_interm", main_shader->param_tex_interm, interm);
         }
-        try_gs_effect_set_int(main_shader->param_current_step, current_step);
+        try_gs_effect_set_int("current_step", main_shader->param_current_step, current_step);
     }
 
     void render_shader(uint32_t cx, uint32_t cy) {
@@ -173,7 +173,7 @@ struct shadertastic_effect_t {
         }
 
         while (gs_effect_loop(main_shader->effect, tech_name)) {
-            gs_draw_sprite(NULL, 0, cx, cy);
+            gs_draw_sprite(nullptr, 0, cx, cy);
         }
         //debug("end of draw");
     }
@@ -181,7 +181,7 @@ struct shadertastic_effect_t {
     void show() {
         debug("show %s", this->name.c_str());
         for (auto param: this->effect_params) {
-            if (param != NULL) {
+            if (param != nullptr) {
                 param->show();
             }
         }
@@ -190,7 +190,7 @@ struct shadertastic_effect_t {
     void hide() {
         debug("hide %s", this->name.c_str());
         for (auto param: this->effect_params) {
-            if (param != NULL) {
+            if (param != nullptr) {
                 param->hide();
             }
         }

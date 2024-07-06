@@ -19,6 +19,7 @@
 #define FILE_UTIL_HPP
 
 #include <iostream>
+#include <vector>
 #include <filesystem>
 #include <util/platform.h>
 #include <zip.h>

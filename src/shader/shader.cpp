@@ -17,7 +17,6 @@
 
 #include <obs-module.h>
 #include <string>
-#include <regex>
 #include "../logging_functions.hpp"
 #include "../util/file_util.h"
 #include "shader.h"
@@ -70,10 +69,6 @@ void effect_shader::load(const char *shader_path) {
             param_current_step = gs_effect_get_param_by_name(effect, "current_step");
             param_nb_steps = gs_effect_get_param_by_name(effect, "nb_steps");
 
-//                param_fd_x = gs_effect_get_param_by_name(effect, "fd_x");
-//                param_fd_y = gs_effect_get_param_by_name(effect, "fd_y");
-//                param_fd_w = gs_effect_get_param_by_name(effect, "fd_w");
-//                param_fd_h = gs_effect_get_param_by_name(effect, "fd_h");
             param_fd_leye_1 = gs_effect_get_param_by_name(effect, "fd_leye_1");
             param_fd_leye_2 = gs_effect_get_param_by_name(effect, "fd_leye_2");
             param_fd_reye_1 = gs_effect_get_param_by_name(effect, "fd_reye_1");
@@ -81,7 +76,6 @@ void effect_shader::load(const char *shader_path) {
             param_fd_face_1 = gs_effect_get_param_by_name(effect, "fd_face_1");
             param_fd_face_2 = gs_effect_get_param_by_name(effect, "fd_face_2");
             param_fd_points_tex = gs_effect_get_param_by_name(effect, "fd_points_tex");
-            //param_fd_points = gs_effect_get_param_by_name(effect, "fd_points");
         }
     }
 }

@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fixed audio level not going to -100 when the audio source is disabled
 - Fixed Inkdrop transition on Windows
 - Fixed memory leak with .shadertastic files loading
+- Development mode: fixed reloading of the effects spamming the logs
 
 ## [0.0.8] - 2024-01-15
 ### Changed

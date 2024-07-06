@@ -89,6 +89,6 @@ class effect_parameter_image : public effect_parameter {
         }
 
         virtual void try_gs_set_val() {
-            try_gs_effect_set_texture(shader_param, this->texture);
+            try_gs_effect_set_texture(name.c_str(), shader_param, this->texture);
         }
 };

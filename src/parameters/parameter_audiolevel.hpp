@@ -118,7 +118,7 @@ class effect_parameter_audiolevel : public effect_parameter {
                 *((float*)this->data) = -100.0;
             }
 
-            try_gs_effect_set_val(shader_param, data, data_size);
+            try_gs_effect_set_val(name.c_str(), shader_param, data, data_size);
         }
 
         static void callback(void *data,
