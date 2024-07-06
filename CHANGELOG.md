@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Set default speed of 0.1 on `input_time` parameters
 - Improved Burn transition
 - Float parameter: changed the default step from 0.1 to 0.01
+- Development mode: Reworked the fallback effect to show "ERR", for clarify
 
 ### Removed
 - Removed template effects from the built-in effects
