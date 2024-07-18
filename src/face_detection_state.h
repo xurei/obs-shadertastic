@@ -26,5 +26,7 @@ struct face_detection_state {
     std::shared_ptr<onnxmediapipe::FaceMesh> facemesh;
     std::vector<std::string> ov_available_devices;
     onnxmediapipe::FaceLandmarksResults facelandmark_results[10];
+    onnxmediapipe::FaceLandmarksResults average_results;
     size_t facelandmark_results_counter = 0;
+    bool facelandmark_results_display_results = false;
 };

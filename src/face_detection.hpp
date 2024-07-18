@@ -23,6 +23,7 @@
 
 #define FACEDETECTION_WIDTH 1280
 #define FACEDETECTION_HEIGHT 720
+#define FACEDETECTION_NB_ITERATIONS 2
 
 struct face_detection_bounding_box {
     union {
@@ -616,8 +617,7 @@ void face_detection_create(face_detection_state *s) {
 }
 //----------------------------------------------------------------------------------------------------------------------
 
-void face_detection_render(face_detection_state *s, obs_source_t *target_source, effect_shader *main_shader) {
-    UNUSED_PARAMETER(main_shader);
+void face_detection_tick(face_detection_state *s, obs_source_t *target_source) {
     const enum gs_color_space preferred_spaces[] = {
         GS_CS_SRGB,
         GS_CS_SRGB_16F,
@@ -659,94 +659,48 @@ void face_detection_render(face_detection_state *s, obs_source_t *target_source,
             if (!facemesh)
                 return;
 
-            const size_t NB_ITERATIONS = 2;
-
             // Convert to BGR
             cv::Mat imageRGBA(FACEDETECTION_HEIGHT, FACEDETECTION_WIDTH, CV_8UC4, data);// = convertFrameToBGR(frame, tf);
             cv::Mat imageRGB = rgbaToRgb(imageRGBA);// = convertFrameToBGR(frame, tf);
 
             s->facelandmark_results_counter++;
-            bool bDisplayResults = facemesh->Run(imageRGB, s->facelandmark_results[s->facelandmark_results_counter%NB_ITERATIONS]);
+            s->facelandmark_results_display_results = facemesh->Run(imageRGB, s->facelandmark_results[s->facelandmark_results_counter%FACEDETECTION_NB_ITERATIONS]);
 
-//            if (s->facelandmark_results_counter >= 4) {
-//                s->facelandmark_results_counter = 0;
-//            }
-
-            if (s->facelandmark_results_counter <= NB_ITERATIONS || !bDisplayResults) {
-                try_gs_effect_set_vec2("fd_leye_1", main_shader->param_fd_leye_1, &no_bounding_box.point1);
-                try_gs_effect_set_vec2("fd_leye_2", main_shader->param_fd_leye_2, &no_bounding_box.point2);
-                try_gs_effect_set_vec2("fd_reye_1", main_shader->param_fd_reye_1, &no_bounding_box.point1);
-                try_gs_effect_set_vec2("fd_reye_2", main_shader->param_fd_reye_2, &no_bounding_box.point2);
-                try_gs_effect_set_vec2("fd_face_1", main_shader->param_fd_face_1, &no_bounding_box.point1);
-                try_gs_effect_set_vec2("fd_face_2", main_shader->param_fd_face_2, &no_bounding_box.point2);
-
-                if (!facemesh->objects.empty())
-                {
-                    // TODO debug, to remove once the face landmark works
-                    face_detection_bounding_box bbox{
-                        facemesh->objects[0].center.x - facemesh->objects[0].width * 0.5f,
-                        facemesh->objects[0].center.y - facemesh->objects[0].height * 0.5f,
-                        facemesh->objects[0].center.x + facemesh->objects[0].width * 0.5f,
-                        facemesh->objects[0].center.y + facemesh->objects[0].height * 0.5f
-                    };
-
-                    debug("bounding box: %f %f, %f %f", bbox.x1, bbox.y1, bbox.x2, bbox.y2);
-
-                    try_gs_effect_set_vec2("fd_face_1", main_shader->param_fd_face_1, &bbox.point1);
-                    try_gs_effect_set_vec2("fd_face_2", main_shader->param_fd_face_2, &bbox.point2);
-                }
+            if (s->facelandmark_results_counter <= FACEDETECTION_NB_ITERATIONS || !s->facelandmark_results_display_results) {
+                /* nothing to do */
             }
             else {
-                onnxmediapipe::FaceLandmarksResults average_results;
-                average_results.facial_surface.resize(s->facelandmark_results[0].facial_surface.size());
+                s->average_results.facial_surface.resize(s->facelandmark_results[0].facial_surface.size());
                 for (size_t i = 0; i < s->facelandmark_results[0].facial_surface.size(); ++i) {
-                    average_results.facial_surface[i].x = 0.0;
-                    average_results.facial_surface[i].y = 0.0;
-                    average_results.facial_surface[i].z = 0.0;
+                    s->average_results.facial_surface[i].x = 0.0;
+                    s->average_results.facial_surface[i].y = 0.0;
+                    s->average_results.facial_surface[i].z = 0.0;
                     size_t count = 0;
-                    for (size_t j = 0; j < NB_ITERATIONS; ++j) {
+                    for (size_t j = 0; j < FACEDETECTION_NB_ITERATIONS; ++j) {
                         if (i < s->facelandmark_results[j].facial_surface.size()) {
-                            average_results.facial_surface[i] += s->facelandmark_results[j].facial_surface[i];
+                            s->average_results.facial_surface[i] += s->facelandmark_results[j].facial_surface[i];
                             ++count;
                         }
                     }
-                    average_results.facial_surface[i] /= (float) count;
+                    s->average_results.facial_surface[i] /= (float) count;
                 }
-                average_results.refined_landmarks.resize(s->facelandmark_results[0].refined_landmarks.size());
+                s->average_results.refined_landmarks.resize(s->facelandmark_results[0].refined_landmarks.size());
                 for (size_t i = 0; i < s->facelandmark_results[0].refined_landmarks.size(); ++i) {
-                    average_results.refined_landmarks[i].x = 0.0;
-                    average_results.refined_landmarks[i].y = 0.0;
-                    average_results.refined_landmarks[i].z = 0.0;
+                    s->average_results.refined_landmarks[i].x = 0.0;
+                    s->average_results.refined_landmarks[i].y = 0.0;
+                    s->average_results.refined_landmarks[i].z = 0.0;
                     size_t count = 0;
-                    for (size_t j = 0; j < NB_ITERATIONS; ++j) {
+                    for (size_t j = 0; j < FACEDETECTION_NB_ITERATIONS; ++j) {
                         if (i < s->facelandmark_results[j].refined_landmarks.size()) {
-                            average_results.refined_landmarks[i] += s->facelandmark_results[j].refined_landmarks[i];
+                            s->average_results.refined_landmarks[i] += s->facelandmark_results[j].refined_landmarks[i];
                             ++count;
                         }
                     }
-                    average_results.refined_landmarks[i] /= (float) count;
+                    s->average_results.refined_landmarks[i] /= (float) count;
                 }
 
-                {
-                    auto bbox = face_detection_get_bounding_box(&average_results, left_iris_refinement_indices, left_iris_refined_region_num_points);
-                    try_gs_effect_set_vec2("fd_leye_1", main_shader->param_fd_leye_1, &bbox.point1);
-                    try_gs_effect_set_vec2("fd_leye_2", main_shader->param_fd_leye_2, &bbox.point2);
-                    //debug("Left Eye: %f %f %f %f", bbox.x1, bbox.y1, bbox.x2-bbox.x1, bbox.y2-bbox.y1);
-                }
-                {
-                    auto bbox = face_detection_get_bounding_box(&average_results, right_iris_refinement_indices, right_iris_refined_region_num_points);
-                    try_gs_effect_set_vec2("fd_reye_1", main_shader->param_fd_reye_1, &bbox.point1);
-                    try_gs_effect_set_vec2("fd_reye_2", main_shader->param_fd_reye_2, &bbox.point2);
-                    //debug("Right Eye: %f %f %f %f", bbox.x1, bbox.y1, bbox.x2-bbox.x1, bbox.y2-bbox.y1);
-                }
-                {
-                    auto bbox = face_detection_get_bounding_box(&average_results, not_lips_eyes_indices, 310);
-                    try_gs_effect_set_vec2("fd_face_1", main_shader->param_fd_face_1, &bbox.point1);
-                    try_gs_effect_set_vec2("fd_face_2", main_shader->param_fd_face_2, &bbox.point2);
-                    //debug("Face: %f %f %f %f", bbox.x1, bbox.y1, bbox.x2-bbox.x1, bbox.y2-bbox.y1);
-                }
                 float points[468 * 4];
-                face_detection_copy_points(&average_results, points);
+                face_detection_copy_points(&s->average_results, points);
 
                 float *texpoints;
                 uint32_t linesize2 = 0;
@@ -757,7 +711,6 @@ void face_detection_render(face_detection_state *s, obs_source_t *target_source,
                     gs_texture_unmap(s->fd_points_texture);
                 }
                 obs_leave_graphics();
-                try_gs_effect_set_texture("fd_points_tex", main_shader->param_fd_points_tex, s->fd_points_texture);
             }
         }
         else {
@@ -766,6 +719,39 @@ void face_detection_render(face_detection_state *s, obs_source_t *target_source,
     }
     else {
         debug("cpt");
+    }
+}
+//----------------------------------------------------------------------------------------------------------------------
+
+void face_detection_render(face_detection_state *s, effect_shader *main_shader) {
+    if (s->facelandmark_results_counter <= FACEDETECTION_NB_ITERATIONS || !s->facelandmark_results_display_results) {
+        try_gs_effect_set_vec2("fd_leye_1", main_shader->param_fd_leye_1, &no_bounding_box.point1);
+        try_gs_effect_set_vec2("fd_leye_2", main_shader->param_fd_leye_2, &no_bounding_box.point2);
+        try_gs_effect_set_vec2("fd_reye_1", main_shader->param_fd_reye_1, &no_bounding_box.point1);
+        try_gs_effect_set_vec2("fd_reye_2", main_shader->param_fd_reye_2, &no_bounding_box.point2);
+        try_gs_effect_set_vec2("fd_face_1", main_shader->param_fd_face_1, &no_bounding_box.point1);
+        try_gs_effect_set_vec2("fd_face_2", main_shader->param_fd_face_2, &no_bounding_box.point2);
+    }
+    else {
+        {
+            auto bbox = face_detection_get_bounding_box(&s->average_results, left_iris_refinement_indices, left_iris_refined_region_num_points);
+            try_gs_effect_set_vec2("fd_leye_1", main_shader->param_fd_leye_1, &bbox.point1);
+            try_gs_effect_set_vec2("fd_leye_2", main_shader->param_fd_leye_2, &bbox.point2);
+            //debug("Left Eye: %f %f %f %f", bbox.x1, bbox.y1, bbox.x2-bbox.x1, bbox.y2-bbox.y1);
+        }
+        {
+            auto bbox = face_detection_get_bounding_box(&s->average_results, right_iris_refinement_indices, right_iris_refined_region_num_points);
+            try_gs_effect_set_vec2("fd_reye_1", main_shader->param_fd_reye_1, &bbox.point1);
+            try_gs_effect_set_vec2("fd_reye_2", main_shader->param_fd_reye_2, &bbox.point2);
+            //debug("Right Eye: %f %f %f %f", bbox.x1, bbox.y1, bbox.x2-bbox.x1, bbox.y2-bbox.y1);
+        }
+        {
+            auto bbox = face_detection_get_bounding_box(&s->average_results, not_lips_eyes_indices, 310);
+            try_gs_effect_set_vec2("fd_face_1", main_shader->param_fd_face_1, &bbox.point1);
+            try_gs_effect_set_vec2("fd_face_2", main_shader->param_fd_face_2, &bbox.point2);
+            //debug("Face: %f %f %f %f", bbox.x1, bbox.y1, bbox.x2-bbox.x1, bbox.y2-bbox.y1);
+        }
+        try_gs_effect_set_texture("fd_points_tex", main_shader->param_fd_points_tex, s->fd_points_texture);
     }
 }
 //----------------------------------------------------------------------------------------------------------------------
