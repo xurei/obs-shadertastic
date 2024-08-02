@@ -7,7 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 ### Added
 - Experimental: Face Tracking
-- Rainbow cycle effect in bundled filters
+- Rainbow cycle filter in bundled filters
+- Face Detection: Reference filter in bundled filters
+- Face Detection: Distort filter in bundled filters
+- Face Detection: Laser Eyes filter in bundled filters
 - Effect selection: added "(Choose an effect)" by default
 
 ### Changed

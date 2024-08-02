@@ -27,9 +27,9 @@ VertData VSDefault(VertData v_in)
 
 float4 HueShift (float4 pixel, float Shift)
 {
-    float3 P = float3(0.55735)*dot(float3(0.55735),pixel.xyz);
+    float3 P = float3(0.55735,0.55735,0.55735)*dot(float3(0.55735,0.55735,0.55735),pixel.xyz);
     float3 U = pixel.xyz-P;
-    float3 V = cross(float3(0.55735),U);
+    float3 V = cross(float3(0.55735,0.55735,0.55735),U);
 
     pixel.xyz = U*cos(Shift*6.2832) + V*sin(Shift*6.2832) + P;
     return float4(pixel.xyz, pixel.a);

@@ -1,0 +1,8 @@
+{
+  "label": "[Face Detection] Reference",
+  "steps": 1,
+  "input_time": false,
+  "input_facedetection": true,
+  "parameters": [
+  ]
+}

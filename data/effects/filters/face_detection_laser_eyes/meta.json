@@ -1,0 +1,63 @@
+{
+  "label": "[Face Detection] Laser Eyes",
+  "steps": 4,
+  "input_time": false,
+  "input_facedetection": true,
+  "parameters": [
+    {
+      "name": "audio_level",
+      "label": "Audio Source",
+      "type": "audiolevel"
+    },
+    {
+      "name": "audio_threshold_low",
+      "label": "Audio Threshold (low)",
+      "type": "float",
+      "slider": true,
+      "min": -100.0,
+      "max": -0.1,
+      "default": -50,
+      "step": 0.1
+    },
+    {
+      "name": "audio_threshold_high",
+      "label": "Audio Threshold (high)",
+      "type": "float",
+      "slider": true,
+      "min": -100.0,
+      "max": 0.0,
+      "default": -10.0,
+      "step": 0.1
+    },
+    {
+      "name": "audio_impact",
+      "label": "Audio level impact",
+      "type": "double",
+      "slider": true,
+      "min": 0,
+      "max": 1.0,
+      "default": 0.6,
+      "step": 0.01
+    },
+    {
+      "name": "intensity",
+      "label": "Halo Intensity",
+      "type": "double",
+      "slider": true,
+      "min": 0,
+      "max": 20.0,
+      "default": 10.0,
+      "step": 0.01
+    },
+    {
+      "name": "eye_intensity_ratio",
+      "label": "Eyes Intensity",
+      "type": "double",
+      "slider": true,
+      "min": 0,
+      "max": 1.0,
+      "default": 0.6,
+      "step": 0.01
+    }
+  ]
+}
