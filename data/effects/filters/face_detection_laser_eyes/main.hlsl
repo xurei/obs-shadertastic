@@ -23,6 +23,7 @@ uniform float audio_threshold_low;
 uniform float audio_threshold_high;
 uniform float eye_intensity_ratio;
 uniform float intensity;
+uniform float flare_width;
 uniform float audio_impact;
 uniform bool no_effect_if_no_sound;
 //----------------------------------------------------------------------------------------------------------------------
@@ -411,8 +412,8 @@ float4 EffectLinear__step3(float2 uv) {
     float2 positionR = (fd_reye_1 + fd_reye_2) / 2.0;
 
     float intensityOfLaser = (
-          laserIntensity(uv, fd_leye_1, fd_leye_2, 0.7, distance(positionL, positionR), 50.0)
-        + laserIntensity(uv, fd_reye_1, fd_reye_2, 0.7, distance(positionL, positionR), 50.0)
+          laserIntensity(uv, fd_leye_1, fd_leye_2, flare_width, distance(positionL, positionR), 30.0 * sqrt(flare_width/0.3))
+        + laserIntensity(uv, fd_reye_1, fd_reye_2, flare_width, distance(positionL, positionR), 30.0 * sqrt(flare_width/0.3))
         + 0.5 * laserIntensity(uv, fd_leye_1, fd_leye_2, 0.6, distance(positionL, positionR), 1.7)
         + 0.5 * laserIntensity(uv, fd_reye_1, fd_reye_2, 0.6, distance(positionL, positionR), 1.7)
     );
