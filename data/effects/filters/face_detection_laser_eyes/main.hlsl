@@ -24,6 +24,7 @@ uniform float audio_threshold_high;
 uniform float eye_intensity_ratio;
 uniform float intensity;
 uniform float audio_impact;
+uniform bool no_effect_if_no_sound;
 //----------------------------------------------------------------------------------------------------------------------
 
 #define PI 3.1415926535
@@ -231,7 +232,18 @@ float audio_effect_level() {
     out_level = 100.0 / (audio_threshold_high - audio_threshold_low) * (out_level - audio_threshold_low);
     out_level /= 100.0;
     out_level = clamp(out_level, 0.0, 1.0);
-    return pow((1.0-audio_impact) + out_level * audio_impact, 1.5);
+    return out_level;
+}
+//----------------------------------------------------------------------------------------------------------------------
+
+float audio_effect_level_with_impact() {
+    float out_level = audio_effect_level();
+    if (no_effect_if_no_sound && out_level == 0.0) {
+        return 0.0;
+    }
+    else {
+        return pow((1.0-audio_impact) + out_level * audio_impact, 1.5);
+    }
 }
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -247,7 +259,7 @@ float eyesColoration(float2 uv, float2 fd_eye_1, float2 fd_eye_2, float eyeInten
 
     float minValue = 0.0;
 
-    float audio_effect_level2 = audio_effect_level();
+    float audio_effect_level2 = audio_effect_level_with_impact();
     float audio_level_mult = audio_effect_level2;
 
     if (best_triangle[0] > -1) {
@@ -292,7 +304,7 @@ float laserIntensity(float2 uv, float2 fd_eye_1, float2 fd_eye_2, float width, f
     float uvLocalLengthCompressed = length(uvLocal * float2(1.0, compress_ratio_v));
     uvLocalLengthCompressed = pow(uvLocalLengthCompressed, 1.9);
 
-    float audio_effect_level2 = audio_effect_level();
+    float audio_effect_level2 = audio_effect_level_with_impact();
     float audio_level_mult = audio_effect_level2;
 
     float intensityRay = 0.0;
@@ -339,6 +351,10 @@ float4 EffectLinear__step0(float2 uv) {
     float eye_intensity = 2.0;
     eye_intensity *= eye_intensity_ratio;
 
+    if (no_effect_if_no_sound && audio_effect_level() == 0.0) {
+        return image.Sample(textureSampler, uv);
+    }
+
     float intensityOfEyes = (
           eyesColoration(uv, fd_leye_1, fd_leye_2, eye_intensity, 1.344)
         + eyesColoration(uv, fd_reye_1, fd_reye_2, eye_intensity, 2.04)
@@ -382,6 +398,10 @@ float4 EffectLinear__step3(float2 uv) {
 
     float4 ppx = image.Sample(textureSampler, uv);
 
+    if (no_effect_if_no_sound && audio_effect_level() == 0.0) {
+        return ppx;
+    }
+
     if (fd_leye_1.x < 0.0) {
         return image.Sample(textureSampler, uv);
     }
@@ -419,9 +439,6 @@ float4 EffectLinear__step3(float2 uv) {
         px_interm.rgb * 0.7 + px.rgb * 0.7,
         px_interm.a * px_interm_yuv.x
     );
-
-    float audio_effect_level2 = audio_effect_level();
-    float audio_level_mult = audio_effect_level2;
 
     return float4(px_dest, px.a);
 }

@@ -40,6 +40,12 @@
       "step": 0.01
     },
     {
+      "name": "no_effect_if_no_sound",
+      "label": "Disable effect if sound does not trigger",
+      "type": "bool",
+      "default": false
+    },
+    {
       "name": "intensity",
       "label": "Halo Intensity",
       "type": "double",
