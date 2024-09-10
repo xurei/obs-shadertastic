@@ -17,6 +17,7 @@ uniform float2 fd_reye_2;
 uniform float2 fd_face_1;
 uniform float2 fd_face_2;
 uniform texture2d fd_points_tex;
+uniform bool show_tex;
 //----------------------------------------------------------------------------------------------------------------------
 
 // These are required objects for the shader to work.
@@ -74,7 +75,7 @@ float2 barycentricCoordinates(float2 p1, float2 p2, float2 p3, float2 point) {
 
 float4 EffectLinear(float2 uv)
 {
-    if (uv.y < 0.05) {
+    if (show_tex && uv.y < 0.05) {
         float4 px = fd_points_tex.Sample(textureSampler, uv);
         return px;
     }

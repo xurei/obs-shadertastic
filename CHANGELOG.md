@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - Vignette in bundled filters
 
+### Changed
+- Face Detection Reference: add "Show texture" option
+
 ## [0.1.0] - 2024-08-23
 ### Added
 - Experimental: Face Tracking

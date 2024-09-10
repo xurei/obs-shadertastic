@@ -4,5 +4,11 @@
   "input_time": false,
   "input_facedetection": true,
   "parameters": [
+    {
+      "name": "show_tex",
+      "label": "Show texture",
+      "type": "bool",
+      "default": true
+    }
   ]
 }
