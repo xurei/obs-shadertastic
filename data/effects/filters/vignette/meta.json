@@ -1,0 +1,47 @@
+{
+  "label": "Vignette",
+  "revision": 1,
+  "steps": 1,
+  "parameters": [
+    {
+      "name": "inner",
+      "label": "Inner radius",
+      "type": "float",
+      "slider": true,
+      "min": 0,
+      "max": 1,
+      "default": 0.5,
+      "step": 0.01
+    },
+    {
+      "name": "outer",
+      "label": "Outer radius",
+      "type": "float",
+      "slider": true,
+      "min": 0,
+      "max": 1,
+      "default": 0.95,
+      "step": 0.01
+    },
+    {
+      "name": "strength",
+      "label": "Strength",
+      "type": "float",
+      "slider": true,
+      "min": 0,
+      "max": 1,
+      "default": 0.8,
+      "step": 0.01
+    },
+    {
+      "name": "curvature",
+      "label": "Curvature",
+      "type": "float",
+      "slider": true,
+      "min": 0.01,
+      "max": 1,
+      "default": 0.5,
+      "step": 0.01
+    }
+  ]
+}
