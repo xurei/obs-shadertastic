@@ -83,7 +83,7 @@ namespace onnxmediapipe
             std::vector<std::vector<int64_t>> inputShapes(inputCount);
             for (size_t i = 0; i < inputCount; ++i) {
                 std::string inputName = ortSession->GetInputNameAllocated(i, allocator).get();
-                char *inputNameCStr = new char[inputName.length()];
+                char *inputNameCStr = new char[inputName.length()+1];
                 strcpy(inputNameCStr, inputName.c_str());
                 inputNames.push_back(inputNameCStr);
                 debug("FACE_LANDMARKS Input Name %lu: %s", i, inputNameCStr);
@@ -109,7 +109,7 @@ namespace onnxmediapipe
             std::vector<std::vector<int64_t>> outputShapes(outputCount);
             for (size_t i = 0; i < outputCount; ++i) {
                 std::string outputName = ortSession->GetOutputNameAllocated(i, allocator).get();
-                char *outputNameCStr = new char[outputName.length()];
+                char *outputNameCStr = new char[outputName.length()+1];
                 strcpy(outputNameCStr, outputName.c_str());
                 outputNames.push_back(outputNameCStr);
                 debug("FACE_LANDMARKS Output Name %lu: %s", i, outputNameCStr);
