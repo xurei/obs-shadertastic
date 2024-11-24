@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 - Face Detection Reference: add "Show texture" option
 
+### Fixed
+- Fixed crash due to incorrect char[] size with face detection filters
+
 ## [0.1.0] - 2024-08-23
 ### Added
 - Experimental: Face Tracking
