@@ -2,6 +2,7 @@ uniform float strength;
 uniform float curvature;
 uniform float inner;
 uniform float outer;
+uniform bool keep_aspect_ratio;
 //----------------------------------------------------------------------------------------------------------------------
 
 sampler_state textureSampler {
@@ -31,8 +32,21 @@ VertData VSDefault(VertData v_in)
 float4 EffectLinear(float2 uv)
 {
     float4 px = image.Sample(textureSampler, uv);
+    if (keep_aspect_ratio) {
+        if (vpixel > upixel) {
+            uv.x -= 0.5;
+            uv.x *= vpixel/upixel;
+            uv.x += 0.5;
+        }
+        else {
+            uv.y -= 0.5;
+            uv.y *= upixel/vpixel;
+            uv.y += 0.5;
+        }
+    }
     //Calculate edge curvature
-    float2 curve = pow(abs(uv*2.0-1.0),vec2(1.0/curvature));
+    float inv_curvature = 1.0 / curvature;
+    float2 curve = pow(abs(uv*2.0-1.0),float2(inv_curvature,inv_curvature));
     //Compute distance to edge
     float edge = pow(length(curve), curvature);
     //Compute vignette gradient and intensity
