@@ -78,7 +78,7 @@ class effect_parameter {
         gs_eparam_t * get_shader_param() {
             return shader_param;
         }
-        size_t get_data_size() {
+        [[nodiscard]] size_t get_data_size() const {
             return data_size;
         }
         inline void * get_data() {

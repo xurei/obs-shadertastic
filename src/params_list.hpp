@@ -18,7 +18,7 @@ class params_list {
     effect_parameter * get(std::string param_name) {
         auto it = params_map.find(param_name);
         if (it == params_map.end()) {
-            return NULL;
+            return nullptr;
         }
         else {
             return it->second;

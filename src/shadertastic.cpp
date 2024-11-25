@@ -116,15 +116,15 @@ obs_data_t * load_settings() {
 }
 
 void apply_settings(obs_data_t *settings) {
-    if (shadertastic_settings.effects_path != NULL) {
+    if (shadertastic_settings.effects_path != nullptr) {
         delete shadertastic_settings.effects_path;
     }
     const char *effects_path_str = obs_data_get_string(settings, SETTING_EFFECTS_PATH);
-    if (effects_path_str != NULL) {
+    if (effects_path_str != nullptr) {
         shadertastic_settings.effects_path = new std::string(effects_path_str);
     }
     else {
-        shadertastic_settings.effects_path = NULL;
+        shadertastic_settings.effects_path = nullptr;
     }
 
     shadertastic_settings.dev_mode_enabled = obs_data_get_bool(settings, SETTING_DEV_MODE_ENABLED);
@@ -141,7 +141,7 @@ void save_settings(obs_data_t *settings) {
         blog(LOG_WARNING, "Failed to save settings to file.");
     }
 
-    if (configPath != NULL) {
+    if (configPath != nullptr) {
         bfree(configPath);
     }
 }
@@ -159,7 +159,7 @@ void load_effects(shadertastic_common *s, obs_data_t *settings, const std::strin
             debug("Effect %s", effect_path.c_str());
             shadertastic_effect_t effect(dir, effect_path);
             effect.load();
-            if (effect.main_shader == NULL) {
+            if (effect.main_shader == nullptr) {
                 debug ("NOT LOADING EFFECT %s", dir.c_str());
             }
             else {
@@ -194,7 +194,7 @@ void load_effects(shadertastic_common *s, obs_data_t *settings, const std::strin
             debug("Effect %s: %s", effect_name.c_str(), effect_path.c_str());
             shadertastic_effect_t effect(effect_name, effect_path);
             effect.load();
-            if (effect.main_shader == NULL) {
+            if (effect.main_shader == nullptr) {
                 debug ("NOT LOADING EFFECT %s", zip.c_str());
             }
             else {
@@ -245,7 +245,7 @@ static void show_settings_dialog() {
             filePathLineEdit->setText(selectedFolder);
         }
         else {
-            obs_data_set_string(settings, SETTING_EFFECTS_PATH, NULL);
+            obs_data_set_string(settings, SETTING_EFFECTS_PATH, nullptr);
             filePathLineEdit->setText("");
         }
     });

@@ -17,39 +17,39 @@
 
 class effect_parameter_bool : public effect_parameter {
     private:
-        bool default_value;
+        bool default_value{};
 
     public:
         // Note: the shaders need a 4-byte data for booleans, this is NOT a mistake to use sizeof(int).
-        effect_parameter_bool(gs_eparam_t *shader_param) : effect_parameter(sizeof(int), shader_param) {
+        explicit effect_parameter_bool(gs_eparam_t *shader_param) : effect_parameter(sizeof(int), shader_param) {
         }
 
-        virtual effect_param_datatype type() {
+        effect_param_datatype type() override {
             return PARAM_DATATYPE_BOOL;
         }
 
-        virtual void set_defaults(obs_data_t *metadata) {
+        void set_defaults(obs_data_t *metadata) override {
             obs_data_set_default_bool(metadata, "default", false);
 
             default_value = obs_data_get_bool(metadata, "default");
         }
 
-        virtual void set_default(obs_data_t *settings, const char *full_param_name) {
+        void set_default(obs_data_t *settings, const char *full_param_name) override {
             obs_data_set_default_bool(settings, full_param_name, default_value);
         }
 
-        virtual void render_property_ui(const char *full_param_name, obs_properties_t *props) {
+        void render_property_ui(const char *full_param_name, obs_properties_t *props) override {
             auto prop = obs_properties_add_bool(props, full_param_name, label.c_str());
             if (!description.empty()) {
                 obs_property_set_long_description(prop, obs_module_text(description.c_str()));
             }
         }
 
-        virtual void set_data_from_settings(obs_data_t *settings, const char *full_param_name) {
+        void set_data_from_settings(obs_data_t *settings, const char *full_param_name) override {
             *((int*)this->data) = obs_data_get_bool(settings, full_param_name) ? 1 : 0;
         }
 
-        virtual void set_data_from_default() {
+        void set_data_from_default() override {
             *((int*)this->data) = default_value ? 1 : 0;
         }
 };

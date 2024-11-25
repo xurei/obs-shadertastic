@@ -17,7 +17,7 @@
 
 class effect_parameter_color_alpha : public effect_parameter {
     private:
-        int default_value;
+        int default_value = (int)0xFF000000;
 
         // Function to convert an RGBA string to an integer
         int rgbaStringToInt(std::string rgba) {
@@ -43,36 +43,36 @@ class effect_parameter_color_alpha : public effect_parameter {
         }
 
     public:
-        effect_parameter_color_alpha(gs_eparam_t *shader_param) : effect_parameter(sizeof(vec4), shader_param) {
+        explicit effect_parameter_color_alpha(gs_eparam_t *shader_param) : effect_parameter(sizeof(vec4), shader_param) {
         }
 
-        virtual effect_param_datatype type() {
+        effect_param_datatype type() override {
             return PARAM_DATATYPE_COLOR_ALPHA;
         }
 
-        virtual void set_defaults(obs_data_t *metadata) {
+        void set_defaults(obs_data_t *metadata) override {
             obs_data_set_default_string(metadata, "default", "#000000FF");
             default_value = rgbaStringToInt(std::string(obs_data_get_string(metadata, "default")));
         }
 
-        virtual void set_default(obs_data_t *settings, const char *full_param_name) {
+        void set_default(obs_data_t *settings, const char *full_param_name) override {
             obs_data_set_default_int(settings, full_param_name, default_value);
         }
 
-        virtual void render_property_ui(const char *full_param_name, obs_properties_t *props) {
+        void render_property_ui(const char *full_param_name, obs_properties_t *props) override {
             auto prop = obs_properties_add_color_alpha(props, full_param_name, label.c_str());
             if (!description.empty()) {
                 obs_property_set_long_description(prop, obs_module_text(description.c_str()));
             }
         }
 
-        virtual void set_data_from_settings(obs_data_t *settings, const char *full_param_name) {
+        void set_data_from_settings(obs_data_t *settings, const char *full_param_name) override {
             //*((int*)this->data) = (int)obs_data_get_int(settings, full_param_name);
             //debug("%s = %d", full_param_name, *((int*)this->data));
             vec4_from_rgba((vec4*) this->data, (uint32_t)obs_data_get_int(settings, full_param_name));
         }
 
-        virtual void set_data_from_default() {
+        void set_data_from_default() override {
             vec4_from_rgba((vec4*) this->data, (uint32_t)default_value);
             //*((int*)this->data) = (int)default_value;
         }

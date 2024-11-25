@@ -17,30 +17,31 @@
 
 struct effect_parameter_list_int_value {
     std::string label;
-    int value;
+    int value{};
 };
 
 class effect_parameter_list_int : public effect_parameter {
     private:
-        int default_value;
+        int default_value{};
         std::vector<effect_parameter_list_int_value> values;
-        obs_data_array *default_array;
+        obs_data_array *default_array{};
 
     public:
-        effect_parameter_list_int(gs_eparam_t *shader_param) : effect_parameter(sizeof(int), shader_param) {
+        explicit effect_parameter_list_int(gs_eparam_t *shader_param) : effect_parameter(sizeof(int), shader_param) {
         }
-        virtual ~effect_parameter_list_int() {
+
+        ~effect_parameter_list_int() override {
             obs_data_array_release(default_array);
         }
 
-        virtual effect_param_datatype type() {
+        effect_param_datatype type() override {
             return PARAM_DATATYPE_LIST_INT;
         }
 
-        virtual void set_defaults(obs_data_t *metadata) {
+        void set_defaults(obs_data_t *metadata) override {
             default_array = obs_data_array_create();
             obs_data_set_default_array(metadata, "values", default_array);
-            obs_data_set_default_array(metadata, "default", 0);
+            obs_data_set_default_int(metadata, "default", 0);
 
             default_value = (int)obs_data_get_int(metadata, "default");
             obs_data_array_t *array = obs_data_get_array(metadata, "values");
@@ -55,11 +56,11 @@ class effect_parameter_list_int : public effect_parameter {
             obs_data_array_release(array);
         }
 
-        virtual void set_default(obs_data_t *settings, const char *full_param_name) {
+        void set_default(obs_data_t *settings, const char *full_param_name) override {
             obs_data_set_default_int(settings, full_param_name, default_value);
         }
 
-        virtual void render_property_ui(const char *full_param_name, obs_properties_t *props) {
+        void render_property_ui(const char *full_param_name, obs_properties_t *props) override {
             obs_property_t *list_ui = obs_properties_add_list(
                 props, full_param_name, label.c_str(),
                 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT
@@ -72,12 +73,12 @@ class effect_parameter_list_int : public effect_parameter {
             }
         }
 
-        virtual void set_data_from_settings(obs_data_t *settings, const char *full_param_name) {
+        void set_data_from_settings(obs_data_t *settings, const char *full_param_name) override {
             *((int*)this->data) = (int)obs_data_get_int(settings, full_param_name);
             //debug("%s = %d", full_param_name, *((int*)this->data));
         }
 
-        virtual void set_data_from_default() {
+        void set_data_from_default() override {
             *((int*)this->data) = (int)default_value;
         }
 };

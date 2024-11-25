@@ -17,23 +17,23 @@
 
 class effect_parameter_unknown : public effect_parameter {
     public:
-        effect_parameter_unknown(gs_eparam_t *shader_param) : effect_parameter(sizeof(int), shader_param) {
+        explicit effect_parameter_unknown(gs_eparam_t *shader_param) : effect_parameter(sizeof(int), shader_param) {
         }
 
-        virtual effect_param_datatype type() {
+        effect_param_datatype type() override {
             return PARAM_DATATYPE_UNKNOWN;
         }
 
-        virtual void set_defaults(obs_data_t *metadata) {
+        void set_defaults(obs_data_t *metadata) override {
             UNUSED_PARAMETER(metadata);
         }
 
-        virtual void set_default(obs_data_t *settings, const char *full_param_name) {
+        void set_default(obs_data_t *settings, const char *full_param_name) override {
             UNUSED_PARAMETER(settings);
             UNUSED_PARAMETER(full_param_name);
         }
 
-        virtual void render_property_ui(const char *full_param_name, obs_properties_t *props) {
+        void render_property_ui(const char *full_param_name, obs_properties_t *props) override {
             obs_properties_add_text(
                 props,
                 full_param_name,
@@ -42,13 +42,13 @@ class effect_parameter_unknown : public effect_parameter {
             );
         }
 
-        virtual void set_data_from_settings(obs_data_t *settings, const char *full_param_name) {
+        void set_data_from_settings(obs_data_t *settings, const char *full_param_name) override {
             UNUSED_PARAMETER(settings);
             UNUSED_PARAMETER(full_param_name);
             *((int*)this->data) = 0;
         }
 
-        virtual void set_data_from_default() {
+        void set_data_from_default() override {
             *((int*)this->data) = 0;
         }
 };

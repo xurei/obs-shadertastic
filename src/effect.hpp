@@ -21,13 +21,13 @@ struct shadertastic_effect_t {
     const std::string path;
     const std::string name;
     std::string label;
-    int nb_steps;
+    int nb_steps{};
     bool input_time = false;
     bool input_facedetection = false;
     params_list effect_params;
     effect_shader *main_shader = nullptr;
 
-    shadertastic_effect_t(std::string name_, std::string path_): name(name_), path(path_) {}
+    shadertastic_effect_t(std::string name_, std::string path_): name(std::move(name_)), path(std::move(path_)) {}
 
     void load() {
         std::string metadata_path = normalize_path(this->path + "/meta.json");
@@ -35,7 +35,7 @@ struct shadertastic_effect_t {
 
         this->main_shader = shaders_library.get(this->path);
 
-        char *meta_json = load_file_zipped_or_local(metadata_path.c_str());
+        char *meta_json = load_file_zipped_or_local(metadata_path);
 
         if (meta_json == nullptr) {
             // Something went wrong -> set default configuration
@@ -150,7 +150,7 @@ struct shadertastic_effect_t {
         //debug("all params set");
     }
 
-    void set_step_params(int current_step, gs_texture_t *interm) {
+    void set_step_params(int current_step, gs_texture_t *interm) const {
         if (gs_get_color_space() == GS_CS_SRGB) {
             /* users want nonlinear fade */
             try_gs_effect_set_texture("tex_interm", main_shader->param_tex_interm, interm);
@@ -162,7 +162,7 @@ struct shadertastic_effect_t {
         try_gs_effect_set_int("current_step", main_shader->param_current_step, current_step);
     }
 
-    void render_shader(uint32_t cx, uint32_t cy) {
+    void render_shader(uint32_t cx, uint32_t cy) const {
         const char *tech_name = "Draw";
         if (gs_get_color_space() == GS_CS_SRGB) {
             /* users want nonlinear fade */

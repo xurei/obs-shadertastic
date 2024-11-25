@@ -17,21 +17,21 @@
 
 class effect_parameter_float : public effect_parameter {
     private:
-        double default_value;
-        bool is_slider;
-        double param_min;
-        double param_max;
-        double param_step;
+        double default_value{};
+        bool is_slider{};
+        double param_min{};
+        double param_max{};
+        double param_step{};
 
     public:
-        effect_parameter_float(gs_eparam_t *shader_param) : effect_parameter(sizeof(float), shader_param) {
+        explicit effect_parameter_float(gs_eparam_t *shader_param) : effect_parameter(sizeof(float), shader_param) {
         }
 
-        virtual effect_param_datatype type() {
+        effect_param_datatype type() override {
             return PARAM_DATATYPE_DOUBLE;
         }
 
-        virtual void set_defaults(obs_data_t *metadata) {
+        void set_defaults(obs_data_t *metadata) override {
             obs_data_set_default_bool(metadata, "slider", false);
             obs_data_set_default_double(metadata, "min", 0.0);
             obs_data_set_default_double(metadata, "max", 100.0);
@@ -45,11 +45,11 @@ class effect_parameter_float : public effect_parameter {
             param_step = obs_data_get_double(metadata, "step");
         }
 
-        virtual void set_default(obs_data_t *settings, const char *full_param_name) {
+        void set_default(obs_data_t *settings, const char *full_param_name) override {
             obs_data_set_default_double(settings, full_param_name, default_value);
         }
 
-        virtual void render_property_ui(const char *full_param_name, obs_properties_t *props) {
+        void render_property_ui(const char *full_param_name, obs_properties_t *props) override {
             obs_property_t *prop;
             if (is_slider) {
                 prop = obs_properties_add_float_slider(props, full_param_name, label.c_str(), param_min, param_max, param_step);
@@ -62,12 +62,12 @@ class effect_parameter_float : public effect_parameter {
             }
         }
 
-        virtual void set_data_from_settings(obs_data_t *settings, const char *full_param_name) {
+        void set_data_from_settings(obs_data_t *settings, const char *full_param_name) override {
             *((float*)this->data) = (float)obs_data_get_double(settings, full_param_name);
             //debug("%s = %f", full_param_name, *((float*)this->data));
         }
 
-        virtual void set_data_from_default() {
+        void set_data_from_default() override {
             *((float*)this->data) = (float)default_value;
         }
 };

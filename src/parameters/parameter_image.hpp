@@ -18,11 +18,11 @@
 class effect_parameter_image : public effect_parameter {
     private:
         std::string path;
-        gs_texture_t * texture = NULL;
+        gs_texture_t * texture;
 
         void load_texture() {
             obs_enter_graphics();
-            if (this->texture != NULL) {
+            if (this->texture != nullptr) {
                 gs_texture_destroy(this->texture);
             }
             this->texture = gs_texture_create_from_file(path.c_str());
@@ -30,47 +30,48 @@ class effect_parameter_image : public effect_parameter {
         }
 
     public:
-        effect_parameter_image(gs_eparam_t *shader_param) : effect_parameter(sizeof(float), shader_param) {
+        explicit effect_parameter_image(gs_eparam_t *shader_param) : effect_parameter(sizeof(float), shader_param) {
+            this->texture = nullptr;
         }
 
-        virtual ~effect_parameter_image() {
-            if (this->texture != NULL) {
+        ~effect_parameter_image() override {
+            if (this->texture != nullptr) {
                 obs_enter_graphics();
                 gs_texture_destroy(this->texture);
-                this->texture = NULL;
+                this->texture = nullptr;
                 obs_leave_graphics();
             }
         }
 
-        virtual effect_param_datatype type() {
+        effect_param_datatype type() override {
             return PARAM_DATATYPE_IMAGE;
         }
 
-        virtual void set_defaults(obs_data_t *metadata) {
+        void set_defaults(obs_data_t *metadata) override {
             UNUSED_PARAMETER(metadata);
         }
 
-        virtual void set_default(obs_data_t *settings, const char *full_param_name) {
+        void set_default(obs_data_t *settings, const char *full_param_name) override {
             UNUSED_PARAMETER(settings);
             UNUSED_PARAMETER(full_param_name);
             //obs_data_set_default_double(settings, full_param_name, default_value);
-            //obs_data_set_default_string(settings, NULL);
+            //obs_data_set_default_string(settings, nullptr);
         }
 
-        virtual void render_property_ui(const char *full_param_name, obs_properties_t *props) {
-            auto prop = obs_properties_add_path(props, full_param_name, label.c_str(), OBS_PATH_FILE, "Image (*.jpg *.jpeg *.png)", NULL);
+        void render_property_ui(const char *full_param_name, obs_properties_t *props) override {
+            auto prop = obs_properties_add_path(props, full_param_name, label.c_str(), OBS_PATH_FILE, "Image (*.jpg *.jpeg *.png)", nullptr);
             if (!description.empty()) {
                 obs_property_set_long_description(prop, obs_module_text(description.c_str()));
             }
         }
 
-        virtual void set_data_from_default() {
+        void set_data_from_default() override {
             this->path = std::string("");
         }
 
-        virtual void set_data_from_settings(obs_data_t *settings, const char *full_param_name) {
+        void set_data_from_settings(obs_data_t *settings, const char *full_param_name) override {
             const char *path_ = obs_data_get_string(settings, full_param_name);
-            if (path_ != NULL) {
+            if (path_ != nullptr) {
                 std::string path_str = std::string(path_);
                 if (this->path != path_str) {
                     this->path = path_str;
@@ -78,17 +79,17 @@ class effect_parameter_image : public effect_parameter {
                 }
             }
             else {
-                if (this->texture != NULL) {
+                if (this->texture != nullptr) {
                     obs_enter_graphics();
                     gs_texture_destroy(this->texture);
-                    this->texture = NULL;
+                    this->texture = nullptr;
                     obs_leave_graphics();
                     this->path = "";
                 }
             }
         }
 
-        virtual void try_gs_set_val() {
+        void try_gs_set_val() override {
             try_gs_effect_set_texture(name.c_str(), shader_param, this->texture);
         }
 };
