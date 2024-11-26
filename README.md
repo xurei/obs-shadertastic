@@ -6,8 +6,8 @@ Create amazing transitions and filters using shaders, with user-friendly configu
 # Build
 1. In-tree build
     - Build OBS Studio: https://obsproject.com/wiki/Install-Instructions
-    - Check out this repository to plugins/shadertastic
-    - Add `add_subdirectory(shadertastic)` to plugins/CMakeLists.txt
+    - Check out this repository to plugins/shadertastic (⚠ not .../obs-shadertastic as git clone may do)
+    - Add `add_subdirectory(shadertastic)` to plugins/CMakeLists.txt *twice*, after each `add_subdirectory(rtmp-services)`
     - Rebuild OBS Studio
 
 1. Stand-alone build (Linux only)
