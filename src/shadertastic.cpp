@@ -331,7 +331,7 @@ static void show_settings_dialog() {
 }
 //----------------------------------------------------------------------------------------------------------------------
 
-bool obs_module_load(void) {
+[[maybe_unused]] bool obs_module_load(void) {
     info("loaded version %s", PROJECT_VERSION);
     obs_data_t *settings = load_settings();
     apply_settings(settings);
@@ -389,7 +389,7 @@ bool obs_module_load(void) {
 }
 //----------------------------------------------------------------------------------------------------------------------
 
-void obs_module_unload(void) {
+[[maybe_unused]] void obs_module_unload(void) {
     shaders_library.unload();
 }
 //----------------------------------------------------------------------------------------------------------------------

@@ -49,8 +49,6 @@ namespace onnxmediapipe
                     std::string model_data_path_ = std::string(model_data_path);
                     std::wstring model_data_path__ = std::wstring(model_data_path_.begin(), model_data_path_.end());
                     info("MODEL DATA PATH: %s", model_data_path_.c_str());
-                    info("MODEL DATA PATH: %s", model_data_path_.c_str());
-                    info("MODEL DATA PATH: %s", model_data_path_.c_str());
                     ortSession = std::make_shared<Ort::Session>(*ort_env, (const ORTCHAR_T*)(model_data_path__.c_str()), sessionOptions);
                 #else
                     ortSession = std::make_shared<Ort::Session>(*ort_env, model_data_path, sessionOptions);
