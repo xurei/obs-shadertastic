@@ -36,6 +36,10 @@ class effect_shader {
     gs_eparam_t *param_fd_face_2 = nullptr;
     gs_eparam_t *param_fd_points_tex = nullptr;
 
+    std::string path;
+
+    ~effect_shader();
+
     void load(const char *shader_path);
 
     void release();

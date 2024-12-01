@@ -36,21 +36,21 @@ struct shadertastic_common {
 //----------------------------------------------------------------------------------------------------------------------
 
 struct shadertastic_transition : public shadertastic_common {
-    obs_source_t *source;
-    bool transition_started;
-    bool transitioning;
-    float transition_point;
-    gs_texrender_t *transition_texrender[2];
+    obs_source_t *source{};
+    bool transition_started{};
+    bool transitioning{};
+    float transition_point{};
+    gs_texrender_t *transition_texrender[2]{};
     int transition_texrender_buffer = 0;
-    gs_texture_t *transparent_texture;
-    float rand_seed;
+    gs_texture_t *transparent_texture{};
+    float rand_seed{};
 
     bool auto_reload = false;
 
-    obs_transition_audio_mix_callback_t mix_a;
-    obs_transition_audio_mix_callback_t mix_b;
-    float transition_a_mul;
-    float transition_b_mul;
+    obs_transition_audio_mix_callback_t mix_a{};
+    obs_transition_audio_mix_callback_t mix_b{};
+    float transition_a_mul{};
+    float transition_b_mul{};
 
     void release() {
         for (auto& [key, effect] : *this->effects) {
@@ -64,12 +64,12 @@ struct shadertastic_transition : public shadertastic_common {
 //----------------------------------------------------------------------------------------------------------------------
 
 struct shadertastic_filter : public shadertastic_common {
-    obs_source_t *source;
-    gs_texrender_t *interm_texrender[2];
+    obs_source_t *source{};
+    gs_texrender_t *interm_texrender[2]{};
     int interm_texrender_buffer = 0;
-    gs_texture_t *transparent_texture;
-    float rand_seed;
-    uint32_t width, height;
+    gs_texture_t *transparent_texture{};
+    float rand_seed{};
+    uint32_t width{}, height{};
     bool should_reload = false;
 
     // Filter previous state (enabled/disabled)

@@ -25,7 +25,7 @@ struct shadertastic_effect_t {
     bool input_time = false;
     bool input_facedetection = false;
     params_list effect_params;
-    effect_shader *main_shader = nullptr;
+    std::shared_ptr<effect_shader> main_shader = nullptr;
 
     shadertastic_effect_t(std::string name_, std::string path_): name(std::move(name_)), path(std::move(path_)) {}
 
@@ -175,7 +175,6 @@ struct shadertastic_effect_t {
         while (gs_effect_loop(main_shader->effect, tech_name)) {
             gs_draw_sprite(nullptr, 0, cx, cy);
         }
-        //debug("end of draw");
     }
 
     void show() {

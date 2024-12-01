@@ -172,7 +172,7 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
 
             for (int current_step=0; current_step < selected_effect->nb_steps; ++current_step) {
                 if (selected_effect->input_facedetection && s->face_detection.created) {
-                    face_detection_render(&s->face_detection, selected_effect->main_shader);
+                    face_detection_render(&s->face_detection, selected_effect->main_shader.get());
                 }
                 bool texrender_ok = true;
                 bool is_interm_step = (current_step < selected_effect->nb_steps - 1);

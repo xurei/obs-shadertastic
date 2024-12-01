@@ -21,8 +21,14 @@
 #include "../util/file_util.h"
 #include "shader.h"
 
+effect_shader::~effect_shader() {
+    debug ("DELETE effect_shader %s", path.c_str());
+    this->release();
+}
+
 void effect_shader::load(const char *shader_path) {
     debug("SHADER PATH: %s", shader_path);
+    this->path = std::string(shader_path);
     char *error_string = nullptr;
     char *shader_source_ = load_file_zipped_or_local(shader_path);
     if (shader_source_ == nullptr) {

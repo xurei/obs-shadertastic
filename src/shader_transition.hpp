@@ -35,7 +35,7 @@ static void *shadertastic_transition_create(obs_data_t *settings, obs_source_t *
     s->transition_texrender[1] = gs_texrender_create(GS_RGBA16, GS_ZS_NONE);
 
     load_effects(s, settings, transitions_dir, "transition");
-    if (shadertastic_settings.effects_path != NULL) {
+    if (shadertastic_settings.effects_path != nullptr) {
         load_effects(s, settings, *(shadertastic_settings.effects_path), "transition");
     }
 
@@ -108,7 +108,7 @@ void shadertastic_transition_update(void *data, obs_data_t *settings) {
         s->selected_effect = &(selected_effect_it->second);
     }
 
-    if (s->selected_effect != NULL) {
+    if (s->selected_effect != nullptr) {
         for (auto param: s->selected_effect->effect_params) {
             std::string full_param_name = param->get_full_param_name(selected_effect_name);
             param->set_data_from_settings(settings, full_param_name.c_str());
@@ -147,9 +147,9 @@ void shadertastic_transition_shader_render(void *data, gs_texture_t *a, gs_textu
 
     shadertastic_effect_t *effect = s->selected_effect;
 
-    if (effect != NULL) {
+    if (effect != nullptr) {
         gs_texture_t *interm_texture = s->transparent_texture;
-        struct vec4 clear_color;
+        struct vec4 clear_color{};
         vec4_zero(&clear_color);
 
         for (int current_step=0; current_step < effect->nb_steps - 1; ++current_step) {
@@ -197,10 +197,10 @@ void shadertastic_transition_video_render(void *data, gs_effect_t *effect) {
         obs_source_t *scene_a = obs_transition_get_source(s->source, OBS_TRANSITION_SOURCE_A);
         obs_source_t *scene_b = obs_transition_get_source(s->source, OBS_TRANSITION_SOURCE_B);
 
-        if (s->auto_reload && s->selected_effect != NULL) {
+        if (s->auto_reload && s->selected_effect != nullptr) {
             debug("AUTO RELOAD");
             s->selected_effect->reload();
-            obs_source_update(s->source, NULL);
+            obs_source_update(s->source, nullptr);
         }
 
         obs_transition_video_render(s->source, shadertastic_transition_render_init);
@@ -260,7 +260,7 @@ bool shadertastic_transition_properties_change_effect_callback(void *priv, obs_p
     UNUSED_PARAMETER(data);
     struct shadertastic_transition *s = static_cast<shadertastic_transition*>(priv);
 
-    if (s->selected_effect != NULL) {
+    if (s->selected_effect != nullptr) {
         obs_property_set_visible(obs_properties_get(props, (s->selected_effect->name + "__params").c_str()), false);
     }
 
@@ -314,7 +314,7 @@ obs_properties_t *shadertastic_transition_properties(void *data) {
         obs_properties_add_group(props, (effect_name + "__params").c_str(), effect_label, OBS_GROUP_NORMAL, effect_group);
         obs_property_set_visible(obs_properties_get(props, (effect_name + "__params").c_str()), false);
     }
-    if (s->selected_effect != NULL) {
+    if (s->selected_effect != nullptr) {
         obs_property_set_visible(obs_properties_get(props, (s->selected_effect->name + "__params").c_str()), true);
     }
 

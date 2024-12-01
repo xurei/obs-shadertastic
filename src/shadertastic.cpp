@@ -151,7 +151,11 @@ void load_effects(shadertastic_common *s, obs_data_t *settings, const std::strin
     std::vector<std::string> dirs = list_directories((effects_dir + "/" + effects_type + "s").c_str());
 
     for (const auto &dir : dirs) {
-        std::string effect_path = effects_dir + "/" + effects_type + "s/" + dir;
+        std::string effect_path = std::string(effects_dir)
+            .append("/")
+            .append(effects_type)
+            .append("s/")
+            .append(dir);
         if (s->effects->find(dir) != s->effects->end()) {
             warn("NOT LOADING EFFECT %s/%ss/%s : an effect with the name '%s' already exist", effects_dir.c_str(), effects_type.c_str(), dir.c_str(), dir.c_str());
         }
@@ -390,6 +394,5 @@ static void show_settings_dialog() {
 //----------------------------------------------------------------------------------------------------------------------
 
 [[maybe_unused]] void obs_module_unload(void) {
-    shaders_library.unload();
 }
 //----------------------------------------------------------------------------------------------------------------------
