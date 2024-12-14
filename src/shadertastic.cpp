@@ -191,7 +191,7 @@ void load_effects(shadertastic_common *s, obs_data_t *settings, const std::strin
         std::string effect_path = zip.c_str();
 
         if (s->effects->find(effect_name) != s->effects->end()) {
-            warn("NOT LOADING EFFECT %s/%s : an effect with the name '%s' already exist", effects_dir.c_str(), zip.c_str(), effect_name.c_str());
+            warn("NOT LOADING EFFECT %s : an effect with the name '%s' already exist", zip.c_str(), effect_name.c_str());
         }
         else if (true /*shadertastic_effect_t::is_effect(effect_path)*/) {
             // TODO the check that meta.json exists is missing in archived effects... I should add it back
